@@ -1,0 +1,981 @@
+@{
+    ViewBag.Title = "Premium Follow-up Details";
+}
+
+@section Title
+{
+    Premium Follow-up Details
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <!-- Header section with custom filters -->
+            <div class="card-header bg-light d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 border-bottom-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap w-100">
+                    <!-- Search Field -->
+                    <div class="form-group mb-0 position-relative" style="min-width: 200px;">
+                        <input type="text" class="form-control form-control-sm" placeholder="Search By Name/ID/Phone"
+                               id="searchInput" style="padding-right: 32px; border-radius: 6px;"/>
+                        <i class="bi bi-search position-absolute text-muted" style="top: 50%; right: 10px; transform: translateY(-50%); pointer-events: none;"></i>
+                    </div>
+
+                    <!-- Staff Filter -->
+                    <select id="staffFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
+                        <option value="">All Staff</option>
+                        @if (ViewBag.StaffList != null)
+                        {
+                            foreach (var staff in ViewBag.StaffList)
+                            {
+                                <option value="@staff.Id">@staff.Name</option>
+                            }
+                        }
+                    </select>
+
+                    <!-- Call Status Filter -->
+                    <select id="callStatusFilter" class="form-select form-select-sm" style="width: 160px; border-radius: 6px;">
+                        <option value="">All Call Statuses</option>
+                        <option value="0">Connected</option>
+                        <option value="1">Not Connected</option>
+                        <option value="2">Busy</option>
+                        <option value="3">Switched Off</option>
+                        <option value="4">No Response</option>
+                    </select>
+
+                    <!-- Interest Status Filter -->
+                    <select id="interestStatusFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
+                        <option value="">All Interests</option>
+                        <option value="0">Interested</option>
+                        <option value="1">Not Interested</option>
+                        <option value="2">Thinking</option>
+                        <option value="3">Call Back Later</option>
+                        <option value="4">Converted</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="premiumFollowTable" class="table table-hover table-striped w-100 align-middle">
+                        <thead class="table-light text-uppercase font-size-12">
+                            <tr>
+                                <th width="12%">Profile ID</th>
+                                <th width="15%">Customer</th>
+                                <th width="15%">Assigned Staff</th>
+                                <th width="15%">Package</th>
+                                <th width="12%">Payment</th>
+                                <th width="10%">Start</th>
+                                <th width="10%">Expiry</th>
+                                <th width="8%">Status</th>
+                                <th width="8%" class="text-center sorting_disabled">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Styles -->
+<style>
+    /* Stacking modals overlay styling */
+    #followUpModal, #updateFollowUpModal {
+        z-index: 1065 !important;
+    }
+    .modal-backdrop.show:nth-of-type(even) {
+        z-index: 1060 !important;
+    }
+
+    /* Premium Modal styling */
+    .detail-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    .detail-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+    .detail-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+    .detail-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    /* Timeline Styling */
+    .followup-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .followup-header {
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    .timeline-container {
+        position: relative;
+        padding-left: 24px;
+        border-left: 2px solid #e2e8f0;
+        margin-left: 8px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-badge {
+        position: absolute;
+        left: -31px;
+        top: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #cbd5e1;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 3px #f1f5f9;
+    }
+    .timeline-item.primary-status .timeline-badge {
+        background-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .timeline-item.success-status .timeline-badge {
+        background-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+    .timeline-item.warning-status .timeline-badge {
+        background-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+    .timeline-item.danger-status .timeline-badge {
+        background-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    .timeline-date {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    .timeline-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .timeline-desc {
+        font-size: 12px;
+        color: #475569;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-top: 4px;
+        border: 1px solid #f1f5f9;
+    }
+</style>
+
+<!-- Profile Details Modal -->
+<div class="modal fade" id="profileDetailsModal" tabindex="-1" aria-labelledby="profileDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header border-bottom py-3 px-4" style="background-color: #f8fafc;">
+                <h5 class="modal-title fw-bold text-primary" id="profileDetailsModalLabel">
+                    <i class="bi bi-person-bounding-box me-2"></i> Profile Details & CRM Follow-up
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <!-- Left Column: Profile Details -->
+                    <div class="col-lg-5 border-end">
+                        <h6 class="text-uppercase text-secondary fw-bold mb-3 font-size-12 letter-spacing-1">Personal Information</h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Profile ID</div>
+                                    <div class="detail-value text-primary fw-bold" id="detailRegisterNumber">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Status</div>
+                                    <div id="detailStatus">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="cardRemainingCreditsContainer" style="display:none;">
+                                <div class="detail-card p-3" style="background: #fdf2f8; border-color: #fbcfe8;">
+                                    <div class="detail-label text-danger">Remaining Credits</div>
+                                    <div class="detail-value fw-bold text-danger" id="detailRemainingCredits">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="cardExpiryDateContainer" style="display:none;">
+                                <div class="detail-card p-3" style="background: #fff7ed; border-color: #ffedd5;">
+                                    <div class="detail-label text-warning">Plan Expiry Date</div>
+                                    <div class="detail-value fw-bold text-dark" id="detailExpiryDate">-</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Full Name</div>
+                                    <div class="detail-value fw-bold" id="detailName">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Gender</div>
+                                    <div class="detail-value" id="detailGender">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Age</div>
+                                    <div class="detail-value" id="detailAge">-</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Location</div>
+                                    <div class="detail-value" id="detailLocation">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Mobile Number</div>
+                                    <div class="detail-value fw-bold text-dark" id="detailPhone">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card p-3">
+                                    <div class="detail-label">Registration Date</div>
+                                    <div class="detail-value" id="detailRegDate">-</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-card p-3" style="background: #eff6ff; border-color: #bfdbfe;">
+                                    <div class="detail-label text-primary">Assigned Staff</div>
+                                    <div class="detail-value fw-semibold text-primary" id="detailAssignedStaff">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Follow-up Timeline -->
+                    <div class="col-lg-7 ps-lg-4 mt-4 mt-lg-0">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="text-uppercase text-secondary fw-bold mb-0 font-size-12 letter-spacing-1">CRM Follow-ups & Timeline</h6>
+                            <button type="button" id="btnAddFollowUp" class="btn btn-success btn-sm d-flex align-items-center gap-1" style="border-radius: 6px;">
+                                <i class="bi bi-plus-circle"></i> Add Follow-up
+                            </button>
+                        </div>
+
+                        <!-- Follow-up Cards Container -->
+                        <div id="followUpsContainer" class="d-flex flex-column gap-3" style="max-height: 580px; overflow-y: auto; padding-right: 5px;">
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat-right-dots-fill font-size-24 text-light d-block mb-2"></i>
+                                No follow-ups recorded yet for this profile.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Follow-up Modal (Overlay) -->
+<div class="modal fade" id="followUpModal" tabindex="-1" aria-labelledby="followUpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-success text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white" id="followUpModalLabel">
+                    <i class="bi bi-telephone-plus-fill me-2"></i> Initialize CRM Follow-up
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="followUpForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="formProfileId" name="ProfileId" />
+                    
+                    <div class="mb-3">
+                        <label for="formFollowUpType" class="form-label fw-semibold">Follow-up Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="formFollowUpType" name="FollowUpType" required style="border-radius: 6px;">
+                            <option value="">-- Select Type --</option>
+                            <option value="0">Profile Verification</option>
+                            <option value="1">Premium Follow up</option>
+                            <option value="2">Renewal Follow up</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="formRemarks" class="form-label fw-semibold">Instructions / Remarks for Staff <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="formRemarks" name="Remarks" rows="4" required placeholder="Describe the instructions or purpose of this follow-up..." style="border-radius: 6px; resize: none;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                    <button type="submit" class="btn btn-success d-flex align-items-center gap-1" style="border-radius: 6px;">
+                        <i class="bi bi-check-circle"></i> Initialize Follow-up
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Follow-up Modal (Overlay) -->
+<div class="modal fade" id="updateFollowUpModal" tabindex="-1" aria-labelledby="updateFollowUpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-primary text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white" id="updateFollowUpModalLabel">
+                    <i class="bi bi-telephone-outbound-fill me-2"></i> Log Follow-up Call/Interaction
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="updateFollowUpForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="updateFollowUpId" name="FollowUpId" />
+                    <input type="hidden" id="updateFollowUpType" />
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="updateContactType" class="form-label fw-semibold">Contact Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="updateContactType" name="ContactType" required style="border-radius: 6px;">
+                                <option value="1">Phone Call</option>
+                                <option value="0">WhatsApp</option>
+                                <option value="2">Direct Call</option>
+                                <option value="3">Email</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="updateCallStatus" class="form-label fw-semibold">Call Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="updateCallStatus" name="CallStatus" required style="border-radius: 6px;">
+                                <option value="0">Connected</option>
+                                <option value="1">Not Connected</option>
+                                <option value="2">Busy</option>
+                                <option value="3">Switched Off</option>
+                                <option value="4">No Response</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Status Dropdowns (shown/hidden based on Follow-up Type) -->
+                        <div class="col-12" id="groupProfileVerificationStatus" style="display:none;">
+                            <label for="updateProfileVerificationStatus" class="form-label fw-semibold">Verification Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="updateProfileVerificationStatus" name="ProfileVerificationStatus" style="border-radius: 6px;">
+                                <option value="0">Pending</option>
+                                <option value="1">Started</option>
+                                <option value="2">Verify</option>
+                                <option value="3">Hold</option>
+                                <option value="4">Reject</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12" id="groupPremiumInterestStatus" style="display:none;">
+                            <label for="updatePremiumInterestStatus" class="form-label fw-semibold">Interest Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="updatePremiumInterestStatus" name="PremiumInterestStatus" style="border-radius: 6px;">
+                                <option value="0">Interested</option>
+                                <option value="1">Not Interested</option>
+                                <option value="2">Thinking</option>
+                                <option value="3">Call Back Later</option>
+                                <option value="4">Converted</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12" id="groupRenewalInterestStatus" style="display:none;">
+                            <label for="updateRenewalInterestStatus" class="form-label fw-semibold">Renewal Interest Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="updateRenewalInterestStatus" name="RenewalInterestStatus" style="border-radius: 6px;">
+                                <option value="0">Pending</option>
+                                <option value="1">Interested</option>
+                                <option value="2">Not Interested</option>
+                                <option value="3">Renewed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="updateNextFollowUpDate" class="form-label fw-semibold">Next Follow-up Date</label>
+                            <input type="date" class="form-control" id="updateNextFollowUpDate" name="NextFollowUpDate" style="border-radius: 6px;" />
+                        </div>
+
+                        <div class="col-12">
+                            <label for="updateRemarks" class="form-label fw-semibold">Remarks / Conversation Details <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="updateRemarks" name="Remarks" rows="3" required placeholder="Log the conversation remarks..." style="border-radius: 6px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" style="border-radius: 6px;">
+                        <i class="bi bi-save"></i> Save Log
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+        // Parse staffId from URL query parameter
+        var urlParams = new URLSearchParams(window.location.search);
+        var staffId = urlParams.get('staffId');
+        if (staffId) {
+            $('#staffFilter').val(staffId);
+        }
+
+        var table = $('#premiumFollowTable').DataTable({
+            processing: true,
+            serverSide: true,
+            pageLength: 100,
+            lengthMenu: [
+                [100, 150, 200, 500],
+                [100, 150, 200, 500]
+            ],
+            searching: false, // Custom search boxes
+            ajax: {
+                url: "/admin/staff/premium-followups-data",
+                type: "POST",
+                data: function (d) {
+                    d.staffId = $('#staffFilter').val() || null;
+                    d.callStatus = $('#callStatusFilter').val() !== "" ? parseInt($('#callStatusFilter').val()) : null;
+                    d.interestStatus = $('#interestStatusFilter').val() !== "" ? parseInt($('#interestStatusFilter').val()) : null;
+                    d.searchName = $('#searchInput').val();
+                }
+            },
+            columns: [
+                {
+                    data: "registerNumber",
+                    render: function (data, type, row) {
+                        if (!data || data === 'N/A') return '<span class="text-muted font-size-12">N/A</span>';
+                        var profileId = row.profileId || row.id;
+                        return '<a href="/admin/staff/profile/' + profileId + '" target="_blank" class="fw-semibold text-primary text-decoration-underline" title="View Full Profile Details">' + data + '</a>';
+                    }
+                },
+                {
+                    data: "customerName",
+                    render: function (data, type, row) {
+                        return data || 'N/A';
+                    }
+                },
+                {
+                    data: "staffName",
+                    render: function (data, type, row) {
+                        if (data && data !== "Unassigned") {
+                            return '<span class="badge badge-soft-info font-size-11 px-2 py-1" style="background-color: rgba(23, 162, 184, 0.15); color: #17a2b8; border: 1px solid rgba(23, 162, 184, 0.25);"><i class="fas fa-user-circle me-1"></i> ' + data + '</span>';
+                        }
+                        return '<span class="text-muted font-size-12">Unassigned</span>';
+                    }
+                },
+                {
+                    data: "packageName",
+                    render: function (data, type, row) {
+                        return '<span class="fw-semibold text-secondary">' + (data || 'Standard Premium') + '</span>';
+                    }
+                },
+                {
+                    data: "paymentInfo",
+                    render: function (data, type, row) {
+                        return data || 'N/A';
+                    }
+                },
+                {
+                    data: "startDate",
+                    render: function (data, type, row) {
+                        return data || 'N/A';
+                    }
+                },
+                {
+                    data: "expiryDate",
+                    render: function (data, type, row) {
+                        return data || 'N/A';
+                    }
+                },
+                {
+                    data: "status",
+                    render: function (data, type, row) {
+                        if (data === "Connected") {
+                            return '<span class="badge badge-soft-success font-size-11" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid rgba(40, 167, 69, 0.2);">Connected</span>';
+                        } else if (data === "Pending") {
+                            return '<span class="badge badge-soft-primary font-size-11" style="background-color: rgba(0, 123, 255, 0.1); color: #007bff; border: 1px solid rgba(0, 123, 255, 0.2);">Awaiting call</span>';
+                        } else {
+                            return '<span class="badge badge-soft-warning font-size-11" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.2);">' + data + '</span>';
+                        }
+                    }
+                },
+                {
+                    data: "profileId",
+                    orderable: false,
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return '<button class="btn btn-soft-info btn-sm btn-view-profile px-3 py-1 d-flex align-items-center justify-content-center gap-1 mx-auto" data-id="' + data + '" title="View Details" style="border-radius: 6px; font-weight: 500;"><i class="bi bi-eye"></i> View</button>';
+                    }
+                }
+            ],
+            order: [], // Default order by latest created follow-up first
+            language: {
+                processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+            }
+        });
+
+        // Trigger redraw on filter change
+        $('#staffFilter, #callStatusFilter, #interestStatusFilter').on('change', function () {
+            table.ajax.reload(null, true);
+        });
+
+        // Trigger redraw on search input (with debouncing)
+        var typingTimer;
+        $('#searchInput').on('keyup input', function () {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                table.ajax.reload(null, true);
+            }, 400);
+        });
+
+        // ------------------ CRM Follow-up JS ------------------
+
+        var detailsModal = new bootstrap.Modal(document.getElementById('profileDetailsModal'));
+        var followUpModal = new bootstrap.Modal(document.getElementById('followUpModal'));
+        var updateFollowUpModal = new bootstrap.Modal(document.getElementById('updateFollowUpModal'));
+        var activeProfileId = null;
+
+        // Log Interaction (Update Follow-up) Click
+        $('#followUpsContainer').on('click', '.btn-update-followup', function () {
+            var followUpId = $(this).data('id');
+            var typeVal = parseInt($(this).data('type'));
+            
+            // Reset form
+            $('#updateFollowUpForm')[0].reset();
+            $('#updateFollowUpId').val(followUpId);
+            $('#updateFollowUpType').val(typeVal);
+            
+            // Hide all dynamic groups
+            $('#groupProfileVerificationStatus, #groupPremiumInterestStatus, #groupRenewalInterestStatus').hide();
+            $('#updateProfileVerificationStatus, #updatePremiumInterestStatus, #updateRenewalInterestStatus').prop('required', false);
+
+            // Show appropriate group based on follow-up type
+            if (typeVal === 0) { // Profile Verification
+                $('#groupProfileVerificationStatus').show();
+                $('#updateProfileVerificationStatus').prop('required', true);
+            } else if (typeVal === 1) { // Premium Followup
+                $('#groupPremiumInterestStatus').show();
+                $('#updatePremiumInterestStatus').prop('required', true);
+            } else if (typeVal === 2) { // Renewal Followup
+                $('#groupRenewalInterestStatus').show();
+                $('#updateRenewalInterestStatus').prop('required', true);
+            }
+            
+            updateFollowUpModal.show();
+        });
+
+        // Handle Update Follow-up Form Submit
+        $('#updateFollowUpForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var typeVal = parseInt($('#updateFollowUpType').val());
+            var data = {
+                FollowUpId: parseInt($('#updateFollowUpId').val()),
+                ContactType: parseInt($('#updateContactType').val()),
+                CallStatus: parseInt($('#updateCallStatus').val()),
+                Remarks: $('#updateRemarks').val(),
+                NextFollowUpDate: $('#updateNextFollowUpDate').val() || null,
+                ProfileVerificationStatus: typeVal === 0 ? parseInt($('#updateProfileVerificationStatus').val()) : null,
+                PremiumInterestStatus: typeVal === 1 ? parseInt($('#updatePremiumInterestStatus').val()) : null,
+                RenewalInterestStatus: typeVal === 2 ? parseInt($('#updateRenewalInterestStatus').val()) : null
+            };
+
+            Swal.fire({
+                title: 'Saving...',
+                html: 'Please wait while we log this interaction.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/admin/staff/update-followup',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Logged Successfully!',
+                            text: response.message,
+                            confirmButtonColor: '#28a745',
+                            timer: 2000
+                        }).then(function () {
+                            updateFollowUpModal.hide();
+                            // Refresh the details modal
+                            if (activeProfileId && activeProfileId > 0 && $('#profileDetailsModal').hasClass('show')) {
+                                loadProfileDetails(activeProfileId);
+                            }
+                            // Refresh main datatable
+                            table.ajax.reload(null, false);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to update follow-up.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'An error occurred while saving follow-up.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            });
+        });
+
+        // View Profile Click
+        $('#premiumFollowTable').on('click', '.btn-view-profile', function () {
+            var profileId = $(this).data('id');
+            activeProfileId = profileId;
+            loadProfileDetails(profileId);
+        });
+
+        // Load Profile Details & Follow-ups
+        function loadProfileDetails(profileId) {
+            $.ajax({
+                url: '/admin/staff/profile-details/' + profileId,
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        var d = response.data;
+                        
+                        // Populate personal info
+                        var profileIdToUse = d.id || profileId;
+                        $('#detailRegisterNumber').html('<a href="/admin/staff/profile/' + profileIdToUse + '" target="_blank" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (d.registerNumber || 'N/A') + '</a>');
+                        $('#detailName').text(d.name);
+                        $('#detailGender').text(d.gender);
+                        $('#detailAge').text(d.age || 'N/A');
+                        $('#detailLocation').text(d.location);
+                        $('#detailPhone').text(d.phone);
+                        $('#detailRegDate').text(d.createdOn);
+                        $('#detailAssignedStaff').text(d.assignedStaff);
+                        
+                        // Show Premium details only if user is Premium
+                        if (d.isPremiumMember || d.status === "Premium") {
+                            $('#detailRemainingCredits').text(d.remainingCredits || '0');
+                            $('#detailExpiryDate').text(d.expiryDate || 'N/A');
+                            $('#cardRemainingCreditsContainer, #cardExpiryDateContainer').show();
+                        } else {
+                            $('#cardRemainingCreditsContainer, #cardExpiryDateContainer').hide();
+                        }
+                        
+                        // Status Badge
+                        var statusHtml = '';
+                        if (d.status === "Premium") {
+                            statusHtml = '<span class="badge bg-success font-size-12 px-3 py-2">Premium</span>';
+                        } else if (d.status === "Active") {
+                            statusHtml = '<span class="badge bg-primary font-size-12 px-3 py-2">Active</span>';
+                        } else {
+                            statusHtml = '<span class="badge bg-warning text-dark font-size-12 px-3 py-2">Pending</span>';
+                        }
+                        $('#detailStatus').html(statusHtml);
+
+                        // Render Follow-ups
+                        renderFollowUps(d.followUps);
+
+                        detailsModal.show();
+                    } else {
+                        Swal.fire('Error', response.message || 'Failed to load profile details.', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'An error occurred while fetching profile details.', 'error');
+                }
+            });
+        }
+
+        // Render Followups
+        function renderFollowUps(followUps) {
+            var container = $('#followUpsContainer');
+            container.empty();
+
+            if (!followUps || followUps.length === 0) {
+                container.html(`
+                    <div class="text-center text-muted py-5 border rounded" style="background: #f8fafc; border-style: dashed !important;">
+                        <i class="bi bi-chat-right-dots-fill font-size-30 text-secondary opacity-50 d-block mb-2"></i>
+                        No follow-ups recorded yet for this profile.
+                    </div>
+                `);
+                return;
+            }
+
+            followUps.forEach(function (f) {
+                var badgeColor = getFollowUpTypeColor(f.followUpTypeEnum);
+                var typeLabel = formatFollowUpType(f.followUpTypeEnum);
+
+                var statusLabel = 'Interest';
+                var statusValue = f.latestInterestStatus;
+                if (f.followUpTypeEnum === 0) {
+                    statusLabel = 'Verification';
+                    statusValue = f.latestProfileVerificationStatus;
+                } else if (f.followUpTypeEnum === 2) {
+                    statusLabel = 'Renewal';
+                    statusValue = f.latestRenewalInterestStatus;
+                }
+
+                var contactHtml = '';
+                if (f.latestContactType && f.latestContactType !== "N/A" && f.latestContactType !== "None" && f.latestContactType !== "") {
+                    contactHtml = `
+                        <div class="row g-2 mb-3 bg-light p-2 rounded border border-light font-size-12">
+                            <div class="col-4">
+                                <span class="text-muted d-block font-size-11">Contact Type</span>
+                                <span class="fw-semibold text-dark">${f.latestContactType}</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block font-size-11">Call Status</span>
+                                <span class="fw-semibold text-dark">${f.latestCallStatus}</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block font-size-11">${statusLabel}</span>
+                                <span class="fw-semibold text-dark">${statusValue}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    contactHtml = `
+                        <div class="alert alert-soft-primary d-flex align-items-center gap-2 py-2 px-3 mb-3 font-size-12 border-0" style="background-color: rgba(59, 130, 246, 0.08); color: #2563eb; border-radius: 8px;">
+                            <i class="bi bi-hourglass-split"></i>
+                            <span>Awaiting first contact by assigned staff member.</span>
+                        </div>
+                    `;
+                }
+
+                var cardHtml = `
+                    <div class="followup-card p-3">
+                        <div class="followup-header d-flex align-items-center justify-content-between pb-2 mb-3">
+                            <span class="badge ${badgeColor} font-size-12 px-2.5 py-1.5 fw-semibold"><i class="bi bi-tag-fill me-1"></i> ${typeLabel}</span>
+                            <div class="text-end">
+                                <span class="font-size-11 text-muted d-block">Next Follow-up</span>
+                                <span class="font-size-12 fw-bold text-dark"><i class="bi bi-calendar3 me-1"></i> ${f.nextFollowUpDate && f.nextFollowUpDate !== 'N/A' && f.nextFollowUpDate !== '' ? f.nextFollowUpDate : 'Awaiting Contact'}</span>
+                            </div>
+                        </div>
+                        
+                        ${contactHtml}
+ 
+                        <!-- Action Row (Collapsible Timeline Trigger & Log Call Button) -->
+                        <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
+                            <div class="accordion accordion-flush" id="accordionTimeline-${f.id}">
+                                <div class="accordion-item border-0">
+                                    <h2 class="accordion-header" id="heading-${f.id}">
+                                        <button class="accordion-button collapsed p-0 font-size-12 text-primary fw-semibold bg-transparent border-0 shadow-none" 
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${f.id}" aria-expanded="false" aria-controls="collapse-${f.id}">
+                                            <i class="bi bi-clock-history me-1"></i> History (${f.timelines.length})
+                                        </button>
+                                    </h2>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-update-followup d-flex align-items-center gap-1 py-1 px-2.5" data-id="${f.id}" data-type="${f.followUpTypeEnum}" style="border-radius: 6px; font-weight: 500; font-size: 11px;">
+                                <i class="bi bi-telephone-outbound"></i> Log Call
+                            </button>
+                        </div>
+
+                        <!-- Collapsible Timeline Content -->
+                        <div id="collapse-${f.id}" class="accordion-collapse collapse" aria-labelledby="heading-${f.id}" data-bs-parent="#accordionTimeline-${f.id}">
+                            <div class="px-1 py-3">
+                                <div class="timeline-container">
+                                    ${renderTimelineItems(f.timelines, f.followUpTypeEnum)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.append(cardHtml);
+            });
+        }
+
+        // Render Timeline Items
+        function renderTimelineItems(timelines, followUpType) {
+            var html = '';
+            timelines.forEach(function (t) {
+                var statusClass = 'success-status';
+                var titleText = '';
+                var detailsHtml = '';
+
+                var statusLabel = 'Interest';
+                var statusValue = t.interestStatus;
+                if (followUpType === 0) {
+                    statusLabel = 'Verification';
+                    statusValue = t.profileVerificationStatus;
+                } else if (followUpType === 2) {
+                    statusLabel = 'Renewal';
+                    statusValue = t.renewalInterestStatus;
+                }
+
+                var isAdminApproved = t.remarks && (t.remarks.indexOf("Admin Approved") !== -1 || t.remarks.startsWith("Admin Approved"));
+                var isAdminRejected = t.remarks && (t.remarks.indexOf("Admin Rejected") !== -1 || t.remarks.startsWith("Admin Rejected"));
+
+                if (isAdminApproved) {
+                    statusClass = 'success-status';
+                    titleText = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Admin Approved</span>';
+                    detailsHtml = `
+                        <i class="bi bi-shield-check me-1"></i> Action by: <strong>${t.staffName}</strong>
+                        ${statusValue && statusValue !== 'N/A' && statusValue !== '' ? ` | <i class="bi bi-emoji-smile me-1"></i> ${statusLabel}: <strong>${statusValue}</strong>` : ''}
+                    `;
+                } else if (isAdminRejected) {
+                    statusClass = 'danger-status';
+                    titleText = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i> Admin Rejected</span>';
+                    detailsHtml = `
+                        <i class="bi bi-shield-x me-1"></i> Action by: <strong>${t.staffName}</strong>
+                        ${statusValue && statusValue !== 'N/A' && statusValue !== '' ? ` | <i class="bi bi-emoji-smile me-1"></i> ${statusLabel}: <strong>${statusValue}</strong>` : ''}
+                    `;
+                } else if (!t.contactType || t.contactType === "None" || t.contactType === "" || t.contactType === "N/A") {
+                    statusClass = 'primary-status';
+                    titleText = '<span class="text-primary fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Follow-up Initiated</span>';
+                    detailsHtml = `
+                        <i class="bi bi-person-fill me-1"></i> Initiated by: <strong>${t.staffName}</strong>
+                        ${statusValue && statusValue !== 'N/A' && statusValue !== '' ? ` | <i class="bi bi-emoji-smile me-1"></i> ${statusLabel}: <strong>${statusValue}</strong>` : ''}
+                    `;
+                } else {
+                    titleText = t.contactType + ' (' + t.callStatus + ')';
+                    if (t.callStatus === "Busy" || t.callStatus === "NoResponse") statusClass = 'warning-status';
+                    if (t.callStatus === "NotConnected" || t.callStatus === "SwitchedOff") statusClass = 'danger-status';
+
+                    detailsHtml = `
+                        <i class="bi bi-person-fill me-1"></i> Staff: <strong>${t.staffName}</strong> | 
+                        <i class="bi bi-emoji-smile me-1"></i> ${statusLabel}: <strong>${statusValue}</strong>
+                        ${t.nextFollowUpDate !== 'N/A' && t.nextFollowUpDate !== '' ? ` | <i class="bi bi-calendar-event me-1"></i> Next: <strong>${t.nextFollowUpDate}</strong>` : ''}
+                    `;
+                }
+
+                html += `
+                    <div class="timeline-item ${statusClass}">
+                        <div class="timeline-badge"></div>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="timeline-title">${titleText}</span>
+                            <span class="timeline-date">${t.createdOn}</span>
+                        </div>
+                        <div class="font-size-11 text-muted mb-1">
+                            ${detailsHtml}
+                        </div>
+                        <div class="timeline-desc">
+                            <strong>Instructions/Remarks:</strong><br/>
+                            ${t.remarks || 'No remarks provided.'}
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        // Helper to format follow up type
+        function formatFollowUpType(val) {
+            if (val === 0) return "Profile Verification";
+            if (val === 1) return "Premium Follow up";
+            if (val === 2) return "Renewal Follow up";
+            return "Unknown";
+        }
+
+        // Helper for follow up type color badge
+        function getFollowUpTypeColor(val) {
+            if (val === 0) return "bg-soft-info text-info";
+            if (val === 1) return "bg-soft-success text-success";
+            if (val === 2) return "bg-soft-warning text-warning";
+            return "bg-soft-secondary text-secondary";
+        }
+
+        // Trigger Add Follow-up Modal
+        $('#btnAddFollowUp').on('click', function () {
+            // Reset form
+            $('#followUpForm')[0].reset();
+            $('#formProfileId').val(activeProfileId);
+            
+            // Open FollowUp Modal
+            followUpModal.show();
+        });
+
+        // Handle Follow-up Form Submit
+        $('#followUpForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var $btn = $(this).find('button[type="submit"]');
+            var originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Initializing...');
+
+            var data = {
+                ProfileId: parseInt($('#formProfileId').val()),
+                FollowUpType: parseInt($('#formFollowUpType').val()),
+                Remarks: $('#formRemarks').val()
+            };
+
+            Swal.fire({
+                title: 'Saving...',
+                html: 'Please wait while we initialize this follow-up.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/admin/staff/follow-up',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Follow-up Initialized!',
+                            text: response.message || 'Follow-up has been successfully initialized.',
+                            confirmButtonColor: '#28a745',
+                            timer: 2000
+                        }).then(function () {
+                            followUpModal.hide();
+                            // Refresh the details modal
+                            if (activeProfileId && activeProfileId > 0 && $('#profileDetailsModal').hasClass('show')) {
+                                loadProfileDetails(activeProfileId);
+                            }
+                            // Refresh main datatable
+                            table.ajax.reload(null, false);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to save follow-up.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'An error occurred on the server while saving follow-up.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+    });
+</script>
+}

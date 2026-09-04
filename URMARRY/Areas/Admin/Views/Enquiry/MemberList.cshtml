@@ -1,0 +1,243 @@
+@using Application.Helpers
+@using System.Text.RegularExpressions
+@model EnquiryViewModel
+@{
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    var enquiries = Model.Enquiries!;
+    var email = Model.Email!;
+    ViewData["Title"] = "Member List";
+    string heading = "Members List";
+    if (!string.IsNullOrEmpty(Model.SelectedStatus))
+    {
+        heading = $"{Regex.Replace(Model.SelectedStatus, "(\\B[A-Z])", " $1")} List";
+    }
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>@heading</h1>
+    <form method="get" asp-action="MemberList" class="d-flex mb-0">
+        @* <div class="form-group me-2">
+            <input type="text" name="name" class="form-control" placeholder="Search by name" value="@Model.NameFilter" />
+            <button type="submit" class="btn btn-primary" style="padding:10px">
+                <i class="bi bi-search"></i> <!-- Bootstrap icon for search -->
+            </button>
+        </div> *@
+        <div class="form-group me-2 position-relative">
+            <input type="text" name="name" class="form-control" placeholder="Search By Name" value="@Model.NameFilter"
+                   id="searchInput" oninput="updatePlaceholder()" style="padding:10px; width:270px;"/>
+            <i class="bi bi-search position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);"></i>
+            <!-- Bootstrap icon for search -->
+        </div>
+        <div class="form-group">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                        data-bs-toggle="dropdown" aria-expanded="false" style="padding:10px">
+                    @(string.IsNullOrEmpty(Model.SelectedStatus) ? "Filter By Status" : (Model.SelectedStatus == "NewRegistration" ? "New Registrations" : Model.SelectedStatus))
+                    <i class="bi bi-chevron-down ms-2"></i> <!-- Bootstrap icon for dropdown -->
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <li><a class="dropdown-item" href="?status=&name=@Model.NameFilter">All</a></li>
+                    <li><a class="dropdown-item" href="?status=Premium&name=@Model.NameFilter">Premium</a></li>
+                    <li><a class="dropdown-item" href="?status=Active&name=@Model.NameFilter">Active</a></li>
+                    <li><a class="dropdown-item" href="?status=Pending&name=@Model.NameFilter">Pending</a></li>
+                    <li><a class="dropdown-item" href="?status=NewRegistration&name=@Model.NameFilter">New
+                            Registrations</a></li>
+                    <li><a class="dropdown-item" href="?status=Recycled&name=@Model.NameFilter">Recycled</a></li>
+                    <li><a class="dropdown-item" href="?status=PremiumExpiring&name=@Model.NameFilter">Premium Expiring</a></li>
+                </ul>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<div class="card-body">
+    <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+        <thead>
+        <tr>
+            <th>Register Number</th>
+            <th>Name</th>
+            <th>Phone</th> 
+            <th>Created on</th>
+            <th>Staff</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+        var table = $('#datatable').DataTable({
+            processing: true,
+            serverSide: true,
+            pageLength: 100,
+            lengthMenu: [
+                [100, 150, 200, 500],
+                [100, 150, 200, 500]
+            ],
+            searching: false, // Custom search box is already implemented at the top of the page
+            ajax: {
+                url: "/admin/enquiry/memberslist-data",
+                type: "GET",
+                data: function (d) {
+                    d.status = '@Model.SelectedStatus';
+                    d.name = '@Model.NameFilter';
+                }
+            },
+            columns: [
+                { 
+                    data: "registerNumber",
+                    render: function (data, type, row) {
+                        return data || '';
+                    }
+                },
+                { 
+                    data: "name",
+                    render: function (data, type, row) {
+                        return data || '';
+                    }
+                },
+                { 
+                    data: "phone",
+                    render: function (data, type, row) {
+                        var code = row.countryCode || '';
+                        var phone = row.phone || '';
+                        return (code ? code + ' ' : '') + phone;
+                    }
+                },
+                { 
+                    data: "createdOn",
+                    render: function (data, type, row) {
+                        if (!data) return '';
+                        var date = new Date(data);
+                        return date.toLocaleDateString();
+                    }
+                },
+                { 
+                    data: "staffName",
+                    render: function (data, type, row) {
+                        if (!data || data === "Unassigned") {
+                            return '<span class="badge bg-soft-secondary text-secondary font-size-12 px-2 py-1"><i class="fas fa-user-slash me-1"></i>Unassigned</span>';
+                        }
+                        return '<span class="badge bg-soft-primary text-primary font-size-12 px-2 py-1"><i class="fas fa-user me-1"></i>' + data + '</span>';
+                    }
+                },
+                {
+                    data: "id",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        var buttons = '<div style="display:flex; align-items:center; gap:6px; white-space: nowrap;">';
+                        
+                        // Staff CRM & Follow-up History page button (replaces previous Print button)
+                        buttons += '<a href="/admin/enquiry/crm-details/' + data + '" class="btn btn-warning btn-xs" title="Staff CRM & Verification Details"><i class="fas fa-user-clock"></i></a>';
+                        
+                        // Edit button
+                        buttons += '<a href="/admin/enquiry/' + data + '" class="btn btn-primary btn-xs"><i class="fas fa-pencil-alt"></i></a>';
+                        
+                        // Recycle/Restore/Delete buttons
+                        if (!row.isActive && (row.disabledReason === 1 || row.disabledReason === 2)) {
+                            buttons += '<button type="button" class="btn btn-success btn-xs" onclick="restoreMember(' + data + ')"><i class="fas fa-undo"></i></button>';
+                            buttons += '<button type="button" class="btn btn-danger btn-xs" onclick="deleteEnquiry(' + data + ')"><i class="fas fa-trash"></i></button>';
+                        } else {
+                            buttons += '<button type="button" class="btn btn-warning btn-xs" onclick="recycleMember(' + data + ')"><i class="fas fa-recycle"></i></button>';
+                        }
+                        
+                        // Analytics button
+                        if (row.isPremiumMember || (row.isVerified && row.isComplete)) {
+                            buttons += '<a href="/admin/enquiry/get-details/' + data + '" class="btn btn-info btn-xs" title="Analytics"><i class="fas fa-chart-line"></i></a>';
+                        }
+                        
+                        // Premium badge
+                        if (row.isPremiumMember) {
+                            buttons += '<a href="javascript:void(0)" class="btn btn-soft-primary btn-xs">Premium Member</a>';
+                        }
+                        
+                        buttons += '</div>';
+                        return buttons;
+                    }
+                }
+            ],
+            order: [[3, "desc"]], // Default order by CreatedOn descending
+            language: {
+                processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+            }
+        });
+    });
+
+    function deleteEnquiry(id) {
+        if (confirm('Are you sure you want to delete?')) {
+            $.ajax({
+                type: "POST",
+                url: `/admin/enquiry/delete/${id}`,
+                success: function (response) {
+                    if (response.success) {
+                        $('#datatable').DataTable().ajax.reload(null, false);
+                    } else {
+                        alert("Error deleting enquiry.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while deleting the enquiry.");
+                }
+            });
+        }
+    }
+
+    function recycleMember(id) {
+        if (confirm('Are you sure you want to send this user to the recycle bin?')) {
+            $.ajax({
+                type: "POST",
+                url: `/admin/enquiry/recycle/${id}`,
+                success: function (response) {
+                    if (response.success) {
+                        $('#datatable').DataTable().ajax.reload(null, false);
+                    } else {
+                        alert("Something went wrong.");
+                    }
+                },
+                error: function () {
+                    alert("Something went wrong.");
+                }
+            });
+        }
+    }
+
+    function restoreMember(id) {
+        if (confirm('Are you sure you want to restore this user?')) {
+            $.ajax({
+                type: "POST",
+                url: `/admin/enquiry/recycle/${id}?restore=true`,
+                success: function (response) {
+                    if (response.success) {
+                        $('#datatable').DataTable().ajax.reload(null, false);
+                    } else {
+                        alert("Something went wrong.");
+                    }
+                },
+                error: function () {
+                    alert("Something went wrong.");
+                }
+            });
+        }
+    }
+
+    function updatePlaceholder() {
+        var input = document.getElementById('searchInput');
+        input.placeholder = input.value || " Search by Name/profile Id/Phone";
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        updatePlaceholder();
+    });
+
+    function confirmDelete() {
+        return confirm('Are you sure you want to delete?');
+    }
+</script>
+}
+    
+    

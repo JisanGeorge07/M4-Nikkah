@@ -1,0 +1,327 @@
+@model Application.ViewModels.AdminLoginStateViewModel
+
+@{
+    Layout = null;
+    var isOtpStep = Model != null && Model.Step == Application.ViewModels.AdminLoginStep.OtpVerification;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>@(isOtpStep ? "Two-Step Verification" : "Login") - Control Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/admin/assets/images/favicon.ico">
+    <link rel="stylesheet" href="/admin/assets/css/preloader.min.css" type="text/css"/>
+    <link href="/admin/assets/css/bootstrap.min.css" id="bootstrap-style" rel="stylesheet" type="text/css"/>
+    <link href="/admin/assets/css/icons.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/admin/assets/css/app.min.css" id="app-style" rel="stylesheet" type="text/css"/>
+    <style>
+        .otp-input-field {
+            font-size: 1.6rem !important;
+            letter-spacing: 10px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            height: 54px !important;
+            border-radius: 8px !important;
+        }
+        .otp-shield-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(81, 86, 190, 0.1);
+            color: #5156be;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 1rem;
+        }
+        .auth-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-page">
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-xxl-3 col-lg-4 col-md-5">
+                <div class="auth-full-page-content d-flex p-sm-5 p-4">
+                    <div class="w-100">
+                        <div class="d-flex flex-column h-100">
+                            <div class="auth-content my-auto">
+                                @if (!isOtpStep)
+                                {
+                                    <!-- ================= STEP 1: EMAIL & PASSWORD ================= -->
+                                    <div class="text-center">
+                                        <h5 class="mb-0">Welcome Back !</h5>
+                                        <p class="text-muted mt-2">Sign in to continue to Control Panel.</p>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+                                    {
+                                        <div class="alert alert-danger alert-dismissible fade show mt-3 mb-0" role="alert">
+                                            <i class="mdi mdi-alert-circle-outline me-2"></i>@Model.ErrorMessage
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    }
+
+                                    @using (Html.BeginForm("Index", "Account",
+                                        new { returnUrl = Model?.ReturnUrl ?? Context.Request.Query["ReturnUrl"] }, FormMethod.Post,
+                                        true, new { enctype = "multipart/form-data", @class = "mt-4 pt-2", id = "form-login" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="Email" name="Email" value="@(Model?.Email ?? "")" placeholder="Enter Email" required autofocus>
+                                            @Html.ValidationMessageFor(x => x.Email, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <label class="form-label">Password</label>
+                                                </div>
+                                            </div>
+                                            <div class="input-group auth-pass-inputgroup">
+                                                <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter password" aria-label="Password" aria-describedby="password-addon" required>
+                                                <button class="btn btn-light shadow-none ms-0" type="button" id="password-addon">
+                                                    <i class="mdi mdi-eye-outline"></i>
+                                                </button>
+                                            </div>
+                                            @Html.ValidationMessageFor(x => x.Password, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="mb-3">
+                                            <button class="btn btn-primary w-100 waves-effect waves-light" type="submit" id="btn-login-submit">
+                                                <span class="btn-text">Log In</span>
+                                                <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        @Html.ValidationMessage("error", new { @class = "text-danger" })
+                                    }
+                                }
+                                else
+                                {
+                                    <!-- ================= STEP 2: OTP VERIFICATION ================= -->
+                                    <div class="text-center">
+                                        <div class="otp-shield-icon">
+                                            <i class="mdi mdi-shield-check-outline"></i>
+                                        </div>
+                                        <h5 class="mb-1">Two-Step Verification</h5>
+                                        <p class="text-muted mt-2 mb-3">
+                                            Enter the 6-digit OTP sent to your registered phone number
+                                            <br/><strong class="text-primary fw-semibold">@Model?.MaskedPhone</strong>
+                                        </p>
+                                    </div>
+
+                                    <div id="otp-alert-container">
+                                        @if (!string.IsNullOrEmpty(Model?.SuccessMessage))
+                                        {
+                                            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                                                <i class="mdi mdi-check-circle-outline me-2"></i>@Model.SuccessMessage
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+                                        {
+                                            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                                <i class="mdi mdi-alert-circle-outline me-2"></i>@Model.ErrorMessage
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @using (Html.BeginForm("VerifyOtp", "Account", FormMethod.Post, new { @class = "mt-3", id = "form-verify-otp", data_cooldown = (Model?.CooldownSeconds ?? 60).ToString() }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" id="TempToken" name="TempToken" value="@Model?.TempToken" />
+                                        <input type="hidden" id="ReturnUrl" name="ReturnUrl" value="@Model?.ReturnUrl" />
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted small fw-semibold text-uppercase">Enter 6-Digit OTP</label>
+                                            <input type="text"
+                                                   class="form-control otp-input-field"
+                                                   id="Otp"
+                                                   name="Otp"
+                                                   maxlength="6"
+                                                   inputmode="numeric"
+                                                   pattern="[0-9]{6}"
+                                                   placeholder="••••••"
+                                                   autocomplete="one-time-code"
+                                                   required
+                                                   autofocus />
+                                            @Html.ValidationMessageFor(x => x.Otp, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div id="countdown-wrapper">
+                                                <span id="countdown-text" class="text-muted small">
+                                                    Resend OTP in <span id="timer-seconds" class="fw-semibold text-primary">@(Model?.CooldownSeconds ?? 60)</span>s
+                                                </span>
+                                                <button type="button" id="btn-resend-otp" class="btn btn-link btn-sm p-0 text-decoration-none" style="display: none;">
+                                                    <i class="mdi mdi-refresh me-1"></i>Resend OTP
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <button class="btn btn-primary w-100 waves-effect waves-light" type="submit" id="btn-verify-submit">
+                                                <span class="btn-text">Verify &amp; Sign In</span>
+                                                <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+
+                                        <div class="text-center mt-3">
+                                            <a href="/account/login" class="text-muted small text-decoration-none">
+                                                <i class="mdi mdi-arrow-left me-1"></i>Back to Login
+                                            </a>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <div class="mt-4 mt-md-5 text-center">
+                                <p class="mb-0 text-muted">
+                                    © @DateTime.Now.Year . Powered By <a href="https://uniwebonline.com/" target="_blank" class="text-reset fw-semibold">Uniweb IT Solutions </a><i class="mdi mdi-heart text-danger"></i>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xxl-9 col-lg-8 col-md-7">
+                <div class="pt-md-5 p-4 d-flex">
+                    <div class="bg-overlay bg-primary"></div>
+                    <ul class="bg-bubbles">
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/admin/assets/libs/jquery/jquery.min.js"></script>
+<script src="/admin/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/admin/assets/libs/metismenu/metisMenu.min.js"></script>
+<script src="/admin/assets/libs/simplebar/simplebar.min.js"></script>
+<script src="/admin/assets/libs/node-waves/waves.min.js"></script>
+<script src="/admin/assets/libs/feather-icons/feather.min.js"></script>
+<script src="/admin/assets/libs/pace-js/pace.min.js"></script>
+<script src="/admin/assets/js/pages/pass-addon.init.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#form-login').on('submit', function () {
+            var $btn = $('#btn-login-submit');
+            $btn.prop('disabled', true);
+            $btn.find('.btn-text').text('Signing in...');
+            $btn.find('.spinner-border').removeClass('d-none');
+        });
+
+        var $otpForm = $('#form-verify-otp');
+        if ($otpForm.length > 0) {
+            var tempToken = $('#TempToken').val() || '';
+            var initialCooldown = parseInt($otpForm.attr('data-cooldown'), 10) || 60;
+            var currentSeconds = initialCooldown;
+            var timerInterval = null;
+
+            var $countdownText = $('#countdown-text');
+            var $timerSeconds = $('#timer-seconds');
+            var $btnResend = $('#btn-resend-otp');
+            var $alertContainer = $('#otp-alert-container');
+
+            function showAlert(message, type) {
+                $alertContainer.empty();
+                var iconClass = type === 'success' ? 'mdi-check-circle-outline' : 'mdi-alert-circle-outline';
+                var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show mb-3" role="alert">' +
+                    '<i class="mdi ' + iconClass + ' me-2"></i>' + $('<div>').text(message).html() +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>';
+                $alertContainer.html(alertHtml);
+            }
+
+            function startTimer(seconds) {
+                if (timerInterval) clearInterval(timerInterval);
+                currentSeconds = seconds;
+                $countdownText.show();
+                $btnResend.hide();
+                $timerSeconds.text(currentSeconds);
+
+                timerInterval = setInterval(function () {
+                    currentSeconds--;
+                    if (currentSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        $countdownText.hide();
+                        $btnResend.show();
+                    } else {
+                        $timerSeconds.text(currentSeconds);
+                    }
+                }, 1000);
+            }
+
+            startTimer(initialCooldown);
+
+            $('#Otp').on('input', function () {
+                var val = $(this).val().replace(/\D/g, '');
+                $(this).val(val);
+                if (val.length === 6) {
+                    $otpForm.submit();
+                }
+            });
+
+            $otpForm.on('submit', function () {
+                var $btn = $('#btn-verify-submit');
+                $btn.prop('disabled', true);
+                $btn.find('.btn-text').text('Verifying...');
+                $btn.find('.spinner-border').removeClass('d-none');
+            });
+
+            $btnResend.on('click', function () {
+                $btnResend.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i>Sending...');
+
+                $.ajax({
+                    url: '/account/resend-otp',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ tempToken: tempToken }),
+                    success: function (res) {
+                        $btnResend.prop('disabled', false).html('<i class="mdi mdi-refresh me-1"></i>Resend OTP');
+                        if (res && res.success) {
+                            showAlert(res.message || 'A new verification code has been sent.', 'success');
+                            startTimer(res.cooldownSeconds || 60);
+                            $('#Otp').val('').focus();
+                        } else {
+                            showAlert(res && res.message ? res.message : 'Failed to resend OTP.', 'danger');
+                        }
+                    },
+                    error: function (xhr) {
+                        $btnResend.prop('disabled', false).html('<i class="mdi mdi-refresh me-1"></i>Resend OTP');
+                        var errorMsg = 'Failed to resend OTP. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        showAlert(errorMsg, 'danger');
+                        if (xhr.responseJSON && xhr.responseJSON.remainingSeconds) {
+                            startTimer(xhr.responseJSON.remainingSeconds);
+                        }
+                    }
+                });
+            });
+        }
+    });
+</script>
+</body>
+</html>

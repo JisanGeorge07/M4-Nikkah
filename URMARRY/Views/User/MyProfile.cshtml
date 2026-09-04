@@ -1,0 +1,769 @@
+@using Application.Helpers
+@model HomeViewModel
+
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    var user = Model.Registration!;
+    var image = Model.Images!;
+    var dateOfBirth = !string.IsNullOrEmpty(user.DOB) ? user.DOB : "01/01/1990";
+    var str1 = dateOfBirth.Replace("-", "/").Split('/');
+    var day1 = string.Empty;
+    var month1 = string.Empty;
+    var year1 = str1[2];
+    var transactionDetails = Model.Transaction;
+    if (str1[0].Length < 2)
+    {
+        day1 = "0" + str1[0];
+    }
+    else
+    {
+        day1 = str1[0];
+    }
+    if (str1[1].Length < 2)
+    {
+        month1 = "0" + str1[1];
+    }
+    else
+    {
+        month1 = str1[1];
+    }
+    if (day1.Length > 2)
+    {
+        var y = year1;
+        var d = day1;
+        day1 = y;
+        year1 = d;
+    }
+    var dob1 = day1 + "/" + month1 + "/" + year1;
+    DateTime myDate1 = DateTime.ParseExact(dob1, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    DateTime today = DateTime.UtcNow;
+    DateTime birthDate = myDate1;
+    int age = today.Year - birthDate.Year;
+
+    if (birthDate > today.AddYears(-age))
+    {
+        age--;
+    }
+}
+
+<div class="d-md-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Profile</h5>
+
+    <nav aria-label="breadcrumb" class="d-inline-block mt-2 mt-sm-0">
+        <ul class="breadcrumb bg-transparent rounded mb-0 p-0">
+            <li class="breadcrumb-item text-capitalize"><a asp-action="Dashboard" asp-controller="User">M4NIKAH</a></li>
+            <li class="breadcrumb-item text-capitalize active" aria-current="page">Profile</li>
+        </ul>
+    </nav>
+</div>
+
+<div class="card border-0 rounded p-4 shadow mt-4">
+    <div class="row align-items-center">
+        <div class="col-lg-4 col-md-5 text-center">
+            <div class="mb-4">
+                <a asp-action="Image" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2">Manage
+                    Photos</a>
+            </div>
+            <div class="tiny-single-item">
+                @if (!string.IsNullOrEmpty(user.ImagePath))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + user.ImagePath)" class="img-fluid rounded" alt="">
+                    </div>
+                }
+                else
+                {
+                    <div class="tiny-slide imagenew02">
+                    <img src="@Url.Content(string.Equals(user.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" class="img-fluid rounded">
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(image.Image1Path))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + image.Image1Path)" class="img-fluid rounded"
+                                                 alt=""></div>
+                }
+                @if (!string.IsNullOrEmpty(image.Image2Path))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + image.Image2Path)" class="img-fluid rounded"
+                                                 alt=""></div>
+                }
+                @if (!string.IsNullOrEmpty(image.Image3Path))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + image.Image3Path)" class="img-fluid rounded"
+                                                 alt=""></div>
+                }
+                @if (!string.IsNullOrEmpty(image.Image4Path))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + image.Image4Path)" class="img-fluid rounded"
+                                                 alt=""></div>
+                }
+                @if (!string.IsNullOrEmpty(image.Image5Path))
+                {
+                    <div class="tiny-slide imagenew02"><img src="@Html.Raw("/" + image.Image5Path)" class="img-fluid rounded"
+                                                 alt=""></div>
+                }
+            </div>
+        </div><!--end col-->
+
+        <div class="col-lg-8 col-md-7 mt-4 mt-sm-0">
+            <div class="section-title ms-md-4">
+                <h5>
+                    @Html.Raw(user.Name)
+                    @if (user.DocumentVerificationComplete && user.DocumentVerificationFollowupApproved)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
+                            <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                        </svg>
+                    }
+                </h5>
+                <div class="d-md-flex justify-content-between align-items-center">
+                    @* <h6 class="text-muted mb-0">@Html.Raw(user.Village) @Html.Raw(!string.IsNullOrEmpty(user.State) ? ", " + user.State : "") @Html.Raw(!string.IsNullOrEmpty(user.Country) ? ", " + user.Country : "")</h6> *@
+                    <h6 class="text-muted mb-0">
+                        @Html.Raw(user.Village ?? string.Empty)
+                        @Html.Raw(!string.IsNullOrEmpty(user.State) ? ", " + user.State : string.Empty)
+                        , @Model.Nationalities.FirstOrDefault(x => x.Id == user.NationalityId)?.Title
+                        @* @Html.Raw(!string.IsNullOrEmpty(user.Country) ? ", " + user.Country : string.Empty) *@
+                    </h6>
+                    <ul class="list-unstyled text-warning h6 mb-0 mt-2 mt-sm-0">
+                        <li class="list-inline-item">@Html.Raw(user.RegisterNumber)</li>
+                    </ul>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12 mt-2">
+										<p>@Html.Raw(user.About)</p>	
+										</div>	
+                    <div class="col-lg-6 mt-1 mt-sm-0">
+                   
+                        <table class="table p-4 rounded shadow mt-3">
+                            <tbody>
+                            <tr>
+                                <td>Age</td>
+                                @* <h5 class="mb-0">@Html.Raw(DateTime.UtcNow.Year - myDate.Year) Yrs</h5> *@
+                                <td class="text-muted">@age Yrs</td>
+                            </tr>
+
+                            <tr>
+                                <td>Gender</td>
+                                <td class="text-muted">@Html.Raw(user.Gender)</td>
+                            </tr>
+
+                            <tr>
+                                <td>Height</td>
+                                <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.HeightId)?.Title</td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td class="text-muted text-break">@Html.Raw(user.Email)</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-lg-6 mt-1 mt-sm-0">
+                        <table class="table p-4 rounded shadow mt-3">
+                            <tbody>
+
+                            <tr>
+                                <td>Religion</td>
+                                <td class="text-muted">@Model.Religions.FirstOrDefault(x => x.Id == user.ReligionId)?.Title</td>
+                            </tr>
+
+                            <tr>
+                                <td>Community</td>
+                                <td class="text-muted">@Model.Communities.FirstOrDefault(x => x.Id == user.CommunityId)?.Title</td>
+                            </tr>
+                            <tr>
+                                <td>Weight</td>
+                                <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.WeightId)?.Title</td>
+                            </tr>
+                            <tr>
+                                 <td>Phone</td>
+                                 <td class="text-muted">@Html.Raw($"{CountryCodeHelper.GetCountryCode(user.CountryCode ?? user.Country)} {user.Phone}")</td>
+                            </tr>
+
+                            @* <tr>
+                                    <td>Email</td>
+                                    <td class="text-muted">@Html.Raw(user.Email)</td> 
+                                </tr> *@
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @* <ul class="list-unstyled text-muted">
+                    <li class="mb-0"><span class="text-primary h5 me-2"><i class="uil uil-check-circle align-middle"></i></span> If you are interested in this profile, please send an Interest to this person.</li>
+                </ul> *@
+
+                @*  <div class="row mt-4">
+                    <div class="col-lg-6 col-12 mt-4 mt-lg-0">
+                        <div class="d-flex shop-list align-items-center">
+                            <h6 class="mb-0">Like this member?</h6>
+                            <div class="qty-icons ms-3">
+                                <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#wishlist" s href="" class="btn btn-soft-primary ms-2"> Express Interest</a>
+
+                            </div>
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row--> *@
+                @if (!user.IsPremiumMember)
+                {
+                    <div class="row mt-4">
+                        <div class="col-lg-6 col-12 mt-4 mt-lg-0">
+                            <div class="d-flex shop-list align-items-center">
+                                <div class="qty-icons">
+                                    <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#payment1"
+                                       class="btn btn-soft-primary ms-2"> Upgrade to Premium Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="payment1" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded shadow border-0">
+                                <div class="modal-header border-bottom">
+                                    <button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal"
+                                            id="close-modal"><i class="uil uil-times fs-4 text-dark"></i></button>
+                                </div>
+                                <div class="modal-body pt-0">
+                                    <div class="paymentdivv" style="text-align: center; padding: 20px;">
+                                        <h7>Upgrade to Premium Membership to view contact details</h7>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="paymentdiv align-items-center justify-content-center mx-auto"
+                                             style="background-color:#A5BE25; color:white; padding-top:10px;">
+                                            <h4>Membership Package</h4>
+                                            <h4>180 Days | 50 Contact Views</h4>
+                                            <a style="background-color: #8CA11E;">
+                                                <h3>
+                                                    <span
+                                                        style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ 2000</span>
+                                                </h3>
+                                            </a>
+                                        </div>
+                                        <div class="mt-4 features_div">
+                                            <h4>Features</h4>
+                                            <p class="text-muted">Unlock Contact Details</p>
+                                            <p class="text-muted">Get Notifications</p>
+                                            <div class="mt-4 newbtn pb-3">
+                                                <a asp-action="MakePayment" asp-controller="Transaction">
+                                                    Pay Online
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @*   <div class="row mt-4">
+                        <div class="col-lg-6 col-12 mt-4 mt-lg-0 col-sm-1">
+                            <div class="d-flex shop-list align-items-center">
+                                <div class="row" style="background-color: yellow">
+                                     <div class="col-12" >
+                                        <div class="col-6">
+                                            Membership Status :
+                                    </div>
+                                        <div class="col-6">
+                                            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#TranscationDetails1" class="btn btn-soft-primary ms-2">Premium Member</a>
+                                    </div>
+                                    </div> 
+                                   
+                                   
+                                </div>
+                            </div>
+                        </div>
+                    </div> *@
+                    <div class="row">
+                        @* <div class="col-4">
+                                Membership Status :
+                            </div> *@
+                        <div class="col-12">
+                            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#TranscationDetails1"
+                               class="btn btn-soft-primary ms-2">Premium Member</a>
+                        </div>
+                        <div class="col-4">
+                        </div>
+                    </div>
+                }
+                <!--Transaction Details Modal-->
+                <div class="modal fade" id="TranscationDetails1" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded shadow border-0">
+                            <div class="modal-header border-bottom">
+                                <button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal"
+                                        id="close-modal"><i class="uil uil-times fs-4 text-dark"></i></button>
+                            </div>
+                            <div class="modal-body pt-0">
+                                <div class="paymentdivv" style="text-align: center; padding: 20px;">
+                                </div>
+                                <div class="text-center">
+                                    <div class="paymentdiv align-items-center justify-content-center mx-auto"
+                                         style="background-color:#A5BE25; color:white; padding-top:10px;">
+                                        <h4>Subscribed package details</h4>
+                                        <a style="background-color: #8CA11E;">
+                                            <h3>
+                                                Amount:
+                                                <span
+                                                    style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ @Html.Raw(transactionDetails?.Amount)</span>
+                                            </h3>
+                                        </a>
+                                    </div>
+                                    <div class="mt-4 features_div">
+                                        <h4>Subscribed
+                                            date: @Html.Raw(transactionDetails?.CreatedOn.ToString("dd-MM-yyyy"))</h4>
+                                        <h4>Features</h4>
+                                        <p class="text-muted">Unlock Contact Details</p>
+                                        <p class="text-muted">Get Notifications</p>
+                                        <p class="text-muted">View Mobile Number 50</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--modal end-->
+
+
+                <div class="mt-4 mx-1">
+                    <a asp-action="Edit" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2">Edit My
+                        Profile</a>
+                </div>
+                @* <ul class="list-unstyled text-muted">
+                <li class="mb-0"><span class="text-primary h5 me-2"><i class="uil uil-check-circle align-middle"></i></span> If you are interested in this profile, please send an Interest to this person.</li>
+                </ul>*@
+
+                @*<div class="row mt-4">
+                <div class="col-lg-6 col-12 mt-4 mt-lg-0">
+                <div class="d-flex shop-list align-items-center">
+                <h6 class="mb-0">Like this member?</h6>
+                <div class="qty-icons ms-3">
+                <a href="" class="btn btn-soft-primary ms-2"> Express Interest</a>
+                </div>
+                </div>
+                </div><!--end col-->
+                </div>*@<!--end row-->
+                <!--<div class="mt-4">
+                    <a href="javascript:void(0)" class="btn btn-primary">Text</a>
+                    <a href="" class="btn btn-soft-primary ms-2">Like this member?</a>
+                </div>-->
+            </div>
+        </div><!--end col-->
+        <div class="col-12 mt-4 card border-0 rounded add-p shadow mt-4">
+            <div class="accordion" id="buyingquestion">
+
+                <div class="accordion-item rounded">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button border-0 bg-light" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne"
+                                aria-expanded="true" aria-controls="collapseOne">
+                            Basic Information
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse border-0 collapse show" aria-labelledby="headingOne"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <!-- <tr>
+                                            <td>Name</td>
+                                            <td class="text-muted">@Html.Raw(user.Name)</td>
+                                        </tr> -->
+                                        <tr>
+                                            <td>Age</td>
+                                            <td class="text-muted">@age Yrs</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Gender</td>
+                                            <td class="text-muted">@Html.Raw(user.Gender)</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <td>Marital Status</td>
+                                            <td class="text-muted">@Model.MaritalStatuses.FirstOrDefault(x => x.Id == user.MaritalStatusId)?.Title</td>
+                                        </tr>
+                                        <!-- <tr>
+                                            <td>Nationality</td>
+                                            <td class="text-muted">@Model.Nationalities.FirstOrDefault(x => x.Id == user.NationalityId)?.Title</td>
+                                        </tr> -->
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <!-- <tr>
+                                            <td>Profile Id</td>
+                                            <td class="text-muted">@Html.Raw(user.RegisterNumber)</td>
+                                        </tr>
+                                         -->
+                                        @if(user.NumberOfChildrens > 0)
+                                        {
+                                        <tr>
+                                            <td>No of Children</td>
+                                            <td class="text-muted">@Html.Raw(user.NumberOfChildrens?.ToString() ?? "0")</td>
+                                        </tr>
+                                        }
+                                        <tr>
+                                            <td>Mother Tongue</td>
+                                            <td class="text-muted">@Model.MotherTongues.FirstOrDefault(x => x.Id == user.MotherTongueId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Financial Status</td>
+                                            <td class="text-muted">@Model.FinancialStatuses.FirstOrDefault(x => x.Id == user.FinancialStatusId)?.Title</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseFive"
+                                aria-expanded="false" aria-controls="collapseFive">
+                            Physical Information
+                        </button>
+                    </h2>
+                    <div id="collapseFive" class="accordion-collapse border-0 collapse" aria-labelledby="headingFive"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <!-- <tr>
+                                            <td>DOB</td>
+                                            <td class="text-muted">@Html.Raw(user.DOB)</td>
+                                        </tr> -->
+                                        <tr>
+                                            <td>Height</td>
+                                            <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.HeightId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Weight</td>
+                                            <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.WeightId)?.Title</td>
+                                        </tr>
+                                         <tr>
+                                            <td>Complexion</td>
+                                            <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.ComplexionId)?.Title</td>
+                                        </tr>
+                                        
+                                       
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        
+                                        <tr>
+                                            <td>Body Type</td>
+                                            <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id == user.BodyTypeId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Physically Challenged ?</td>
+                                            <td class="text-muted">@Html.Raw(user.IsPhysicallyChallenged ? "Yes" : "No")</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseFour"
+                                aria-expanded="false" aria-controls="collapseFour">
+                            Education Information
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse border-0 collapse" aria-labelledby="headingFour"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                <div class="col-lg-12 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <tr>
+                                            <td>Education</td>
+                                            @* <td class="text-muted">@Html.Raw(user.HighestEducation)</td> *@
+                                            <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Title == user.HighestEducation)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Course</td>
+                                            @* <td class="text-muted">@Html.Raw(user.HighestEducation)</td> *@
+                                            <td class="text-muted">@user.EducationType</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Profession</td>
+                                            <td class="text-muted">@Model.Professions.FirstOrDefault(x => x.Id == user.ProfessionId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Profession Type</td>
+                                            <td class="text-muted">@user.ProfessionType</td>
+                                        </tr>
+                                        @* <tr>
+                                            <td>Education Type</td>
+                                            <td class="text-muted">@Html.Raw(user.EducationType)</td>
+                                            </tr> *@
+                                        @* <td class="text-muted">@Model.BodyFeatures.FirstOrDefault(x => x.Id.ToString() == user.EducationType)?.Title</td> *@
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseThree"
+                                aria-expanded="false" aria-controls="collapseThree">
+                            Religious Information
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse border-0 collapse" aria-labelledby="headingThree"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                @*  <div class="card border-0 tab-pane fade show active p-4 rounded shadow" id="description" role="tabpanel" aria-labelledby="description-data">
+                                <p class="text-muted mb-0">@Html.Raw(user.Religion)</p>
+                                </div> *@
+
+                                <div class="col-lg-12 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <tr>
+                                            <td>Religion</td>
+                                            <td class="text-muted">@Model.Religions.FirstOrDefault(x => x.Id == user.ReligionId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Community</td>
+                                            <td class="text-muted">@Model.Communities.FirstOrDefault(x => x.Id == user.CommunityId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Religiousness</td>
+                                            <td class="text-muted">@Model.Religiousnesses.FirstOrDefault(x => x.Id == user.ReligiousnessId)?.Title</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            
+
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseTwo"
+                                aria-expanded="false" aria-controls="collapseTwo">
+                            Location Details
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse border-0 collapse" aria-labelledby="headingTwo"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                         <tr>
+                                            <td>Present Location</td>
+                                            <td class="text-muted">@user?.PresentCountry</td> 
+                                        </tr>
+                                        <tr>
+                                            <td>Nationality</td>
+                                            <td class="text-muted">@Model.Nationalities.FirstOrDefault(x => x.Id == user.NationalityId)?.Title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>State</td>
+                                            <td class="text-muted">@user?.State</td>
+                                        </tr>
+                                        <!-- <tr>
+                                            <td>District</td>
+                                            <td class="text-muted">@user?.District</td>
+                                        </tr>
+                                        
+                                        -->
+                                        <!-- <tr>
+                                            <td>Present District</td>
+                                            <td class="text-muted">@user?.PresentDistrict</td>
+                                        </tr> -->
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <tr>
+                                            <td>District</td>
+                                            <td class="text-muted">@user?.District</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>City</td>
+                                            <td class="text-muted">@user?.Village</td>
+                                        </tr>
+<!-- 
+                                        <tr>
+                                            <td>Present State</td>
+                                            <td class="text-muted">@user?.PresentState</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Present City</td>
+                                            <td class="text-muted">@user?.PresentCity</td>
+                                        </tr> -->
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseSix"
+                                aria-expanded="false" aria-controls="collapseSix">
+                            Family Information
+                        </button>
+                    </h2>
+                    <div id="collapseSix" class="accordion-collapse border-0 collapse" aria-labelledby="headingSix"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                <div class="col-lg-12 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                        <tr>
+                                            <td>Family Name</td>
+                                            <td class="text-muted">@user.FamilyName</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Father Name</td>
+                                            <td class="text-muted">@user.FatherName</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Post</td>
+                                            <td class="text-muted">@user?.Post</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Pin Code</td>
+                                            <td class="text-muted">@user?.PinCode</td>
+                                        </tr>
+                                        <!-- <tr>
+                                            <td>Financial Status</td>
+                                            <td class="text-muted">@Model.FinancialStatuses.FirstOrDefault(x => x.Id == user.FinancialStatusId)?.Title</td>
+                                        </tr> -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item rounded mt-2">
+                    <h2 class="accordion-header" id="headingEight">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseEight"
+                                aria-expanded="false" aria-controls="collapseEight">
+                            Contact Details
+                        </button>
+                    </h2>
+                    <div id="collapseEight" class="accordion-collapse border-0 collapse" aria-labelledby="headingEight"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                         <tr>
+                                             <td>Primary Number</td>
+                                             <td class="text-muted">@Html.Raw($"{CountryCodeHelper.GetCountryCode(user?.CountryCode ?? user?.Country)} {user.Phone}")</td>
+                                         </tr>
+                                        @* <tr>
+                                            <td>Email</td>
+                                            <td class="text-muted text-break">@user?.Email</td>
+                                        </tr> *@
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-lg-6 mt-1 mt-sm-0">
+                                    <table class="table p-4 rounded shadow mt-3">
+                                        <tbody>
+                                         <tr>
+                                             <td>Secondary Number</td>
+                                             <td class="text-muted">@Html.Raw($"{CountryCodeHelper.GetCountryCode(user?.SecondaryCountryCode ?? user?.PresentCountry)} {user.LandlineNumber}")</td>
+                                         </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- <div class="accordion-item rounded  mt-2">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button border-0 bg-light collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseSeven"
+                                aria-expanded="true" aria-controls="collapseSeven">
+                            About Myself
+                        </button>
+                    </h2>
+                    <div id="collapseSeven" class="accordion-collapse border-0 collapse" aria-labelledby="headingSeven"
+                         data-bs-parent="#buyingquestion">
+                        <div class="accordion-body text-muted">
+                            <div class="row">
+                                <div class="col-lg-12 mt-1 mt-sm-0">
+                                    <div class="card border-0 tab-pane fade show  p-4 rounded shadow" id="description"
+                                         role="tabpanel" aria-labelledby="description-data">
+                                        <p class="text-muted mb-0">@Html.Raw(user?.About)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .features_div p {
+        margin-bottom: 5px; /* Adjust this value to control the spacing */
+        line-height: 1.2; /* Adjust line height if needed */
+    }
+</style>

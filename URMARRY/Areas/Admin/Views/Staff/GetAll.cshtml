@@ -1,0 +1,61 @@
+@model List<Application.Models.StaffDto>
+@{
+    ViewBag.Title = "Staff";
+}
+
+@section Title
+{
+    Staff management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <a asp-action="Get" asp-route-id="0" class="btn btn-primary btn-xs">New</a>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                        <tr>
+                            <th width="15%">Staff Name</th>
+                            <th width="12%">Registration ID</th>
+                            <th width="15%">Email</th>
+                            <th width="12%">Mobile Number</th>
+                            <th width="13%">Designation</th>
+                            <th width="12%">Department</th>
+                            <th width="10%">Joining Date</th>
+                            <th width="5%">Status</th>
+                            <th width="3%">Display Order</th>
+                            <th width="3%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderBy(m=>m.DisplayOrder))
+                        {
+                            <tr>
+                                <td>@Html.Raw(item.StaffName)</td>
+                                <td>@Html.Raw(item.UserName)</td>
+                                <td>@Html.Raw(item.Email)</td>
+                                <td>@Html.Raw(item.MobileNumber)</td>
+                                <td>@Html.Raw(item.Designation ?? "-")</td>
+                                <td>@Html.Raw(item.Department ?? "-")</td>
+                                <td>@Html.Raw(item.JoiningDate?.ToString("dd-MMM-yyyy") ?? "-")</td>
+                                <td>
+                                    @Html.Raw(item.IsActive ? "Enabled" : "Disabled")
+                                </td>
+                                <td>@Html.Raw(item.DisplayOrder)</td>
+                                <td>
+                                    <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

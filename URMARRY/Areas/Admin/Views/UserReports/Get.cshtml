@@ -1,0 +1,152 @@
+@using Domain
+@model Application.Models.UserReportDto
+@{
+    ViewBag.Title = "Nationality";
+    List<RegistrationDto> users = ViewBag.users;
+}
+
+@section Title
+{
+    <a asp-action="GetAll" class="btn btn-primary btn-xs">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    Report
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("Post", "UserReports", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="modal-body row">
+                        <input type="hidden" asp-for="@Model.Id">
+
+                        <div class="mb-3 col-md-12 alert alert-info">
+                            <p class="col-form-label">
+                                <strong>
+                                    <i class="fas fa-flag me-1"></i>
+                                    <span class="text-body">Reported on</span>
+                                    @Model.CreatedOn!.Value.ToLocalTime().ToLongDateString()
+                                    <span class="text-body">at</span>
+                                    @Model.CreatedOn!.Value.ToLocalTime().ToShortTimeString()
+                                </strong>
+                            </p>
+                        </div>
+
+                        @if (Model.ActionedOn is not null)
+                        {
+                            string alertClass =
+                                "mb-3 col-md-12 alert alert-" +
+                                Model.Status switch
+                                {
+                                    UserReportStatus.Actioned => "success",
+                                    UserReportStatus.Dismissed => "warning",
+                                    _ => "info"
+                                };
+
+                            string iconClass = Model.Status switch
+                            {
+                                UserReportStatus.Actioned => "fas fa-check-circle me-1",
+                                UserReportStatus.Dismissed => "fas fa-times-circle me-1",
+                                _ => "fas fa-info-circle me-1"
+                            };
+
+
+                            <div class="@alertClass">
+                                <p class="col-form-label">
+                                    <strong>
+                                        <i class="@iconClass"></i>
+                                        <span class="text-body">@(Model.Status.ToString()) on</span>
+                                        @Model.ActionedOn!.Value.ToLocalTime().ToLongDateString()
+                                        <span class="text-body">at</span>
+                                        @Model.ActionedOn!.Value.ToLocalTime().ToShortTimeString()
+                                        <span class="text-body">by</span>
+                                        @Model.ActionedByUsername
+                                    </strong>
+                                </p>
+                            </div>
+                        }
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Reason</label>
+                            <select asp-for="@Model.Reason" required="required" readonly="@(Model.Id != 0)"
+                                    class="form-select">
+                                <option value="">Select Reason</option>
+                                @if (ViewBag.reasons != null)
+                                {
+                                    foreach (var reason in (List<Application.Models.UserReportReasonDto>)ViewBag.reasons)
+                                    {
+                                        <option value="@reason.Reason">@reason.Reason</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Reported User</label>
+                            <select asp-for="@Model.ReportedUserId" class="form-select" data-live-search="true"
+                                    required="required" readonly="@(Model.Id != 0)">
+                                <option value="">Select User</option>
+                                @foreach (RegistrationDto user in users)
+                                {
+                                    <option value="@user.Id">@user.Name (@user.RegisterNumber)</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Reported By</label>
+                            <select asp-for="@Model.ReporterUserId" class="form-select" data-live-search="true"
+                                    required="required" readonly="@(Model.Id != 0)">
+                                <option value="">Select User</option>
+                                @foreach (RegistrationDto user in users)
+                                {
+                                    <option value="@user.Id">@user.Name (@user.RegisterNumber)</option>
+                                }
+                            </select>
+                        </div>
+
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Details</label>
+                            <textarea asp-for="@Model.Details" class="form-control"
+                                      readonly="@(Model.Id != 0)">
+                            </textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Action</label>
+                            <select asp-for="@Model.Status" class="form-select" required="required">
+                                <option value="@UserReportStatus.Pending">Pending</option>
+                                <option value="@UserReportStatus.Actioned">Actioned</option>
+                                <option value="@UserReportStatus.Dismissed">Dismissed</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Moderator Notes</label>
+                            <textarea asp-for="@Model.ModeratorNotes" class="form-control">
+                            </textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(function () {
+            $('.selectpicker').selectpicker();
+        });
+    </script>
+}

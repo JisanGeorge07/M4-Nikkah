@@ -1,0 +1,39 @@
+@model Application.Models.RegistrationDto
+
+<li class="list-inline-item mb-0 ms-1">
+    <div class="dropdown dropdown-primary">
+        <button type="button" class="btn btn-soft-light dropdown-toggle p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@Html.Raw("/" + Model.ImagePath)" class="avatar avatar-ex-small rounded" alt="">
+            }
+            else
+            {
+                <img src="@Url.Content(string.Equals(Model.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" class="avatar avatar-ex-small rounded" alt="">
+            }
+            
+            </button>
+        <div class="dropdown-menu dd-menu dropdown-menu-end shadow border-0 mt-3 py-3" style="min-width: 200px;">
+            <a class="dropdown-item d-flex align-items-center text-dark pb-3" asp-action="Dashboard" asp-controller="User">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <img src="@Html.Raw("/" + Model.ImagePath)" class="avatar avatar-md-sm rounded-circle border shadow" alt="">
+                }
+                else
+                {
+                    <img src="@Url.Content(string.Equals(Model.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" class="avatar avatar-md-sm rounded-circle border shadow" alt="">
+                }
+                <div class="flex-1 ms-2">
+                    <span class="d-block">@Html.Raw(Model.Name)</span>
+                    <small class="text-muted">@Html.Raw(Model.Village) @Html.Raw(!string.IsNullOrEmpty(Model.State) ? ", " + Model.State : "") @Html.Raw(!string.IsNullOrEmpty(Model.Country) ? ", " + Model.Country : "")</small>
+                </div>
+            </a>
+            <a class="dropdown-item text-dark" asp-action="MyProfile" asp-controller="User"><span class="mb-0 d-inline-block me-1"><i class="ti ti-user"></i></span> View My Profile</a>
+            <a class="dropdown-item text-dark" asp-action="Edit" asp-controller="User"><span class="mb-0 d-inline-block me-1"><i class="ti ti-user"></i></span> Edit My Profile</a>
+            <a class="dropdown-item text-dark" asp-action="Image" asp-controller="User"><span class="mb-0 d-inline-block me-1"><i class="ti ti-camera"></i></span>  Manage Photos</a>
+            <div class="dropdown-divider border-top"></div>
+            <a class="dropdown-item text-dark" asp-action="ChangePassword" asp-controller="User"><span class="mb-0 d-inline-block me-1"><i class="ti ti-lock"></i></span>  Edit Password</a>
+            <a class="dropdown-item text-dark" asp-action="Signout" asp-controller="User"><span class="mb-0 d-inline-block me-1"><i class="ti ti-logout"></i></span> Logout</a>
+        </div>
+    </div>
+</li>

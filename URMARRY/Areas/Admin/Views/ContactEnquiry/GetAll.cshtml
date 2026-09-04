@@ -1,0 +1,102 @@
+﻿@using Application.Constants
+@model URMARRY.Areas.Admin.Models.ContactEnquiryViewModel
+@{
+    ViewBag.Title = "Enquiries";
+
+    var email = Model.Email!;
+    var enquiries = Model.Enquiries!;
+}
+
+@section Title
+    {
+    General enquiries
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("PostEmail", "Enquiry", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    // ReSharper disable once LocalVariableHidesMember InconsistentNaming
+                    var Model = email;
+
+
+                    <div class="modal-body row">
+
+                        <input type="hidden" asp-for="@Model.Purpose" />
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">SMTP Server</label>
+                            <input type="text" class="form-control" asp-for="@Model.SmtpServer">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Port</label>
+                            <input type="number" class="form-control" asp-for="@Model.Port">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Sender Email ID</label>
+                            <input type="text" class="form-control" asp-for="@Model.EmailId">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Password</label>
+                            <input type="password" class="form-control" asp-for="@Model.Password" value="@Model.Password">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Recipients(Multiple recipients? Seperate each email with a space)</label>
+                            <textarea class="form-control" asp-for="@Model.Recipients"></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">
+                    General enquiries
+                </h4>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                        <tr>
+                            <th width="25%">Name</th>
+                            <th width="25%">Email</th>
+                            <th width="25%">Subject</th>
+                            <th width="25%">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in enquiries)
+                        {
+                            <tr>
+                                <td>@Html.Raw(item.Name)</td>
+                                <td>@Html.Raw(item.Email)</td>
+                                <td>@Html.Raw(item.Subject)</td>
+                                <td>
+                                    <a asp-action="Get" asp-controller="ContactEnquiry" asp-route-id="@item.Id"
+                                       class="btn btn-primary btn-xs ml-2">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

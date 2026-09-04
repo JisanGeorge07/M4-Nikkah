@@ -1,0 +1,1649 @@
+@using Application.Helpers
+@model HomeViewModel
+
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    var enquiry = Model.Registration!;
+    var image = Model.Images!;
+    var _selectedStateId = 0;
+    var str = enquiry.DOB.Replace("-", "/").Split('/');
+    var day = string.Empty;
+    var month = string.Empty;
+    var year = str[2];
+    if (str[0].Length < 2)
+    {
+        day = "0" + str[0];
+    }
+    else
+    {
+        day = str[0];
+    }
+    if (str[1].Length < 2)
+    {
+        month = "0" + str[1];
+    }
+    else
+    {
+        month = str[1];
+    }
+    if (day.Length > 2)
+    {
+        var y = year;
+        var d = day;
+        day = y;
+        year = d;
+    }
+    var dob = day + "/" + month + "/" + year;
+    DateTime myDate = DateTime.ParseExact(dob, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    DateTime today = DateTime.UtcNow;
+    int age = today.Year - myDate.Year;
+    if (myDate > today.AddYears(-age))
+    {
+        age--;
+    }
+
+    string defaultImage = string.Equals(enquiry.Gender, "Female", StringComparison.OrdinalIgnoreCase) ?
+    "~/assets/images/default-user-women.png" : "~/assets/images/default-user-men.png";
+    string imagePath = !string.IsNullOrEmpty(enquiry.ImagePath) ? enquiry.ImagePath : defaultImage;
+}
+
+@*
+<div class="d-md-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Edit My Profile</h5>
+
+                            <nav aria-label="breadcrumb" class="d-inline-block mt-2 mt-sm-0">
+                                <ul class="breadcrumb bg-transparent rounded mb-0 p-0">
+            <li class="breadcrumb-item text-capitalize"><a asp-action="Dashboard" asp-controller="User">M4NIKAH</a></li>
+                                    <li class="breadcrumb-item text-capitalize active" aria-current="page">Edit Profile</li>
+                                </ul>
+                            </nav>
+                        </div>
+
+<div class="col-xl-12 mt-3">
+    <!-- Account details card-->
+    <div class="card mb-4">
+        <div class="card-header">Profile Details</div>
+        <div class="card-body">
+            <form asp-action="Edit" asp-controller="User">
+                <input type="hidden" id="Id" name="Id" value="@enquiry.Id" />
+                <!-- Form Row-->
+
+                 
+<div class="row gx-3 mb-3">
+
+</div>
+                <!-- Form Group (email address)-->
+                <div class="row gx-3 mb-3">
+
+<div class="col-md-6">
+                        <label class="small mb-1" for="inputMaritalStatus">Marital Status</label>
+                        <select class="form-control form-select" name="MaritalStatusId" id="MaritalStatusId">
+                            @foreach (var item in Model.MaritalStatuses)
+                            {
+                                if (item.Id == enquiry.MaritalStatusId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputPhysically">Physically Challenged</label>
+                        <select class="form-control form-select" id="IsPhysicallyChallenged" name="IsPhysicallyChallenged" required>
+                            @if (enquiry.IsPhysicallyChallenged)
+                            {
+                                <option value="true" selected="selected">Yes</option>
+                                <option value="false">No</option>
+                            }
+                            else
+                            {
+                                <option value="true">Yes</option>
+                                <option value="false" selected="selected">No</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row gx-3 mb-3">
+
+              
+</div>
+
+                <!-- Form Row -->
+                 <div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputHeight">Height</label>
+                        <select class="form-control form-select" name="HeightId" id="HeightId" required>
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Height))
+                            {
+                                if (item.Id == enquiry.HeightId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <!-- Form Group (location)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputWeight">Weight</label>
+                        <select class="form-control form-select" name="WeightId" id="WeightId">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Weight))
+                            {
+                                if (item.Id == enquiry.WeightId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <!-- Form Row -->
+                <div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputComplexion">Complexion</label>
+                        <select class="form-control form-select" name="ComplexionId" id="ComplexionId">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Complexion))
+                            {
+                                if (item.Id == enquiry.ComplexionId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <!-- Form Group (location)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputBodyType">Body Type</label>
+                        <select class="form-control form-select" name="BodyTypeId" id="BodyTypeId">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.BodyType))
+                            {
+                                if (item.Id == enquiry.BodyTypeId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <!-- Form Row -->
+                <div class="row gx-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputEducation">Highest Education</label>
+                        <select class="form-control form-select" name="HighestEducation" id="HighestEducation" required>
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Education))
+                            {
+                                if (item.Title == enquiry.HighestEducation)
+                                {
+                                    <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="EducationType">Course</label>
+                        <input class="form-control" name="EducationType" id="EducationType" type="text" placeholder=""
+value="@enquiry.EducationType" maxlength="30">
+                    </div>
+                </div>
+                <!-- Form Row -->
+                <div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputProfession">Profession</label>
+                        <select class="form-control form-select" name="ProfessionId" id="ProfessionId">
+                            @foreach (var item in Model.Professions)
+                            {
+                                if (item.Id == enquiry.ProfessionId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <!-- Form Group (location)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="ProfessionType">Profession Type</label>
+                        <input class="form-control" name="ProfessionType" id="ProfessionType" type="text" placeholder=""
+value="@enquiry.ProfessionType" maxlength="30">
+                    </div>
+                </div>
+
+
+                <!-- Form Row -->
+                 <div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="MotherTongueId">Mother Tongue</label>
+                        <select class="form-control form-select" name="MotherTongueId" id="MotherTongueId" required>
+                            @foreach (var item in Model.MotherTongues)
+                            {
+                                if (item.Id == enquiry.MotherTongueId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="ReligiousnessId">Religiousness</label>
+                        <select class="form-control form-select" name="ReligiousnessId" id="ReligiousnessId" required>
+                            @foreach (var item in Model.Religiousnesses)
+                            {
+                                if (item.Id == enquiry.ReligiousnessId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <!-- Form Row -->
+                <div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="CommunityId">Community</label>
+                        <select class="form-control form-select" name="CommunityId" id="CommunityId" required>
+                            @foreach (var item in Model.Communities)
+                            {
+                                if (item.Id == enquiry.CommunityId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="FinancialStatusId">Financial Status</label>
+                        <select class="form-control form-select" name="FinancialStatusId" id="FinancialStatusId" required>
+                            @foreach (var item in Model.FinancialStatuses)
+                            {
+                                if (item.Id == enquiry.FinancialStatusId)
+                                {
+                                    <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+
+                <!-- Form Row -->
+                <div class="row gx-3 mb-3">
+
+                </div>
+
+                
+<div class="row gx-3 mb-3">
+                    <!-- Form Group (organization name)-->
+                    <div class="col-md-6">
+                        <label class="small mb-1" for="inputPCountry">Present Country</label>
+                        <select class="form-control form-select" name="PresentCountry" id="PresentCountry" required>
+                            @foreach (var item in Model.Nationalities)
+                            {
+                                if (item.Title == enquiry.PresentCountry)
+                                {
+                                    <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                    <label class="small mb-1" for="LandlineNumber">Secondary Number</label>
+                        <input class="form-control" id="LandlineNumber" name="LandlineNumber" type="numeric" placeholder="Telephone Number"
+value="@enquiry.LandlineNumber" maxlength="10">
+                    </div>
+
+<div class="row gx-3 mb-3">
+                    <label class="small mb-1" for="About">About</label>
+                    <textarea name="About" id="About" type="text" class="form-control ps-5" placeholder="Brief About Yourself..."
+maxlength="300">@Html.Raw(enquiry.About)</textarea>
+                </div>
+
+                
+<button class="btn btn-primary" style="margin-top:10px" type="submit">Save changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+   
+$(document).ready(function () {
+        $('#MaritalStatusId').change(function () {
+            var childrenField = document.getElementById("childrenField");
+            var maritalStatusId = $(this).val();
+            if (maritalStatusId === '1') {
+                childrenField.style.display = "none";
+                $('#NumberOfChildrens').val('');
+                document.getElementById("childrenField").style.display = "none";
+            } else {
+                childrenField.style.display = "block";
+            }
+        });
+        // Trigger the change event on page load to handle the initial state
+        $('#MaritalStatusId').trigger('change');
+    });
+
+    
+</script>
+<script>
+
+    $(document).ready(function () {
+        $('#Country').change(function () {
+            var selectedCountry = $(this).val();
+            if (selectedCountry === 'India') {
+                $('#stateContainer').show(); // Show the state dropdown if 'India' is selected
+                $('#districtContainer').show();
+                $('#State').prop('disabled', false);
+            } else {
+                $('#stateContainer').hide(); // Hide the state dropdown if any other country is selected
+                $('#districtContainer').hide();
+                $('#cityContainer').hide();
+                $('#State').prop('disabled', true);
+            }
+        });
+
+        // Trigger the change event on page load to handle the initial state
+        $('#Country').trigger('change');
+    });
+
+    $(document).ready(function () {
+        $('#State').change(function () {
+            var selectedState = $(this).val();
+            if (selectedState === 'Kerala') {
+                $('#cityContainer').show(); // Show the state dropdown if 'India' is selected
+                $('#Village').prop('disabled', false); // Enable the city dropdown
+            } else {
+                $('#cityContainer').hide(); // Hide the state dropdown if any other country is selected
+                $('#Village').prop('disabled', true); // Enable the city dropdown
+            }
+            var selectedStateId = $(this).data('state-id');
+        });
+        // Trigger the change event on page load
+        $('#State').trigger('change');
+    });
+
+    // $(document).ready(function () {
+    // $('#PresentCountry').change(function () {
+    // var selectedPresentCountry = $(this).val();
+    // if (selectedPresentCountry === 'India') {
+    // $('#presentStateContainer').show();
+    // $('#presentDistrictContainer').show();
+    // $('#PresentState').prop('disabled', false);
+    // } else {
+    // $('#presentStateContainer').hide();
+    // $('#presentDistrictContainer').hide();
+    // $('#presentCityContainer').hide();
+    // $('#PresentState').prop('disabled', true);
+    // }
+    // });
+    // $('#PresentCountry').trigger('change');
+    // });
+
+    // $(document).ready(function () {
+    // $('#PresentState').change(function () {
+    // var selectedPresentState = $(this).val();
+    // if (selectedPresentState === 'Kerala') {
+    // $('#presentCityContainer').show();
+    // $('#PresentCity').prop('disabled', false);
+    // } else {
+    // $('#presentCityContainer').hide();
+    // $('#PresentCity').prop('disabled', true);
+    // }
+    // });
+
+// $('#PresentState').trigger('change');
+    // });
+
+</script>
+<script>
+$(document).ready(function() {
+    $('#State').change(function() {
+            var selectedStateId = $(this).data('state-id');
+        $('#District').empty(); // Clear the existing options
+        $('#District').append('
+<option value="">Select District</option>'); // Add the default option
+
+        // Filter districts based on selected state
+        $('#districtContainer option[data-state-id]').each(function() {
+            var districtStateId = $(this).data('state-id');
+            if (districtStateId == selectedStateId) {
+                $('#District').append($(this).clone());
+            }
+        });
+
+        // Optionally, you can trigger change event for the district dropdown here
+        $('#District').trigger('change');
+    });
+
+    // Trigger the state change event on page load if a state is already selected (e.g., in edit scenarios)
+    $('#State').trigger('change');
+});
+ </script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#State').change(function () {
+            var stateName = $(this).val(); // Get the selected state's name
+
+            // Make an AJAX call to fetch districts based on the selected state name
+            $.ajax({
+                url: '/Home/GetDistrictsByStateName', // Action method to fetch districts by state name
+                type: 'GET',
+                data: { stateName: stateName },
+                dataType: 'json',
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.open("GET", '/Home/GetDistrictsByStateName?stateName=' + encodeURIComponent(stateName), true);
+                    xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Clear existing options in the district dropdown
+                        $('#District').empty();
+                         $('#District').append('<option value="">District</option>');
+
+                        // Populate the district dropdown with new options
+                        $.each(response.message, function (index, item) {
+                            $('#District').append('<option value="' + item.name + '">' + item.name + '</option>');
+                        });
+                    }
+                    else {
+
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+      // $('#State').trigger('change');
+
+    });
+
+    $(document).ready(function () {
+        $('#District').change(function () {
+            var districtName = $(this).val(); // Get the selected state's name
+
+            // Make an AJAX call to fetch districts based on the selected state name
+            $.ajax({
+                url: '/Home/GetCityByDistictName', // Action method to fetch districts by state name
+                type: 'GET',
+                data: { districtName: districtName },
+                dataType: 'json',
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.open("GET", '/Home/GetCityByDistictName?districtName=' + encodeURIComponent(districtName), true);
+                    xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Clear existing options in the district dropdown
+                        $('#Village').empty();
+                        $('#Village').append('<option value="">City</option>');
+
+                        // Populate the district dropdown with new options
+                        $.each(response.message, function (index, item) {
+                            $('#Village').append('<option value="' + item.name + '">' + item.name + '</option>');
+                        });
+                    }
+                    else {
+
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+      // $('#District').trigger('change');
+    });
+
+    $(document).ready(function () {
+        $('#PresentState').change(function () {
+            var stateName = $(this).val(); // Get the selected state's name
+
+            // Make an AJAX call to fetch districts based on the selected state name
+            $.ajax({
+                url: '/Home/GetDistrictsByStateName', // Action method to fetch districts by state name
+                type: 'GET',
+                data: { stateName: stateName },
+                dataType: 'json',
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.open("GET", '/Home/GetDistrictsByStateName?stateName=' + encodeURIComponent(stateName), true);
+                    xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Clear existing options in the district dropdown
+                        $('#PresentDistrict').empty();
+                        $('#PresentDistrict').append('<option value="">Present District</option>');
+
+                        // Populate the district dropdown with new options
+                        $.each(response.message, function (index, item) {
+                            $('#PresentDistrict').append('<option value="' + item.name + '">' + item.name + '</option>');
+                        });
+                    }
+                    else {
+
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+      // $('#PresentState').trigger('change');
+
+    });
+
+    // $(document).ready(function () {
+    // $('#PresentDistrict').change(function () {
+    // var districtName = $(this).val(); // Get the selected state's name
+
+    // // Make an AJAX call to fetch districts based on the selected state name
+    // $.ajax({
+    // url: '/Home/GetCityByDistictName', // Action method to fetch districts by state name
+    // type: 'GET',
+    // data: { districtName: districtName },
+    // dataType: 'json',
+    // xhr: function () {
+    // var xhr = new window.XMLHttpRequest();
+    // xhr.open("GET", '/Home/GetCityByDistictName?districtName=' + encodeURIComponent(districtName), true);
+    // xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+    // return xhr;
+    // },
+    // success: function (response) {
+    // if (response.success) {
+    // // Clear existing options in the district dropdown
+    // $('#PresentCity').empty();
+    // $('#PresentCity').append('<option value="">Present City</option>');
+
+    // // Populate the district dropdown with new options
+    // $.each(response.message, function (index, item) {
+    // $('#PresentCity').append('<option value="' + item.name + '">' + item.name + '</option>');
+    // });
+    // }
+    // else {
+
+    // }
+    // },
+    // error: function () {
+    // }
+    // });
+    // });
+    // // $('#PresentDistrict').trigger('change');
+    // });
+
+
+    $(document).ready(function () {
+        $('#Country').select2({
+            placeholder: 'Country',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#State').select2({
+            placeholder: 'State',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#District').select2({
+            placeholder: 'District',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#Village').select2({
+            placeholder: 'City',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#PresentCountry').select2({
+            placeholder: 'Present Country',
+            allowClear: false
+        });
+    });
+
+    // $(document).ready(function () {
+    // $('#PresentState').select2({
+    // placeholder: 'Present State',
+    // allowClear: false
+    // });
+    // });
+
+    // $(document).ready(function () {
+    // $('#PresentDistrict').select2({
+    // placeholder: 'Present District',
+    // allowClear: false
+    // });
+    // });
+
+    // $(document).ready(function () {
+    // $('#PresentCity').select2({
+    // placeholder: 'Present City',
+    // allowClear: false
+    // });
+    // });
+
+</script>
+
+<style>
+    /* Ensure Select2 uses Bootstrap styling */
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px); /* Match Bootstrap input height */
+        border: 1px solid #e9ecef; /* Match Bootstrap border */
+        border-radius: 0.25rem; /* Match Bootstrap border-radius */
+        padding: 0.375rem 0.75rem; /* Match Bootstrap padding */
+    }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 1.5; /* Adjust the text inside the dropdown */
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%; /* Ensures the arrow aligns correctly */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__clear {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+</style>
+*@
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div class="">
+            <div id="profileDetailSection" class="">
+                <!-- Back Button -->
+                <!-- <button class="btn back-btn-round mb-3" onclick="showCardsSection()">
+                                                        <i class="uil uil-arrow-left"></i>
+                                                    </button> -->
+
+@if (enquiry?.PhotoVisibleToAll == false)
+{
+    <style>
+        .profile-summary-image .tiny-slide img {
+            filter: blur(8px) !important;
+            transform: scale(1.05) !important;
+            transition: filter 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+}
+
+                <!-- Profile Summary Wrapper -->
+                <div class="profile-summary-wrapper">
+                    <!-- Image Side -->
+                    <div class="profile-summary-image position-relative" id="editImageContainer">
+                        @if (enquiry?.PhotoVisibleToAll == false || enquiry.PhotoVisibleToAccepted == true ) 
+                        {
+                            <div class="premium-blur position-absolute top-0 start-0 w-100 h-100 rounded" style="z-index: 9; pointer-events: none;"></div>
+                            <div class="premium-lock" style="z-index: 10; cursor: default;">
+                                <i class="uil uil-lock"></i>
+                                <span class="premium-text">Unlock Images</span>
+                            </div>
+                        }
+                        <div class="tiny-single-item">
+                            @if (!string.IsNullOrEmpty(enquiry?.ImagePath))
+                               {
+                                <div class="tiny-slide"><img id="detailImage" src="@Html.Raw("/" + enquiry?.ImagePath)" class="img-fluid rounded"
+                                                                 alt="Profile"></div>
+                                }
+                                else
+                                {
+                                    <div class="tiny-slide"><img id="detailImage" src="@Url.Content(string.Equals(enquiry?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "~/assets/images/default-user-women.png" : "~/assets/images/default-user-men.png")" class="img-fluid rounded"
+                                                                 alt="Profile"></div>
+                                }
+                                @if(!string.IsNullOrEmpty(image?.Image1Path))
+                                {
+                                <div class="tiny-slide"><img src="@Html.Raw("/" + image?.Image1Path)"
+                                                                 class="img-fluid rounded" alt="Profile"></div>
+                                }
+                                @if(!string.IsNullOrEmpty(image?.Image2Path))
+                                {
+                                <div class="tiny-slide"><img src="@Html.Raw("/" + image?.Image2Path)"
+                                                                 class="img-fluid rounded" alt="Profile"></div>
+                                }
+                                @if(!string.IsNullOrEmpty(image?.Image3Path))
+                                {
+                                <div class="tiny-slide"><img src="@Html.Raw("/" + image?.Image3Path)"
+                                                                 class="img-fluid rounded" alt="Profile"></div>
+                                }
+                                @if(!string.IsNullOrEmpty(image?.Image4Path))
+                                {
+                                <div class="tiny-slide"><img src="@Html.Raw("/" + image?.Image4Path)"
+                                                                 class="img-fluid rounded" alt="Profile"></div>
+                                }
+                                @if(!string.IsNullOrEmpty(image?.Image5Path))
+                                {
+                                <div class="tiny-slide"><img src="@Html.Raw("/" + image?.Image5Path)"
+                                                                 class="img-fluid rounded" alt="Profile"></div>
+                                }
+                                    </div>
+                                    <!-- Watermark Image -->
+                                    <img src="../../../../assets/images/icon/card-watermark.png"
+                                        class="profile-edit-watermark position-absolute" alt="Watermark">
+                                </div> 
+                                <!-- Content Side -->
+                                <div class="profile-summary-content d-flex flex-column">
+                                    <div class="mt-2 card-content-container">
+                                        <span class="fs-12 d-block mb-1">@Html.Raw(Model.Registration?.RegisterNumber)</span>
+                                        <h4 id="detailName" class="fw-medium mb-2 fs-5">
+                                            @Html.Raw(Model.Registration?.Name)
+                                            @if (Model.Registration != null && Model.Registration.DocumentVerificationComplete && Model.Registration.DocumentVerificationFollowupApproved)
+                                            {
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
+                                                    <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                                                </svg>
+                                            }
+                                        </h4>
+                                        <p id="detailInfo" class="fs-12 mb-0">@Html.Raw(enquiry.About ?? string.Empty)</p>
+                                    </div> 
+                                    <!-- Buttons -->
+                                    <div class="content-button-wrapper mt-3 card-content-container">
+                                        <button class="icon-btn btn-green" onClick="window.location.href='@Url.Action("Image", "User")'">
+                                            Manage My Photo
+                                        </button>
+
+                                        @* <button class="icon-btn btn-lime">
+                                            Edit My Profile
+                                        </button> *@
+                                    </div>
+
+                                    <!-- Watermark -->
+                                    <div class="watermark-container">
+                                        <img src="../../../../assets/images/icon/detail-card-logo.png">
+                                    </div>
+
+                                    
+
+                                    <!-- Close Button -->
+                                    <!-- <button class="btn-close m-3 shadow-none border-0" onclick="showCardsSection()">
+                                        <i class="uil uil-times" style="font-size: 18px;"></i>
+                                    </button> -->
+                                </div>
+                            </div> 
+                        </div>
+
+
+                        <!-- Profile Edit Accordions -->
+                        <div class="profile-accordion">
+                            <!-- Basic Information -->
+                            <div class="accordion-item-custom active">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Basic Information</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('basicModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">Name</span>
+                                            <span class="detail-value" id="val-Name">@enquiry.Name</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Profile ID</span>
+                                            <span class="detail-value" id="val-ProfileId">@enquiry.RegisterNumber</span>
+                                        </div> -->
+                                        <div class="detail-row">
+                                            <span class="detail-label">Age</span>
+                                            <span class="detail-value" id="val-Age">@age</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Gender</span>
+                                            <span class="detail-value" id="val-Gender">@enquiry.Gender</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Marital Status</span>
+                                            <span class="detail-value" id="val-MaritalStatus">@(Model.MaritalStatuses.FirstOrDefault(x => x.Id == enquiry.MaritalStatusId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">Nationality</span>
+                                            <span class="detail-value" id="val-Nationality">@(Model.Nationalities.FirstOrDefault(x => x.Id == enquiry.NationalityId)?.Title ?? "N/A")</span>
+                                        </div> --> 
+                                        <div class="detail-row">
+                                            <span class="detail-label">Mother Tongue</span>
+                                            <span class="detail-value" id="val-MotherTongue">@(Model.MotherTongues.FirstOrDefault(x => x.Id == enquiry.MotherTongueId)?.Title ?? "N/A")</span>
+                                        </div>
+                                         @if(enquiry.MaritalStatusId != 1)
+                                         {
+                                         <div class="detail-row">
+                                             <span class="detail-label">Number of Children</span>
+                                             <span class="detail-value" id="val-NumberOfChildren">@(enquiry.NumberOfChildrens ?? 0)</span>
+                                         </div>
+                                         }
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">About</span>
+                                            <span class="detail-value" id="val-About">@enquiry.About</span>
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Physical Information -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Physical Information</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('physicalModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">DOB</span>
+                                            <span class="detail-value" id="val-DOB">@dob</span>
+                                        </div> -->
+                                        <div class="detail-row">
+                                            <span class="detail-label">Height</span>
+                                            <span class="detail-value" id="val-Height">@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.HeightId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Weight</span>
+                                            <span class="detail-value" id="val-Weight">@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.WeightId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Complexion</span>
+                                            <span class="detail-value" id="val-Complexion">@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.ComplexionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Body Type</span>
+                                            <span class="detail-value" id="val-BodyType">@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.BodyTypeId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Physically Challenged?</span>
+                                            <span class="detail-value" id="val-IsPhysicallyChallenged">@(enquiry.IsPhysicallyChallenged ? "Yes" : "No")</span>
+                                        </div>
+                                        @if (enquiry.IsPhysicallyChallenged && !string.IsNullOrEmpty(enquiry.PhysicallyChallengedDetail))
+                                        {
+                                            <div class="detail-row">
+                                                <span class="detail-label">Physical Challenge Detail</span>
+                                                <span class="detail-value" id="val-PhysicallyChallengedDetail">@(string.IsNullOrEmpty(enquiry.PhysicallyChallengedDetail) ? "N/A" : enquiry.PhysicallyChallengedDetail)</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Education Information -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Education Information</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('educationModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <div class="detail-row">
+                                            <span class="detail-label">Highest Education</span>
+                                            <span class="detail-value" id="val-HighestEducation">@enquiry.HighestEducation</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Course</span>
+                                            <span class="detail-value" id="val-EducationType">@enquiry.EducationType</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Profession</span>
+                                            <span class="detail-value" id="val-Profession">@(Model.Professions.FirstOrDefault(x => x.Id == enquiry.ProfessionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Profession Type</span>
+                                            <span class="detail-value" id="val-ProfessionType">@enquiry.ProfessionType</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Religious Information -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Religious Information</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('religiousModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <div class="detail-row">
+                                            <span class="detail-label">Religion</span>
+                                            <span class="detail-value" id="val-Religion">@(Model.Religions.FirstOrDefault(x => x.Id == enquiry.ReligionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Community</span>
+                                            <span class="detail-value" id="val-Community">@(Model.Communities.FirstOrDefault(x => x.Id == enquiry.CommunityId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Religiousness</span>
+                                            <span class="detail-value" id="val-Religiousness">@(Model.Religiousnesses.FirstOrDefault(x => x.Id == enquiry.ReligiousnessId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location Details -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Location Details</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('locationModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                         <div class="detail-row">
+                                            <span class="detail-label">Present Country</span>
+                                            <span class="detail-value" id="val-PresentCountry">@enquiry.PresentCountry</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Nationality</span>
+                                            <span class="detail-value" id="val-NationalityLoc">@(Model.Nationalities.FirstOrDefault(x => x.Id == enquiry.NationalityId)?.Title ?? "N/A")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">State</span>
+                                            <span class="detail-value" id="val-State">@enquiry.State</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">District</span>
+                                            <span class="detail-value" id="val-District">@enquiry.District</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">City</span>
+                                            <span class="detail-value" id="val-Village">@enquiry.Village</span>
+                                        </div>
+                                       
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">Present State</span>
+                                            <span class="detail-value" id="val-PresentState">@enquiry.PresentState</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Present District</span>
+                                            <span class="detail-value" id="val-PresentDistrict">@enquiry.PresentDistrict</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Present City</span>
+                                            <span class="detail-value" id="val-PresentCity">@enquiry.PresentCity</span>
+                                        </div> -->
+                                        <!-- <div class="detail-row">
+                                            <span class="detail-label">Secondary Number</span>
+                                            <span class="detail-value" id="val-LandlineNumber">@enquiry.LandlineNumber</span>
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </div>
+
+                        
+
+                            <!-- Family Information -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Family Information</h3>
+                                    <div class="accordion-actions">
+                                        <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('familyModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button>
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <div class="detail-row">
+                                            <span class="detail-label">Family Name</span>
+                                            <span class="detail-value" id="val-FamilyName">@enquiry.FamilyName</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Father Name</span>
+                                            <span class="detail-value" id="val-FatherName">@enquiry.FatherName</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Post</span>
+                                            <span class="detail-value" id="val-Post">@enquiry.Post</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Pin code</span>
+                                            <span class="detail-value" id="val-PinCode">@enquiry.PinCode</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Financial Status</span>
+                                            <span class="detail-value" id="val-FinancialStatus">@(Model.FinancialStatuses.FirstOrDefault(x => x.Id == enquiry.FinancialStatusId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="accordion-item-custom">
+                                <div class="accordion-header-custom" onclick="toggleAccordion(this)">
+                                    <h3 class="accordion-title">Contact Details</h3>
+                                    <div class="accordion-actions">
+                                        <!-- <button class="btn-edit-small"
+                                                onclick="event.stopPropagation(); openEditModal('contactModal')">
+                                            <i class="uil uil-edit-alt"></i> Edit
+                                        </button> -->
+                                        <div class="accordion-toggle-icon">
+                                            <i class="uil uil-angle-down"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-content-custom">
+                                    <div class="accordion-content-inner">
+                                        <div class="detail-row">
+                                            <span class="detail-label">Primary Number</span>
+                                            <span class="detail-value" id="val-Phone">@Html.Raw($"{CountryCodeHelper.GetCountryCode(enquiry?.CountryCode ?? enquiry?.Country)} {enquiry.Phone}")</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="detail-label">Secondary Number</span>
+                                            <span class="detail-value" id="val-LandlineNumber">@Html.Raw($"{CountryCodeHelper.GetCountryCode(enquiry?.SecondaryCountryCode ?? enquiry?.PresentCountry)} {enquiry.LandlineNumber}")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                     </div>
+                </div>
+            </main>
+
+<!-- Modals Structure -->
+    <!-- Basic Information Modal -->
+    <div id="basicModal" class="edit-modal-overlay">
+        <form id="form-basic" onsubmit="submitEditForm(event, 'basic')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('basicModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Basic Information</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Marital Status</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.MaritalStatuses.FirstOrDefault(x => x.Id == enquiry.MaritalStatusId)?.Title ?? "Select Marital Status")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.MaritalStatuses)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.MaritalStatusId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="MaritalStatusId" id="MaritalStatusIdVal" value="@enquiry.MaritalStatusId">
+                    </div>
+                </div>
+                <div class="form-group-custom" id="childrenEditContainer" style="display: none;">
+                    <label class="form-label-custom">Number Of Children</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(enquiry.NumberOfChildrens?.ToString() ?? "0")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            <div class="custom-option @(enquiry.NumberOfChildrens == 0 || enquiry.NumberOfChildrens == null ? "selected" : "")" data-value="0">0</div>
+                            <div class="custom-option @(enquiry.NumberOfChildrens == 1 ? "selected" : "")" data-value="1">1</div>
+                            <div class="custom-option @(enquiry.NumberOfChildrens == 2 ? "selected" : "")" data-value="2">2</div>
+                            <div class="custom-option @(enquiry.NumberOfChildrens == 3 ? "selected" : "")" data-value="3">3</div>
+                            <div class="custom-option @(enquiry.NumberOfChildrens >= 4 ? "selected" : "")" data-value="4">4+</div>
+                        </div>
+                        <input type="hidden" name="NumberOfChildrens" id="NumberOfChildrensVal" value="@(enquiry.NumberOfChildrens ?? 0)">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Mother Tongue</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.MotherTongues.FirstOrDefault(x => x.Id == enquiry.MotherTongueId)?.Title ?? "Select Mother Tongue")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.MotherTongues)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.MotherTongueId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="MotherTongueId" value="@enquiry.MotherTongueId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">About</label>
+                    <textarea name="About" class="form-control-custom" placeholder="Brief About Yourself..." style="min-height: 100px; padding: 20px; resize: vertical;" maxlength="300">@Html.Raw(enquiry.About)</textarea>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Education Modal -->
+    <div id="educationModal" class="edit-modal-overlay">
+        <form id="form-education" onsubmit="submitEditForm(event, 'education')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('educationModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Education Information</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Highest Education</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(string.IsNullOrEmpty(enquiry.HighestEducation) ? "Select Education" : enquiry.HighestEducation)</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Education))
+                            {
+                                <div class="custom-option @(item.Title == enquiry.HighestEducation ? "selected" : "")" data-value="@item.Title">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="HighestEducation" value="@enquiry.HighestEducation">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Course</label>
+                    <div class="custom-select-wrapper multi-select">
+                        <div class="custom-select-trigger">
+                            <span>Select Course(s)</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @{
+                                var selectedCoursesList = (enquiry?.EducationType ?? "").Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                                var dbCourses = Model.BodyFeatures.Where(x => x.Type == BodyFeature.Course).Select(x => x.Title).ToList();
+                            }
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Course))
+                            {
+                                bool isSelected = selectedCoursesList.Contains(item.Title);
+                                <div class="custom-option @(isSelected ? "selected" : "")" data-value="@item.Title">@Html.Raw(item.Title)</div>
+                            }
+                            @foreach (var course in selectedCoursesList)
+                            {
+                                if (!dbCourses.Contains(course))
+                                {
+                                    <div class="custom-option selected" data-value="@course">@Html.Raw(course)</div>
+                                }
+                            }
+                        </div>
+                        <input type="hidden" name="EducationType" id="courseHiddenInput" value="@enquiry?.EducationType" />
+                    </div>
+                    <div class="selected-tags-container mt-2"></div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Profession</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.Professions.FirstOrDefault(x => x.Id == enquiry.ProfessionId)?.Title ?? "Select Profession")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.Professions)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.ProfessionId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="ProfessionId" value="@enquiry.ProfessionId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Profession Type</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(string.IsNullOrEmpty(enquiry.ProfessionType) ? "Select Profession Type" : enquiry.ProfessionType)</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.ProfessionType))
+                            {
+                                <div class="custom-option @(item.Title == enquiry.ProfessionType ? "selected" : "")" data-value="@item.Title">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="ProfessionType" value="@enquiry.ProfessionType">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Religious Modal -->
+    <div id="religiousModal" class="edit-modal-overlay">
+        <form id="form-religious" onsubmit="submitEditForm(event, 'religious')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('religiousModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Religious Information</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Community</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.Communities.FirstOrDefault(x => x.Id == enquiry.CommunityId)?.Title ?? "Select Community")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.Communities)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.CommunityId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="CommunityId" value="@enquiry.CommunityId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Religiousness</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.Religiousnesses.FirstOrDefault(x => x.Id == enquiry.ReligiousnessId)?.Title ?? "Select Religiousness")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.Religiousnesses)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.ReligiousnessId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="ReligiousnessId" value="@enquiry.ReligiousnessId">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Location Modal -->
+    <div id="locationModal" class="edit-modal-overlay">
+        <form id="form-location" onsubmit="submitEditForm(event, 'location')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('locationModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Location Details</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Present Country</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(string.IsNullOrEmpty(enquiry.PresentCountry) ? "Select Present Country" : enquiry.PresentCountry)</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.Nationalities)
+                            {
+                                <div class="custom-option @(item.Title == enquiry.PresentCountry ? "selected" : "")" data-value="@item.Title">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="PresentCountry" value="@enquiry.PresentCountry">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Secondary Number</label>
+                    <input type="text" class="form-control-custom" name="LandlineNumber" value="@enquiry.LandlineNumber" maxlength="10">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Physical Modal -->
+    <div id="physicalModal" class="edit-modal-overlay">
+        <form id="form-physical" onsubmit="submitEditForm(event, 'physical')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('physicalModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Physical Information</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Height</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.HeightId)?.Title ?? "Select Height")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Height))
+                            {
+                                <div class="custom-option @(item.Id == enquiry.HeightId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="HeightId" value="@enquiry.HeightId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Weight</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.WeightId)?.Title ?? "Select Weight")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Weight))
+                            {
+                                <div class="custom-option @(item.Id == enquiry.WeightId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="WeightId" value="@enquiry.WeightId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Complexion</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.ComplexionId)?.Title ?? "Select Complexion")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Complexion))
+                            {
+                                <div class="custom-option @(item.Id == enquiry.ComplexionId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="ComplexionId" value="@enquiry.ComplexionId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Body Type</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.BodyTypeId)?.Title ?? "Select Body Type")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.BodyType))
+                            {
+                                <div class="custom-option @(item.Id == enquiry.BodyTypeId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="BodyTypeId" value="@enquiry.BodyTypeId">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <div class="gender-selection-wrapper" id="physicallyChallengedWrapper">
+                        <span class="gender-label">Physically Challenged?</span>
+                        <button type="button" class="gender-btn @(enquiry.IsPhysicallyChallenged ? "" : "active")" id="btnPhysicallyNo">
+                            <i class="uil uil-check-circle"></i> No
+                        </button>
+                        <button type="button" class="gender-btn @(enquiry.IsPhysicallyChallenged ? "active" : "")" id="btnPhysicallyYes">
+                            <i class="uil uil-check-circle"></i> Yes
+                        </button>
+                        <input type="hidden" name="IsPhysicallyChallenged" id="IsPhysicallyChallengedVal" value="@(enquiry.IsPhysicallyChallenged ? "Yes" : "No")">
+                    </div>
+                </div>
+                <div class="form-group-custom" id="physicalChallengeDetailEditContainer" style="display: @(enquiry.IsPhysicallyChallenged ? "block" : "none");">
+                    <label class="form-label-custom">Physical Challenge Detail *</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(string.IsNullOrEmpty(enquiry.PhysicallyChallengedDetail) ? "Select Detail" : enquiry.PhysicallyChallengedDetail)</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.PhysicalDisability))
+                            {
+                                <div class="custom-option @(item.Title == enquiry.PhysicallyChallengedDetail ? "selected" : "")" data-value="@item.Title">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="PhysicallyChallengedDetail" id="PhysicallyChallengedDetailVal" value="@enquiry.PhysicallyChallengedDetail">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Family Modal -->
+    <div id="familyModal" class="edit-modal-overlay">
+        <form id="form-family" onsubmit="submitEditForm(event, 'family')" class="edit-modal-card">
+            <div class="edit-modal-close" onclick="closeEditModal('familyModal')">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="edit-modal-header">
+                <h3 class="edit-modal-title">Family Information</h3>
+            </div>
+            <div class="edit-modal-body">
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Financial Status</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger">
+                            <span>@(Model.FinancialStatuses.FirstOrDefault(x => x.Id == enquiry.FinancialStatusId)?.Title ?? "Select Financial Status")</span>
+                            <i class="uil uil-angle-down"></i>
+                        </div>
+                        <div class="custom-options">
+                            @foreach (var item in Model.FinancialStatuses)
+                            {
+                                <div class="custom-option @(item.Id == enquiry.FinancialStatusId ? "selected" : "")" data-value="@item.Id">@Html.Raw(item.Title)</div>
+                            }
+                        </div>
+                        <input type="hidden" name="FinancialStatusId" value="@enquiry.FinancialStatusId">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button type="submit" class="btn-save-custom">Save</button>
+            </div>
+        </form>
+    </div>
+
+@section Scripts {
+    <script>
+        function submitEditForm(event, section) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const $form = $(form);
+            const submitBtn = $form.find('.btn-save-custom');
+            const originalBtnText = submitBtn.text();
+            
+            // Client-side validation: if physically challenged is 'Yes', they must select a detail
+            if (section === 'physical') {
+                var isPhysChallenged = $('#IsPhysicallyChallengedVal').val();
+                var detail = $('#PhysicallyChallengedDetailVal').val();
+                if (isPhysChallenged === 'Yes' && (!detail || detail.trim() === '')) {
+                    Swal.fire({
+                        title: 'Required Field!',
+                        text: 'Please select a Physical Challenge Detail.',
+                        icon: 'warning',
+                        confirmButtonColor: '#0B6B2E'
+                    });
+                    return false;
+                }
+            }
+            
+            // Disable button and show loading state
+            submitBtn.prop('disabled', true).text('Saving...');
+            
+            // Serialize form data
+            let formData = $form.serializeArray();
+            
+            // Special handling for IsPhysicallyChallenged to ensure it binds to boolean true/false
+            formData = formData.map(field => {
+                if (field.name === 'IsPhysicallyChallenged') {
+                    return {
+                        name: field.name,
+                        value: (field.value === 'Yes' || field.value === 'true').toString()
+                    };
+                }
+                return field;
+            });
+            
+            $.ajax({
+                url: '/edit-profile?section=' + encodeURIComponent(section),
+                type: 'POST',
+                data: $.param(formData),
+                success: function (response) {
+                    if (response.success) {
+                        
+                            closeEditModal(section + 'Modal');
+                            window.location.reload();
+                    
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.message || 'Failed to update profile.',
+                            icon: 'error',
+                            confirmButtonColor: '#0B6B2E'
+                        });
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred while saving your changes. Please try again.',
+                        icon: 'error',
+                        confirmButtonColor: '#0B6B2E'
+                    });
+                    submitBtn.prop('disabled', false).text(originalBtnText);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Event delegation to capture click on dynamically modified gender-btn buttons
+            $(document).on('click', '#physicallyChallengedWrapper .gender-btn', function () {
+                setTimeout(function() {
+                    var val = $('#IsPhysicallyChallengedVal').val();
+                    if (val === 'Yes') {
+                        $('#physicalChallengeDetailEditContainer').show();
+                    } else {
+                        $('#physicalChallengeDetailEditContainer').hide();
+                        // Reset selection
+                        $('#physicalChallengeDetailEditContainer .custom-option').removeClass('selected');
+                        $('#physicalChallengeDetailEditContainer .custom-select-trigger span').text('Select Detail');
+                        $('#PhysicallyChallengedDetailVal').val('');
+                    }
+                }, 50);
+            });
+
+            $(document).on('change', '#MaritalStatusIdVal', function () {
+                var maritalStatusId = $(this).val();
+                if (maritalStatusId == '2' || maritalStatusId == '3' || maritalStatusId == '4' || maritalStatusId == '5' || maritalStatusId == '6') {
+                    $('#childrenEditContainer').show();
+                } else {
+                    $('#childrenEditContainer').hide();
+                    $('#childrenEditContainer .custom-option').removeClass('selected');
+                    $('#childrenEditContainer .custom-option[data-value="0"]').addClass('selected');
+                    $('#childrenEditContainer .custom-select-trigger span').text('0');
+                    $('#NumberOfChildrensVal').val('0');
+                }
+            });
+            setTimeout(function () {
+                $('#MaritalStatusIdVal').trigger('change');
+            }, 100);
+        });
+    </script>
+}

@@ -1,0 +1,394 @@
+﻿@model URMARRY.Models.HomeViewModel
+@{
+    var enquiry = Model.Enquiry;
+    var contact = Model.Contact;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <style type="text/css">
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+        }
+
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        @@media screen and (max-width: 480px) {
+            .mobile-hide {
+                display: none !important;
+            }
+
+            .mobile-center {
+                text-align: center !important;
+            }
+        }
+
+        div[style*="margin: 16px 0;"] {
+            margin: 0 !important;
+        }
+    </style>
+</head>
+
+<body style="margin: 0 !important; padding: 0 !important; background-color: #fff;" bgcolor="#fff">
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center" style="background-color: #fff;" bgcolor="#fff">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                <tr>
+                    <td align="center" style="padding:10px 35px 30px 35px; background-color: #f3f3f3; -webkit-border-top-left-radius: 40px;
+-webkit-border-top-right-radius: 40px;
+-moz-border-radius-topleft: 40px;
+-moz-border-radius-topright: 40px;
+border-top-left-radius: 40px;
+border-top-right-radius: 40px;" bgcolor="#f3f3f3">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                            <tr>
+                                <td align="center" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding-top: 25px;">
+                                    <h2 style="font-size:24px; font-weight: bolder; line-height: 36px; color: #a08011; margin: 0;"> New registration enquiry from @enquiry!.Name </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="padding-top: 20px;">
+                                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        @if (!string.IsNullOrWhiteSpace(enquiry!.Name))
+                                        {
+                                            <tr>
+                                                <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Name </td>
+                                                <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Name) </td>
+                                            </tr>
+                                        }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.ProfileFor))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Profile For </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.ProfileFor) </td>
+                                                </tr>
+                                            }
+
+                                         @*   @if (!string.IsNullOrWhiteSpace(enquiry!.Gender))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Gender </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Gender) </td>
+                                                </tr>
+                                            }*@
+
+                                           @* @if (!string.IsNullOrWhiteSpace(enquiry!.DOB))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Date of birth </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.DOB) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Nationality))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Nationality </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Nationality) </td>
+                                                </tr>
+                                            }*@
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Email))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Email </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Email) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Phone))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Phone </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Phone) </td>
+                                                </tr>
+                                            }
+
+                                        @*    @if (!string.IsNullOrWhiteSpace(enquiry!.MaritalStatus))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Marital Status </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.MaritalStatus) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Height))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Height </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Height) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Weight))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Weight </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Weight) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Complexion))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Complexion </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Complexion) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.BodyType))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Body Type </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.BodyType) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.HighestEducation))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Highest Education </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.HighestEducation) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Profession))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Profession </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Profession) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.ProfessionType))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Profession Type </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.ProfessionType) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.MotherTongue))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Mother Tongue </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.MotherTongue) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Religion))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Religion </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Religion) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Caste))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Caste </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Caste) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Community))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Community </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Community) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Religiousness))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Religiousness </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Religiousness) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.FinancialStatus))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Financial Status </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.FinancialStatus) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.FamilyName))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Family Name </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.FamilyName) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.FatherName))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Father Name </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.FatherName) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Post))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Post </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Post) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Village))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Village </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Village) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.PinCode))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Pin Code </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.PinCode) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.Country))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Country </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Country) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.State))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> State </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.State) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.District))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> District </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.District) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.PresentCountry))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Present Location Country </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.PresentCountry) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.PresentState))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Present Location State </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.PresentState) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.PresentDistrict))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Present Location District </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.PresentDistrict) </td>
+                                                </tr>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(enquiry!.About))
+                                            {
+                                                <tr>
+                                                    <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> About </td>
+                                                    <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.About) </td>
+                                                </tr>
+                                            }*@
+
+                                        <tr>
+                                            <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 2px 10px;"> Date </td>
+                                            <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 2px 10px;">@Html.Raw(enquiry.CreatedOn) </td>
+                                        </tr>
+
+                                        
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" style="padding:20px 35px; background-color: #ffffff;" bgcolor="#ffffff">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                            
+                            <tr>
+                                <td align="center" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px;">
+                                    <p style="font-size: 14px; font-weight: 400; line-height: 20px; color: #777777;"> © @DateTime.Now.Year | M4NIKAH | All Rights Reserved</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+
+</html>

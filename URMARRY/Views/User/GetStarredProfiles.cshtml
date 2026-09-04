@@ -1,0 +1,224 @@
+
+@model UserDashboardViewModel
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    <link href="/assets/account/assets/css/style.min.css" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+    var height = Model.BodyFeatures!.Where(x => x.Type == BodyFeature.Height);
+    var religion = Model.ReligionCaste!;
+    var maritalstatus = Model.MaritalStatus!;
+    var profession = Model.Profession!;
+    var community = Model.Community!;
+}
+<div class="d-md-flex justify-content-between align-items-center">
+     <h5 class="mb-0"> Shortlisted Profiles</h5>
+</div>
+<div class="col-lg-12 mt-4 order-md-2 order-lg-2 order-2">
+    <div class="card border-0 shadow rounded p-4">
+
+        <div class="row matchprofile">
+            @foreach (var item in Model.RegistrationList)
+            {
+                if (item != null && item.IsStarred)
+                {
+                    var dtb = !string.IsNullOrEmpty(item.DOB) ? item.DOB : "01/01/1990";
+                    var str1 = dtb.Replace("-", "/").Trim().Split('/');
+                    var day1 = string.Empty;
+                    var month1 = string.Empty;
+                    var year1 = str1[2];
+                    if (str1[0].Length < 2)
+                    {
+                        day1 = "0" + str1[0];
+                    }
+                    else
+                    {
+                        day1 = str1[0];
+                    }
+                    if (str1[1].Length < 2)
+                    {
+                        month1 = "0" + str1[1];
+                    }
+                    else
+                    {
+                        month1 = str1[1];
+                    }
+                    if (day1.Length > 2)
+                    {
+                        var y = year1;
+                        var d = day1;
+                        day1 = y;
+                        year1 = d;
+                    }
+                    string[] formats = { "d/M/yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd" };
+
+                    var dob1 = day1.Trim() + "/" + month1.Trim() + "/" + year1.Trim();
+                    DateTime myDate1 = DateTime.ParseExact(dob1, formats, System.Globalization.CultureInfo.InvariantCulture);
+                    
+                    string imagePath = !string.IsNullOrEmpty(item.ImagePath) ? item.ImagePath : (string.Equals(item.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "~/assets/images/default-user-women.png" : "~/assets/images/default-user-men.png");
+                    /*string profileUrl = !Model.Registration.IsPremiumMember && !Model.Registration.IsSpecialRequest
+                        ? "#"
+                        : Url.Action("Profile", "User", new
+                        {
+                            url = string.IsNullOrWhiteSpace(item.RegisterNumber)
+                                ? item.Id.ToString()
+                                : item.RegisterNumber
+                        })!;*/
+                    string? profileUrl = Url.Action("Profile", "User", new
+                    {
+                        url = string.IsNullOrWhiteSpace(item.RegisterNumber)
+                            ? item.Id.ToString()
+                            : item.RegisterNumber
+                    });
+                       
+
+                    string restrictedAccessModalAttributes = "";//"!Model.Registration.IsPremiumMember && !Model.Registration.IsSpecialRequest ? $"data-bs-toggle=\"modal\" data-bs-target=\"#payment1\" data-name=\"{item.Name}\" data-registernumber=\"{item.RegisterNumber}\" data-imagepath=\"{Url.Content(imagePath)}\"" : "";
+                    
+                    DateTime birthDateOfMatchedProfile = myDate1;
+
+
+                    DateTime today = DateTime.UtcNow;
+                    int age1 = today.Year - birthDateOfMatchedProfile.Year;
+
+                    if (birthDateOfMatchedProfile > today.AddYears(-age1))
+                    {
+                        age1--;
+                    }
+                    string profileDetails = $"{age1} Yrs, {height.FirstOrDefault(x => x.Id == item.HeightId)?.Title}, {@maritalstatus.FirstOrDefault(x => x.Id == item.MaritalStatusId)?.Title}, {item.EducationType}, {profession.FirstOrDefault(x => x.Id == item.ProfessionId)?.Title}, {community.FirstOrDefault(x => x.Id == item.CommunityId)?.Title}, {@religion.FirstOrDefault(x => x.Id == item.ReligionId)?.Title}, {item.Village} {(string.IsNullOrEmpty(item.State) ? ", " + item.State : "")} {(!string.IsNullOrEmpty(item.District) ? ", " + item.District : "")}";
+                    
+                    <div class="col-lg-4 col-md-4 mt-4 pt-2">
+                        <div class="card team team-primary text-center border01 nnewone1">
+                            <div class="position-relative">
+                                @{
+                                    <div class="imagenew">
+                                        <a @Html.Raw(restrictedAccessModalAttributes) href="@profileUrl">
+                                            <img src="@Url.Content(imagePath)" class="img-fluid"
+                                                 alt="@($"{item.Name}'s Photo")">
+                                        </a>
+                                    </div>
+                                }
+                                <div class="card-body py-3 px-0 pb-0 content newdiv">
+                                     <h5>
+                                         <a href="@profileUrl" @Html.Raw(restrictedAccessModalAttributes)>@item.Name</a>
+                                         @if (item.DocumentVerificationComplete && item.DocumentVerificationFollowupApproved)
+                                         {
+                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Detailed Verified Profile" data-bs-toggle="tooltip">
+                                                 <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                                             </svg>
+                                         }
+                                     </h5>
+                                    <div class="row mt-2">
+                                        <div class="col-12 text-center addtxt02">
+                                            <h5 class="mb-0">@profileDetails</h5>
+                                        </div><!--end col-->
+                                    </div><!--end row-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    <!--modal start-->
+    <div class="modal fade" id="payment1" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded shadow border-0">
+                <div class="modal-header border-bottom">
+                    <button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal" id="close-modal"><i class="uil uil-times fs-4 text-dark"></i></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <div class="paymentdivv">
+                        <h5>Upgrade to Premium Membership to view contact details</h5>
+                    </div>
+                    <div class="text-center">
+                        <div class="paymentdiv align-items-center justify-content-center mx-auto">
+                            <h1>Membership Package</h1>
+                            <h2>180 Days</h2>
+                              <h3 style="margin: 0;">
+                                <span style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ 2000</span>
+                              </h3>
+                        </div>
+                        <div class="mt-4 features_div">
+                            <h4>Features</h4>
+                            <p class="text-muted">Personalised messages to 40 Members</p>
+                            <p class="text-muted">Chat with prospects directly</p>
+                            <p class="text-muted">View mobile numbers 40</p>
+                            <div class="mt-4 newbtn pb-3">
+                                <a asp-action="MakePayment" asp-controller="Transaction">
+                                    Pay Online
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--model end-->
+
+</div>
+
+
+   <script>
+       document.addEventListener('DOMContentLoaded', function () {
+        function handleButtonClick(event, type) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const itemId = this.id.split('-')[1]; // Get the item ID from the button ID
+            const form = document.getElementById(`${type}form-${itemId}`);
+            const actionInput = document.getElementById(`action-${itemId}`);
+            const icon = document.getElementById(`${type}icon-${itemId}`);
+
+            // Prepare form data for submission
+            const formData = new FormData(form);
+
+            // Send AJAX request
+        //     fetch(form.action, {
+        //         method: 'POST',
+        //         body: formData,
+        //         headers: {
+        //             'X-Requested-With': 'XMLHttpRequest'
+        //         }
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log(data); // Log the server response for debugging
+        //         if (data.success) {
+        //             // Toggle icon state based on current state
+        //             if (icon.tagName.toLowerCase() === 'i') {
+        //                 icon.outerHTML = `<span id="${type}icon-${itemId}" style="font-size: 20px; color: ${type === 'star' ? 'green' : 'red'};">${type === 'star' ? '★' : '♥'}</span>`;
+        //                 actionInput.value = "Remove";
+        //             } else {
+        //                 icon.outerHTML = `<i id="${type}icon-${itemId}" class="uil ${type === 'star' ? 'uil-star' : 'uil-heart-sign'} align-middle"></i>`;
+        //                 actionInput.value = "Add";
+        //             }
+        //         } else {
+        //             alert(`Failed to update ${type} status: ` + (data.message || 'Unknown error'));
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error('Error:', error);
+        //         alert('An error occurred. Please try again.');
+        //     });
+        // }
+
+        // Attach event listeners for star buttons
+        const starButtons = document.querySelectorAll('button[id^="starbutton-"]');
+        starButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                handleButtonClick.call(this, event, 'star');
+            });
+        });
+
+        // Attach event listeners for like buttons
+        const likeButtons = document.querySelectorAll('button[id^="likebutton-"]');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                handleButtonClick.call(this, event, 'like');
+            });
+        });
+    }})
+
+
+ </script>
+
+

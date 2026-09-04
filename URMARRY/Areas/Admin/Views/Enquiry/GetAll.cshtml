@@ -1,0 +1,127 @@
+@using Application.Constants
+@using Application.Helpers
+@model URMARRY.Areas.Admin.Models.EnquiryViewModel
+@{
+    ViewBag.Title = "Enquiries";
+
+    var email = Model.Email!;
+    var enquiries = Model.Enquiries!;
+}
+
+@section Title
+{
+    @switch (email.Purpose)
+    {
+        case EnquiryTypes.Registration:
+            <text>Registrations</text>
+            break;
+
+        default:
+            <text>General enquiries</text>
+            break;
+    }
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("PostEmail", "Enquiry", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    // ReSharper disable once LocalVariableHidesMember InconsistentNaming
+                    var Model = email;
+
+
+                    <div class="modal-body row">
+
+                        <input type="hidden" asp-for="@Model.Purpose"/>
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">SMTP Server</label>
+                            <input type="text" class="form-control" asp-for="@Model.SmtpServer">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Port</label>
+                            <input type="number" class="form-control" asp-for="@Model.Port">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Sender Email ID</label>
+                            <input type="text" class="form-control" asp-for="@Model.EmailId">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Password</label>
+                            <input type="password" class="form-control" asp-for="@Model.Password" value="@Model.Password">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Recipients(Multiple recipients? Seperate each email with a space)</label>
+                            <textarea class="form-control" asp-for="@Model.Recipients"></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (enquiries.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        Registration
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                        <thead>
+                        <tr>
+                            <th width="30%">Name</th>
+                            <th width="25%">Phone</th>
+                            <th width="20%">Sent on</th>
+                            <th width="25%">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in enquiries)
+                        {
+                            <tr>
+                                <td>@Html.Raw(item.Name)</td>
+                                <td>@Html.Raw($"{( !string.IsNullOrEmpty(item.CountryCode ?? item.Country) ? CountryCodeHelper.GetCountryCode(item.CountryCode ?? item.Country) + " " : "" )}{item.Phone}")</td>
+                                <td>@Html.Raw(item.CreatedOn?.ToShortDateString())</td>
+                                <td>
+                                        <a asp-action="Print" asp-route-id="@item.Id"
+                                           class="btn btn-warning btn-xs ml-2" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    <a asp-action="Get" asp-route-id="@item.Id"
+                                           class="btn btn-primary btn-xs ml-2">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                        <a asp-action="Matching" asp-route-id="@item.Id"
+                                           class="btn btn-success btn-xs ml-2" >
+                                            Matching
+                                        </a>
+                                        <a asp-action="Delete" asp-controller="Enquiry" asp-route-id="@item.Id" class="btn btn-danger btn-xs ml-2">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

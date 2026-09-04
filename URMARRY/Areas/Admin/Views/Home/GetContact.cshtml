@@ -1,0 +1,91 @@
+﻿@model Application.Models.ContactDto
+@{
+    ViewBag.Title = "Home Content";
+}
+
+@section Title
+    {
+    Contact Management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("PostContact", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="modal-body row">
+                        <input type="hidden" asp-for="@Model.Id">
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.BannerTitle">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Body</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.BannerBody"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Image (1920 x 700)</label>
+                            @if (!string.IsNullOrEmpty(Model.BannerImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.BannerImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.BannerImagePath">
+                            <input type="file" class="form-control" id="BannerImage" name="BannerImage">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Form Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.FormTitle">
+                        </div>
+
+                        @*<div class="mb-3 col-md-12">
+                            <label class="col-form-label">Image (400 x 542)</label>
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.ImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.ImagePath">
+                            <input type="file" class="form-control" id="Image" name="Image">
+                            <label class="col-form-label">Image Alt</label>
+                            <input type="text" class="form-control" asp-for="@Model.ImageAlt">
+                        </div>*@
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Address</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.Address"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Email</label>
+                            <input type="text" class="form-control" asp-for="@Model.Email">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Phone</label>
+                            <input type="text" class="form-control" asp-for="@Model.Phone">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Google Map Url</label>
+                            <textarea class="form-control" asp-for="@Model.GoogleMapUrl"></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

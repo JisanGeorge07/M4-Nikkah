@@ -1,0 +1,145 @@
+@using Application.Constants
+@using Application.Helpers
+@using Application.Models
+@using Domain
+@model List<Application.Models.Transactions.Transaction>
+@{
+    ViewBag.Title = "Transactions";
+    var Transactions = Model!;
+    var enquiries = ViewBag.Enquiries as IEnumerable<RegistrationDto>;
+}
+
+@section Title
+{
+   Transaction Details
+}
+<div class="card-header">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!--Date filter-->
+        <form method="get" action="/admin/enquiry/Transaction-enquiry" class="d-flex flex-grow-1 align-items-center">
+            <div class="d-flex align-items-center mr-3">
+                <div class="form-group mr-2">
+                    <label for="fromDate" class="mr-2">From Date</label>
+                    <input type="date" class="form-control" id="fromDate" name="fromDate" value="@ViewBag.FromDate" />
+                </div>
+                <div class="form-group mr-2">
+                    <label for="toDate" class="mr-2">To Date</label>
+                    <input type="date" class="form-control" id="toDate" name="toDate" value="@ViewBag.ToDate" />
+                </div>
+                <div class="form-group mr-2">
+                    <label for="paymentType" class="mr-2">Payment Type</label>
+                    <select class="form-control" id="paymentType" name="paymentType" style="margin-top: 0px;">
+                        <option value="">All</option>
+                        <option value="Online" selected="@(ViewBag.PaymentType == "Online")">Online</option>
+                        <option value="Offline" selected="@(ViewBag.PaymentType == "Offline")">Offline</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary ml-2" style="margin-top: 20px; margin-bottom: -10px; margin-left:20px">Filter</button>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group me-2 flex-grow-1 position-relative" style="max-width: 300px;">
+                    <input type="text" name="name" class="form-control" placeholder="Search By Name" value="@ViewBag.Name" id="searchInput" style="padding:10px;margin-top:25px;margin-left:20px;" />
+                    <i class="bi bi-search position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);"></i> <!-- Bootstrap icon for search -->
+                </div>
+            </div>
+        </form>
+        <!--Add Subscription and Export To Pdf-->
+        <div class="d-flex align-items-center">
+            <a asp-action="AddSubscription" class="btn btn-success mr-2" style="margin-top:24px">Add Subscription</a>
+            <form method="get" action="/admin/enquiry/Transaction-enquiry/exportpdf" class="ml-3">
+                <input type="hidden" name="fromDate" value="@ViewBag.FromDate" />
+                <input type="hidden" name="toDate" value="@ViewBag.ToDate" />
+                <button type="submit" class="btn btn-secondary" style="margin-top:24px">Export as PDF</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@if (Transactions.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    
+                    <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th width="15%">Register Number</th>
+                                <th width="15%">Payment on</th>
+                                <th width="20%">Transaction Id</th>
+                                <th width="15%">Name</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Payment Type</th>
+                                <th>Source</th>
+                                <th width="15%">Phone</th>
+                                <th width="15%">Email</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Transactions)
+                            {
+                                var user = enquiries?.FirstOrDefault(x => x.Id == item.userId);
+                                <tr>
+                                    <td>@Html.Raw(user?.RegisterNumber ?? "N/A")</td>
+                                    <td>@Html.Raw(item.CreatedOn.ToShortDateString())</td>
+                                    <td>@Html.Raw(item.TxnId)</td>
+                                    <td>@Html.Raw(item.FirstName.Trim())</td>
+                                    <td>@Html.Raw(item.Status)</td>
+                                    <td>@Html.Raw(item.Amount)</td>
+                                    <td>
+                                        @if (item.PaymentType == "Offline")
+                                        {
+                                            if (item.OfflinePaymentType == OfflinePaymentMethod.UPIPayment)
+                                            {
+                                                <span>Offline(UPI Payment)</span>
+                                            }
+                                            else if (item.OfflinePaymentType == OfflinePaymentMethod.BankPayment)
+                                            {
+                                                <span>Offline(Bank Payment)</span>
+                                            }
+                                            else if (item.OfflinePaymentType == OfflinePaymentMethod.CashPayment)
+                                            {
+                                                <span>Offline(Cash Payment)</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Offline</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span>Online</span>
+                                        }
+                                    </td>
+                                    <td>@Html.Raw(string.IsNullOrEmpty(item.Source) ? "N/A" : item.Source)</td>
+                                    <td>@Html.Raw($"{CountryCodeHelper.GetCountryCode(user?.CountryCode ?? user?.Country)}{item.Phone}")</td>
+                                    <td>@Html.Raw(item.Email)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+        <div class="row">
+        <div class="col-12">
+            <br />
+    <p>No transactions found for the selected criteria.</p>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // No longer needed: modal fallback
+        });
+    </script>
+}

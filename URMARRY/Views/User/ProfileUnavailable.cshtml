@@ -1,0 +1,76 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    ViewData["Title"] = "Profile Unavailable";
+}
+
+@*<div class="d-flex align-items-center justify-content-center py-5" style="min-height: 75vh; background: radial-gradient(circle at top right, rgba(244,106,106,0.05), transparent), radial-gradient(circle at bottom left, rgba(85,110,230,0.05), transparent);">
+    <div class="card shadow-lg border-0 text-center p-5" style="max-width: 480px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06) !important;">
+        <!-- Error Status Icon -->
+        <div class="mx-auto mb-4 d-flex align-items-center justify-content-center animate__animated animate__zoomIn" 
+             style="width: 100px; height: 100px; border-radius: 50%; background-color: rgba(244, 106, 106, 0.1); color: #f46a6a; transition: transform 0.3s ease;">
+            <i class="fas fa-user-slash" style="font-size: 2.8rem;"></i>
+        </div>
+        
+        <!-- Status Messages -->
+        <h2 class="fw-bold mb-3" style="color: #343a40; font-family: 'Outfit', sans-serif; letter-spacing: -0.5px;">Profile Unavailable</h2>
+        <p class="text-muted mb-4 px-3" style="font-size: 1.05rem; line-height: 1.6;">
+            The profile you are attempting to view has been deleted or deactivated by the account owner.
+        </p>
+        
+        <!-- Navigation Actions -->
+        <div class="d-grid gap-2 col-10 mx-auto">
+            <a asp-controller="User" asp-action="Dashboard" class="btn btn-primary py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-2" 
+               style="border-radius: 10px; background: linear-gradient(135deg, #556ee6, #3452e1); border: none; box-shadow: 0 4px 12px rgba(85, 110, 230, 0.2); transition: all 0.2s ease;">
+                <i class="fas fa-home"></i> Go to Dashboard
+            </a>
+            <a asp-controller="User" asp-action="Explore" class="btn btn-light py-2.5 fw-semibold border text-secondary d-flex align-items-center justify-content-center gap-2" 
+               style="border-radius: 10px; background-color: #f8f9fa; border-color: #e9ecef; transition: all 0.2s ease;">
+                <i class="fas fa-search"></i> Explore Profiles
+            </a>
+        </div>
+    </div>
+</div>
+*@
+<style>
+    /* Premium Hover effect styling */
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(165, 190, 37, 0.3) !important;
+        background: linear-gradient(135deg, #128742, #0b6b2e) !important;
+    }
+    .btn-light:hover {
+        background-color: #e9ecef !important;
+        color: #212529 !important;
+    }
+</style>
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+<div id="no-results" class="text-center py-5 d-flex flex-column align-items-center justify-content-center" style="min-height: 90vh;">
+    <img src="/assets/images/icon/profile-unavilable.svg" alt="no-match" height="200px">
+    <h4 class="text-black fw-semibold fs-5 lh-base align-middle mt-3 mb-1">
+        Profile Unavailable
+    </h4>
+    <div class="col-lg-6 mx-auto">
+        <p class="fw-normal fs-13 lh-base text-center align-middle text-black"
+            style="font-size: 12px;">
+            The profile you are attempting to view has been deleted or deactivated by the account owner.
+        </p>
+    </div>
+
+    <div class="d-grid gap-2 col-11 col-sm-6 col-md-4 mx-auto mt-4">
+        <a asp-controller="User" asp-action="Dashboard" class="btn btn-primary py-2 fw-semibold d-flex align-items-center justify-content-center gap-2" 
+           style="border-radius: 8px; background: linear-gradient(135deg, #a5be25, #128742); border: none; box-shadow: 0 4px 12px rgba(165, 190, 37, 0.2); transition: all 0.2s ease; font-size: 14px;">
+            <i class="uil uil-home"></i> Go to Dashboard
+        </a>
+        <a asp-controller="User" asp-action="Explore" class="btn btn-light py-2 fw-semibold border text-secondary d-flex align-items-center justify-content-center gap-2" 
+           style="border-radius: 8px; background-color: #f8f9fa; border-color: #e9ecef; transition: all 0.2s ease; font-size: 14px;">
+            <i class="uil uil-search"></i> Explore Profiles
+        </a>
+    </div>
+</div>
+</div>
+</div>
+</main>
+
+                            

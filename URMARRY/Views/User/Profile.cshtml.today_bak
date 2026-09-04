@@ -1,0 +1,2395 @@
+@using Application.Helpers
+@model HomeViewModel
+
+@{
+    // <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    //var user = Model.Registration!;
+    var user = Model.MatchedUserProfile!;
+    var image = Model.Images!;
+    var displayCountryCode = CountryCodeHelper.GetCountryCode(user.CountryCode ?? user.Country);
+    var displaySecondaryCountryCode = CountryCodeHelper.GetCountryCode(user.SecondaryCountryCode ?? user.PresentCountry);
+    var dateOfBirth = !string.IsNullOrEmpty(user.DOB) ? user.DOB : "01/01/1990";
+    var str1 = dateOfBirth.Replace("-", "/").Split('/');
+    var day1 = string.Empty;
+    var month1 = string.Empty;
+    var year1 = str1[2];
+    if (str1[0].Length < 2)
+    {
+        day1 = "0" + str1[0];
+    }
+    else
+    {
+        day1 = str1[0];
+    }
+    if (str1[1].Length < 2)
+    {
+        month1 = "0" + str1[1];
+    }
+    else
+    {
+        month1 = str1[1];
+    }
+    if (day1.Length > 2)
+    {
+        var y = year1;
+        var d = day1;
+        day1 = y;
+        year1 = d;
+    }
+    var dob1 = day1 + "/" + month1 + "/" + year1;
+    DateTime myDate1 = DateTime.ParseExact(dob1, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    DateTime today = DateTime.UtcNow;
+    DateTime birthDate = myDate1;
+    int age = today.Year - birthDate.Year;
+
+    if (birthDate > today.AddYears(-age))
+    {
+        age--;
+    }
+
+    string defaultImage = string.Equals(user.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "~/assets/images/default-user-women.png" : "~/assets/images/default-user-men.png";
+    string imagePath = !string.IsNullOrEmpty(user.ImagePath) ? user.ImagePath : defaultImage;
+    string restrictedAccessModalAttributes = !Model.Registration.IsPremiumMember && !Model.Registration.IsSpecialRequest ? $"data-bs-toggle=\"modal\" data-bs-target=\"#payment1\" data-name=\"{user.Name}\" data-registernumber=\"{user.RegisterNumber}\" data-imagepath=\"{Url.Content(imagePath)}\"" : "";
+
+    bool isViewerSelf = Model.Registration != null && user != null && Model.Registration.Id == user.Id;
+    string? lastSeenDisplayText = null;
+    if (!isViewerSelf)
+    {
+        if (Model.IsProfileOnline)
+        {
+            lastSeenDisplayText = "Online";
+        }
+        else if (Model.ProfileLastSeenAt.HasValue)
+        {
+            var rawTime = Model.ProfileLastSeenAt.Value;
+            var diff = DateTime.UtcNow - rawTime;
+            if (diff.TotalSeconds < -30)
+            {
+                diff = DateTime.Now - rawTime;
+            }
+            if (diff.TotalSeconds < 0) diff = TimeSpan.Zero;
+
+            if (diff.TotalSeconds < 60)
+            {
+                lastSeenDisplayText = "Last seen just now";
+            }
+            else if (diff.TotalMinutes < 60)
+            {
+                int m = Math.Max(1, (int)diff.TotalMinutes);
+                lastSeenDisplayText = $"Last seen {m}m ago";
+            }
+            else if (diff.TotalHours < 24)
+            {
+                int h = (int)diff.TotalHours;
+                lastSeenDisplayText = $"Last seen {h}hr{(h > 1 ? "s" : "")} ago";
+            }
+            else if (diff.TotalDays < 2)
+            {
+                lastSeenDisplayText = "Last seen yesterday";
+            }
+            else if (diff.TotalDays < 7)
+            {
+                int d = (int)diff.TotalDays;
+                lastSeenDisplayText = $"Last seen {d} days ago";
+            }
+            else if (diff.TotalDays < 30)
+            {
+                int w = Math.Max(1, (int)(diff.TotalDays / 7));
+                lastSeenDisplayText = $"Last seen {w} week{(w > 1 ? "s" : "")} ago";
+            }
+            else if (diff.TotalDays < 365)
+            {
+                int mo = Math.Max(1, (int)(diff.TotalDays / 30));
+                lastSeenDisplayText = $"Last seen {mo} month{(mo > 1 ? "s" : "")} ago";
+            }
+            else
+            {
+                int y = Math.Max(1, (int)(diff.TotalDays / 365));
+                lastSeenDisplayText = $"Last seen {y} year{(y > 1 ? "s" : "")} ago";
+            }
+        }
+    }
+}
+
+
+<style>
+    .profile-presence-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.25px;
+        transition: all 0.3s ease;
+        user-select: none;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .profile-presence-badge.online {
+        background: rgba(34, 197, 94, 0.12);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.32);
+        box-shadow: 0 1px 4px rgba(34, 197, 94, 0.15);
+    }
+    .profile-presence-badge.offline {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    .profile-presence-badge.offline i {
+        font-size: 13px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        margin-top: -1px;
+    }
+    .profile-presence-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        animation: profilePresencePulse 1.8s infinite;
+    }
+    @@keyframes profilePresencePulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+    }
+
+    /* Responsive adjustments for presence section */
+    .profile-header-presence-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: 12px;
+        row-gap: 6px;
+        margin-bottom: 8px;
+    }
+    .profile-name-text {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 0;
+        display: inline-flex;
+        align-items: center;
+    }
+    #profilePresenceContainer {
+        display: inline-flex;
+        align-items: center;
+        transform: translateY(-5px);
+    }
+
+    @@media (max-width: 767.98px) {
+        .profile-name-text {
+            font-size: 20px;
+        }
+        .profile-header-presence-row {
+            column-gap: 8px;
+            row-gap: 6px;
+            margin-bottom: 6px;
+        }
+        #profilePresenceContainer {
+            transform: translateY(-4px);
+        }
+        .profile-presence-badge {
+            font-size: 11.5px;
+            padding: 3px 10px;
+            gap: 5px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .profile-name-text {
+            font-size: 18px;
+        }
+        #profilePresenceContainer {
+            transform: translateY(-3.5px);
+        }
+    }
+
+    .contact-lock {
+        position: absolute !important;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+        backdrop-filter: blur(5px);
+        background: rgba(255, 255, 255, 0.15);
+        z-index: 5;
+        border-radius: 10px;
+    }
+    .blur-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+    }
+    .blur-wrapper.locked .family-information,
+    .blur-wrapper.locked .contact-details {
+        filter: blur(5px);
+        user-select: none;
+        pointer-events: none;
+        transition: filter 0.3s ease;
+    }
+    .profile-detail-image-wrapper.photos-unlocked .tiny-slide img {
+        filter: none !important;
+        transform: none !important;
+    }
+    /* Modal image blur overlay and lock icon styling */
+    .modal-image-blur-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .modal-image-blur-wrapper img {
+        filter: blur(8px) !important;
+        transform: scale(1.05);
+        transition: filter 0.3s ease, transform 0.3s ease;
+    }
+    .modal-image-blur-wrapper.photos-unlocked img {
+        filter: none !important;
+        transform: none !important;
+    }
+    .modal-image-blur-wrapper .modal-premium-blur {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        background: rgba(255, 255, 255, 0.05);
+        z-index: 2;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+    .modal-image-blur-wrapper .modal-premium-lock {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .modal-image-blur-wrapper .modal-premium-lock i {
+        font-size: 24px;
+        color: #ffffff;
+        display: inline-flex;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+</style>
+
+    <main class="flex-fil p-4" style="min-width: 0;"> 
+                <div class="container" style="max-width: 960px;">
+                    <div> 
+
+                        <!-- PROFILE DETAIL SECTION STARTS  -->
+                        <div id="profileDetailSection">
+                            <!-- Back Button -->
+                            <!-- <button class="btn back-btn-round mb-3" onclick="showCardsSection()">
+                                                                                <i class="uil uil-arrow-left"></i>
+                                                                            </button> -->
+                        
+                            <!-- Profile Summary Wrapper -->
+
+                            <div class="card main-profile-wrapper border-0 rounded p-4 shadow mt-4 mb-4">
+                                <!-- Image Side -->
+                                <div class="row">
+                                <div class="col-12 col-md-6 col-lg-4">
+                                <div class="profile-detail-image-wrapper position-relative overflow-hidden rounded @(Model.PhotosUnlocked || string.IsNullOrEmpty(user?.ImagePath) ? "photos-unlocked" : "")">
+                        <div class="tiny-single-item">
+                            @if (!string.IsNullOrEmpty(user?.ImagePath))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + user?.ImagePath)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Url.Content(string.Equals(user?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "~/assets/images/default-user-women.png" : "~/assets/images/default-user-men.png")" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            @if(!string.IsNullOrEmpty(image?.Image1Path))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + image?.Image1Path)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            @if(!string.IsNullOrEmpty(image?.Image2Path))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + image?.Image2Path)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            @if(!string.IsNullOrEmpty(image?.Image3Path))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + image?.Image3Path)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            @if(!string.IsNullOrEmpty(image?.Image4Path))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + image?.Image4Path)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                            @if(!string.IsNullOrEmpty(image?.Image5Path))
+                            {
+                                <div class="tiny-slide position-relative">
+                                    <img src="@Html.Raw("/" + image?.Image5Path)" class="img-fluid rounded" alt="Profile">
+                                </div>
+                            }
+                        </div> 
+                        <!-- Watermark Image -->
+                        <img src="../../../../assets/images/icon/card-watermark.png" class="profile-edit-watermark position-absolute" alt="Watermark">
+                         @if (!Model.PhotosUnlocked && !string.IsNullOrEmpty(user?.ImagePath))
+                         {
+                                         <div class="premium-blur position-absolute top-0 start-0 w-100 h-100 rounded" style="z-index: 2;"></div>
+
+                                         <!-- Lock Icon -->
+                                         <div class="premium-lock" style="z-index: 3; cursor: @(Model.PhotoUnlockRequestStatus == 0 ? "default" : "pointer");" 
+                                              onclick="@(Model.PhotoUnlockRequestStatus == 0 ? "" : $"sendPhotoUnlockRequest({Model.MatchedUserProfile.Id})")">
+                                             <i data-lucide="@(Model.PhotoUnlockRequestStatus == 0 ? "clock" : "lock")"></i>
+                                             <span class="premium-text">
+                                                 @if (Model.PhotoUnlockRequestStatus == 0)
+                                                 {
+                                                     <text>Request Pending...</text>
+                                                 }
+                                                 else if (Model.PhotoUnlockRequestStatus == 2)
+                                                 {
+                                                     <text>Request Rejected - Retry?</text>
+                                                 }
+                                                 else
+                                                 {
+                                                     <text>Unlock Images</text>
+                                                 }
+                                             </span> 
+                                         </div>
+                         }                </div>
+                    </div>
+
+                                <div class="col-12 col-md-6 col-lg-8 mt-3 mt-md-0">
+                                        <div class="bio-title ms-md-4">
+                                            <div class="profile-header-presence-row">
+                                                <h5 class="profile-name-text">
+                                                    @Html.Raw(user.Name)
+                                                    @if (user.DocumentVerificationComplete && user.DocumentVerificationFollowupApproved)
+                                                    {
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
+                                                            <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                                                        </svg>
+                                                    }
+                                                </h5>
+                                                @if (!isViewerSelf)
+                                                {
+                                                    <div id="profilePresenceContainer">
+                                                        @if (Model.IsProfileOnline)
+                                                        {
+                                                            <span class="profile-presence-badge online" title="Currently online">
+                                                                <span class="profile-presence-dot"></span>
+                                                                <span>Online</span>
+                                                            </span>
+                                                        }
+                                                        else if (!string.IsNullOrEmpty(lastSeenDisplayText))
+                                                        {
+                                                            <span class="profile-presence-badge offline" title="@(Model.ProfileLastSeenAt.HasValue ? Model.ProfileLastSeenAt.Value.ToString("dd MMM yyyy, hh:mm tt UTC") : "")">
+                                                                <i class="uil uil-clock-three"></i>
+                                                                <span>@lastSeenDisplayText</span>
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div>
+                                                <h6 class="text-muted mb-1" style="font-size: 13.5px; line-height: 1.4;">@Html.Raw(user.Village ?? string.Empty)
+                        @Html.Raw(!string.IsNullOrEmpty(user.District) ? ", " + user.District : string.Empty)
+                        @Html.Raw(!string.IsNullOrEmpty(user.State) ? ", " + user.State : string.Empty)</h6>
+                                                <p class="text-muted mb-0 mt-1 mb-2" style="color: rgb(0, 102, 45) !important;"><b>@Html.Raw(user.RegisterNumber?.ToUpper())</b></p>
+                                            </div> 
+
+                                            <div class="row">
+                                                <div class="col-lg-12 mt-1 mt-sm-0">
+                                                    <p>@Html.Raw(user.About)</p> 
+                                                </div> 
+                                            </div> 
+
+                                            <div class="row mt-2">
+                                                <div class="col-lg-12 col-12 mt-2 mt-lg-0">
+                                                    <div class="shop-list align-items-center">
+                                                        <div class="qty-icons">
+                                                        <form id="likeform-@user.Id" method="post" asp-action="UserFavouriteProfile" asp-controller="User" style="display:inline;">
+                                                        <input type="hidden" name="LikedId" value="@user.Id"/>
+                                                        <input type="hidden" id="action-like-@user.Id" name="Action" value="@((Model.InterestStatusFromUs != -1) ? "Remove" : "Add")"/>
+                                                        @{
+                                                            int fromUs = Model.InterestStatusFromUs;
+                                                            int toUs = Model.InterestStatusToUs;
+                                                            string btnLabel = "Express Interest";
+                                                            string btnClass = "btn btn-soft-primary";
+                                                            string btnStyle = "";
+                                                            bool btnDisabled = false;
+
+                                                            if (fromUs == 0) // Pending
+                                                            {
+                                                                btnLabel = "Interest Sent (Pending)";
+                                                                btnClass = "btn btn-outline-warning";
+                                                                btnStyle = "color: #ff9f43 !important; border: 1px solid #ff9f43 !important; opacity: 1 !important; background-color: transparent !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            }
+                                                            else if (fromUs == 1 && toUs == 1) // Matched
+                                                            {
+                                                                btnLabel = "Matched!";
+                                                                btnClass = "btn btn-soft-success";
+                                                                btnStyle = "background-color: #28a745 !important; color: white !important; opacity: 1 !important; border-color: #28a745 !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            } 
+                                                            else if (fromUs == 1) // Accepted
+                                                            {
+                                                                btnLabel = "Interest Accepted ✓";
+                                                                btnClass = "btn btn-soft-success";
+                                                                btnStyle = "background-color: #28a745 !important; color: white !important; opacity: 1 !important; border-color: #28a745 !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            }
+                                                            else if (fromUs == 2) // Declined
+                                                            {
+                                                                btnLabel = "Interest Declined";
+                                                                btnClass = "btn btn-soft-secondary";
+                                                                btnStyle = "background-color: #6c757d !important; color: white !important; opacity: 1 !important; border-color: #6c757d !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            }
+                                                            else if (toUs == 0) // Received interest (Pending)
+                                                            {
+                                                                btnLabel = "Accept Interest";
+                                                                btnClass = "btn btn-success";
+                                                                btnStyle = "background-color: #28a745 !important; color: white !important; border-color: #28a745 !important;";
+                                                            }
+                                                            else if (toUs == 1) // We accepted their interest
+                                                            {
+                                                                btnLabel = "Interest Accepted ✓";
+                                                                btnClass = "btn btn-soft-success";
+                                                                btnStyle = "background-color: #28a745 !important; color: white !important; opacity: 1 !important; border-color: #28a745 !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            }
+                                                            else if (toUs == 2) // We declined their interest
+                                                            {
+                                                                btnLabel = "Interest Declined";
+                                                                btnClass = "btn btn-soft-secondary";
+                                                                btnStyle = "background-color: #6c757d !important; color: white !important; opacity: 1 !important; border-color: #6c757d !important; cursor: default; pointer-events: none;";
+                                                                btnDisabled = true;
+                                                            }
+                                                        }
+                                                        <button type="button" id="likebutton-@user.Id"
+                                                            class="@btnClass" style="@btnStyle" @(btnDisabled ? "disabled" : "") 
+                                                            onclick="@(toUs == 0 ? $"respondToInterest({user.Id}, 'Accept')" : "onInterestButtonClick(event)")">
+                                                            @btnLabel
+                                                        </button>
+                                                        </form>
+                                                        </div>
+                                                    </div>
+                                                </div><!--end col-->
+                                            </div><!--end row-->
+
+
+
+                                            <!--<div class="mt-4">
+                                            <a href="javascript:void(0)" class="btn btn-primary">Text</a>
+                                            <a href="" class="btn btn-soft-primary ms-2">Like this member?</a>
+                                        </div>--> 
+                                        </div>
+                                    </div>
+
+                                <!-- Content Side -->
+                                @*<div class="profile-summary-content d-flex flex-column">
+                                    <div class="mt-2 card-content-container">
+                                        <span class="fs-12 d-block mb-1">@Html.Raw(user.RegisterNumber.ToUpper())</span>
+                                        <h4 id="detailName" class="fw-medium mb-2 fs-5">@Html.Raw(user.Name)</h4>
+                                        @{
+                                            var heightStr = Model.BodyFeatures?.FirstOrDefault(x => x.Id == user.HeightId)?.Title;
+                                            var religionStr = Model.Religions?.FirstOrDefault(x => x.Id == user.ReligionId)?.Title;
+                                            var locationStr = $"{user.Village}{(string.IsNullOrEmpty(user.District) ? "" : ", " + user.District)}{(string.IsNullOrEmpty(user.State) ? "" : ", " + user.State)}";
+                                            var basicInfoStr = $"{age} Yrs{(string.IsNullOrEmpty(heightStr) ? "" : ", " + heightStr)}{(string.IsNullOrEmpty(user.HighestEducation) ? "" : ", " + user.HighestEducation)}{(string.IsNullOrEmpty(religionStr) ? "" : ", " + religionStr)}{(string.IsNullOrEmpty(locationStr) ? "" : ", " + locationStr)}";
+                                        }
+                                        <p id="detailInfo" class="fs-12 mb-0">@Html.Raw(user.About)</p>
+                                    </div>
+                                    <!-- Buttons -->
+                                    <div class="content-button-wrapper mt-3 card-content-container">
+                                        <form id="likeform-@user.Id" method="post" asp-action="UserFavouriteProfile" asp-controller="User" style="display:inline;">
+                                            <input type="hidden" name="LikedId" value="@user.Id"/>
+                                            <input type="hidden" id="action-like-@user.Id" name="Action" value="@((user.IsLiked) ? "Remove" : "Add")"/>
+                                            @{
+                                                // State logic:
+                                                // IsLiked=true  && ProfileLikedUs=true  → ✓ Matched!
+                                                // IsLiked=false && ProfileLikedUs=true  → Confirm Interest (they liked us)
+                                                // IsLiked=true  && ProfileLikedUs=false → Interest Sent
+                                                // IsLiked=false && ProfileLikedUs=false → Express Interest
+                                                string btnLabel = user.IsLiked && Model.ProfileLikedUs ? "Matched!"
+                                                    : !user.IsLiked && Model.ProfileLikedUs ? "Confirm Interest"
+                                                    : user.IsLiked ? "Interest Sent"
+                                                    : "Express Interest";
+                                            }
+                                            <button type="button" id="likebutton-@user.Id" class="icon-btn btn-lime"
+                                                onclick="onInterestButtonClick(event)">
+                                                @btnLabel
+                                            </button>
+                                        </form>
+                                    </div>
+                        
+                                    <!-- Watermark -->
+                                    <div class="watermark-container">
+                                        <img src="../../../../assets/images/icon/detail-card-logo.png">
+                                    </div>
+                        
+                                    <!-- Close Button -->
+                                    <button class="btn-close m-3 shadow-none border-0" onclick="window.history.back()">
+                                        <i class="uil uil-times" style="font-size: 18px;"></i>
+                                    </button>
+                                </div>*@
+
+
+
+                            </div>
+                        </div>
+
+
+                        
+                            <!-- Interest Status Bar -->
+                            @{
+                                int fromUsVal = Model.InterestStatusFromUs;
+                                int toUsVal = Model.InterestStatusToUs;
+                                bool showInterestBar = (fromUsVal != -1 || toUsVal != -1);
+                                string interestBarVisibility = showInterestBar ? "" : "d-none";
+                            }
+                            <div class="interest-status-bar-container @interestBarVisibility" id="interest-info-section">
+                                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                    <div class="d-flex flex-column">
+                                        @if (fromUsVal == 1 && toUsVal == 1)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">🎉 It's a Match!</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">You and @(user.Name.Split(" ")[0]) have mutually matched ❤️. Go ahead and connect!</p>
+                                        }
+                                        else if (fromUsVal == 0)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">Waiting for Response...</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">You sent an interest request. Waiting for @(user.Name.Split(" ")[0]) to accept or decline. 💌</p>
+                                        }
+                                        else if (fromUsVal == 1)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">Interest Accepted ✓</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">@(user.Name.Split(" ")[0]) accepted your interest! 💚</p>
+                                        }
+                                        else if (fromUsVal == 2)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">Interest Declined</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">Your interest request was declined.</p>
+                                        }
+                                        else if (toUsVal == 0)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">💌 @(user.Name.Split(" ")[0]) sent you an Interest!</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">Would you like to accept or decline their interest request? 💚</p>
+                                        }
+                                        else if (toUsVal == 1)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">Interest Accepted ✓</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">You accepted @(user.Name.Split(" ")[0])'s interest! 💚</p>
+                                        }
+                                        else if (toUsVal == 2)
+                                        {
+                                            <h6 class="mb-1 fw-bold fs-15 text-white">Interest Declined</h6>
+                                            <p class="text-white opacity-90 fs-12 mb-0">You declined @(user.Name.Split(" ")[0])'s interest request.</p>
+                                        }
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                                        @if (toUsVal == 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-light text-success fw-bold rounded-pill px-3 py-1.5 shadow-sm" onclick="respondToInterest(@user.Id, 'Accept')">
+                                                Accept
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1.5" onclick="respondToInterest(@user.Id, 'Decline')">
+                                                Decline
+                                            </button>
+                                        }
+                                        else if (fromUsVal == 0)
+                                        {
+                                            <button type="button" id="cancel-interest-btn" class="btn btn-sm btn-danger text-white rounded-pill px-3 py-1.5 fw-bold shadow-sm" onclick="onCancelInterestClick(event)">
+                                                Cancel Interest
+                                            </button>
+                                        }
+                                        else if (fromUsVal == 1 || toUsVal == 1)
+                                        {
+                                            @if (!Model.ContactDetailsUnlocked)
+                                            {
+                                                <button id="status-bar-view-contact-btn" class="btn btn-sm btn-light text-success fw-bold rounded-pill px-3 py-1.5 shadow-sm" onclick="@(Model.Registration.IsPremiumMember || Model.Registration.IsSpecialRequest ? "showPremiumContactModal()" : "showUpgradeModal()")">
+                                                    View Contact
+                                                </button>
+                                            }
+                                            @*<button class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1.5" onclick="sendSMSToast()">
+                                                Send SMS
+                                            </button>*@
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Contact Bar -->
+                            <div class="contact-bar-container text-center">
+                                @{
+                                    string contactPhone = user.Phone;
+                                    if (!Model.ContactDetailsUnlocked)
+                                    {
+                                        contactPhone = contactPhone[0] + new string('X', contactPhone.Length - 2) + contactPhone[^1];
+                                    }
+                                }
+                                <h6 class="mb-0 fs-14 fw-medium">Contact Number: @displayCountryCode <span id="contactNumber-@user.Id" class="text-warning">@contactPhone</span></h6>
+                        
+                                <div class="position-absolute w-100" style="bottom: -20px; left: 0; z-index: 5;">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                                        @if (!Model.ContactDetailsUnlocked)
+                                        {
+                                            <button id="view-contact-details-btn" class="btn btn-lime-green text-white rounded-pill px-4 py-2 small shadow fs-14 fw-medium"
+                                                onclick="@(Model.Registration.IsPremiumMember || Model.Registration.IsSpecialRequest ? "showPremiumContactModal()" : "showUpgradeModal()")">
+                                                <i class="uil uil-phone-volume me-1"></i>
+                                                View Contact Details
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button id="view-contact-details-btn" class="btn btn-lime-green text-white rounded-pill px-4 py-2 small shadow fs-14 fw-medium d-none">
+                                                <i class="uil uil-phone-volume me-1"></i>
+                                                View Contact Details
+                                            </button>
+                                        }
+
+                                        @{
+                                            var cleanCode = displayCountryCode.Replace("+", "");
+                                            var cleanPhone = user.Phone?.Replace(" ", "").Replace("+", "");
+                                            var waHref = Model.ContactDetailsUnlocked ? $"https://wa.me/{cleanCode}{cleanPhone}" : "javascript:void(0)";
+                                            var waOnclick = Model.ContactDetailsUnlocked ? "" : (Model.Registration.IsPremiumMember || Model.Registration.IsSpecialRequest ? "showPremiumContactModal()" : "showUpgradeModal()");
+                                        }
+                                        <a id="whatsapp-link" href="@waHref" onclick="@waOnclick" @(Model.ContactDetailsUnlocked ? "target=\"_blank\"" : "")
+                                            class="btn btn-forest-green text-white rounded-circle d-flex align-items-center justify-content-center shadow p-0 whatsupp"
+                                            style="width: 42px; height: 42px;">
+                                            <img src="../../../../assets/images/icon/whatsapp.icon.png" width="24" alt="WhatsApp">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        
+                        
+                        
+                        
+                            <!-- Information Sections -->
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Basic Information</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Age:</span>
+                                            <span class="fw-semibold">@age Yrs</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Gender:</span>
+                                            <span class="fw-semibold">@user.Gender</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Marital Status:</span>
+                                            <span class="fw-semibold">@(Model.MaritalStatuses?.FirstOrDefault(x => x.Id == user.MaritalStatusId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    @if (user.NumberOfChildrens > 0)
+                                    {
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2"><span class="fw-medium opacity-75">Children:</span>
+                                                <span class="fw-semibold">@user.NumberOfChildrens</span>
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Mother Tongue:</span>
+                                            <span class="fw-semibold">@(Model.MotherTongues?.FirstOrDefault(x => x.Id == user.MotherTongueId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Financial Status:</span>
+                                            <span class="fw-semibold">@(Model.FinancialStatuses?.FirstOrDefault(x => x.Id == user.FinancialStatusId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Physical Information</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Height:</span>
+                                            <span class="fw-semibold">@(Model.BodyFeatures?.FirstOrDefault(x => x.Id == user.HeightId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Weight:</span>
+                                            <span class="fw-semibold">@(Model.BodyFeatures?.FirstOrDefault(x => x.Id == user.WeightId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Complexion:</span>
+                                            <span class="fw-semibold">@(Model.BodyFeatures?.FirstOrDefault(x => x.Id == user.ComplexionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Body Type:</span>
+                                            <span class="fw-semibold">@(Model.BodyFeatures?.FirstOrDefault(x => x.Id == user.BodyTypeId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Physically Challenged:</span>
+                                            <span class="fw-semibold">@(user.IsPhysicallyChallenged ? "Yes" : "No")</span>
+                                        </div>
+                                    </div>
+                                    @if (user.IsPhysicallyChallenged && !string.IsNullOrEmpty(user.PhysicallyChallengedDetail))
+                                    {
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2" style="white-space: normal; height: auto; min-height: 38px; text-overflow: clip;" title="@(string.IsNullOrEmpty(user.PhysicallyChallengedDetail) ? "N/A" : user.PhysicallyChallengedDetail)">
+                                                <span class="fw-medium opacity-75">Physical Challenge Detail:</span>
+                                                <span class="fw-semibold">@(string.IsNullOrEmpty(user.PhysicallyChallengedDetail) ? "N/A" : user.PhysicallyChallengedDetail)</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Education & Profession</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Education:</span>
+                                            <span class="fw-semibold">@(string.IsNullOrEmpty(user.HighestEducation) ? "N/A" : user.HighestEducation)</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Course:</span>
+                                            <span class="fw-semibold">@(string.IsNullOrEmpty(user.EducationType) ? "N/A" : user.EducationType)</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Profession:</span>
+                                            <span class="fw-semibold">@(Model.Professions?.FirstOrDefault(x => x.Id == user.ProfessionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Profession Type:</span>
+                                            <span class="fw-semibold">@(string.IsNullOrEmpty(user.ProfessionType) ? "N/A" : user.ProfessionType)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Religious Information</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Religion:</span>
+                                            <span class="fw-semibold">@(Model.Religions?.FirstOrDefault(x => x.Id == user.ReligionId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Community:</span>
+                                            <span class="fw-semibold">@(Model.Communities?.FirstOrDefault(x => x.Id == user.CommunityId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Religiousness:</span>
+                                            <span class="fw-semibold">@(Model.Religiousnesses?.FirstOrDefault(x => x.Id == user.ReligiousnessId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Location Information</h5>
+                                <div class="row g-2 location-details">
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2" style="white-space: normal;"><span class="fw-medium opacity-75">Present Location:</span>
+                                            <span class="fw-semibold">@(!string.IsNullOrWhiteSpace(user.PresentCity) ? user.PresentCity + ", " : "")@(!string.IsNullOrWhiteSpace(user.PresentState) ? user.PresentState + ", " : "")@user.PresentCountry</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">Nationality:</span>
+                                            <span class="fw-semibold">@(Model.Nationalities?.FirstOrDefault(x => x.Id == user.NationalityId)?.Title ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">State:</span>
+                                            <span class="fw-semibold">@(user.State ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">District:</span>
+                                            <span class="fw-semibold">@(user.District ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <div class="info-pill p-2"><span class="fw-medium opacity-75">City:</span>
+                                            <span class="fw-semibold">@(user.Village ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Family Information</h5>
+                                <div class="blur-wrapper @(Model.ContactDetailsUnlocked ? "" : "locked")">
+                                    <div class="contact-lock d-flex align-items-center justify-content-center @(Model.ContactDetailsUnlocked ? "d-none" : "")"></div>
+                                    <div class="row g-2 family-information">
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2" style="white-space: normal;"><span class="fw-medium opacity-75">Family Name:</span>
+                                                <span class="fw-semibold family-name-val">@(Model.ContactDetailsUnlocked ? user.FamilyName : "*******")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2"><span class="fw-medium opacity-75">Father's Name:</span>
+                                                <span class="fw-semibold father-name-val">@(Model.ContactDetailsUnlocked ? user.FatherName : "*******")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2"><span class="fw-medium opacity-75">Post:</span>
+                                                <span class="fw-semibold post-val">@(Model.ContactDetailsUnlocked ? user.Post : "*******")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="info-pill p-2"><span class="fw-medium opacity-75">Pin Code:</span>
+                                                <span class="fw-semibold pincode-val">@(Model.ContactDetailsUnlocked ? user.PinCode : "*******")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="fw-medium fs-18 mb-3">Contact Information</h5>
+                                @{
+                                    string displayPhone = user.Phone;
+                                    string? displayLandline = user.LandlineNumber;
+                                    if (!Model.ContactDetailsUnlocked)
+                                    {
+                                        displayPhone = displayPhone[0] + new string('X', displayPhone.Length - 2) + displayPhone[^1];
+                                        displayLandline = displayLandline is null ? null : displayLandline[0] + new string('X', displayLandline.Length - 2) + displayLandline[^1];
+                                    }
+                                }
+                                <div class="blur-wrapper @(Model.ContactDetailsUnlocked ? "" : "locked")">
+                                    <div class="contact-lock d-flex align-items-center justify-content-center @(Model.ContactDetailsUnlocked ? "d-none" : "")"></div>
+                                    <div class="row g-2 contact-details">
+                                        <div class="col-12 col-md-6">
+                                            <div class="info-pill p-2"><span class="fw-medium opacity-75">Primary Number:</span>
+                                                <span class="fw-semibold phone-val">@($"{displayCountryCode} {displayPhone}")</span>
+                                            </div>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(user.LandlineNumber))
+                                        {
+                                            <div class="col-12 col-md-6">
+                                                <div class="info-pill p-2"><span class="fw-medium opacity-75">Secondary Number:</span>
+                                                    <span class="fw-semibold landline-val">@($"{displaySecondaryCountryCode} {displayLandline}")</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        
+                        
+                            <!-- Action Footer -->
+                            <div class="d-flex bg-light rounded-pill mb-4 action-footer border">
+                                <div class="flex-fill action-pill" onclick="showFavouriteModal()" style="cursor: pointer;">
+                                    <div class="icon-circle mb-1" style="background-color: #648472; color: white;"><i class="uis uis-star"></i>
+                                    </div>
+                                    <span class="fs-14 fw-normal" id="startext-@user.Id">@(user.IsStarred ? "Favourited" : "Shortlist")</span>
+                                </div>
+                                <div class="flex-fill action-pill" onclick="showBlockedModal()" style="cursor: pointer;">
+                                    <div class="icon-circle mb-1" style="background-color: #E93B3B; color: white;"><i class="uil uil-ban"></i>
+                                    </div>
+                                    <span class="fs-14 fw-normal">Closed</span>
+                                </div>
+                                <div class="flex-fill action-pill" id="report-action-pill" onclick="handleReportButtonClick()" style="cursor: pointer;">
+                                    <div class="icon-circle mb-1" id="report-icon-circle" style="background-color: @(Model.AlreadyReported ? "#6c757d" : "#017132"); color: white;"><i
+                                            class="uil uil-file-edit-alt"></i></div>
+                                    <span class="fs-14 fw-normal" id="report-text-span">@(Model.AlreadyReported ? "Reported" : "Report")</span>
+                                </div>
+                            </div>
+                        
+                            <!-- Write a Note -->
+                            <!-- <div class="rounded-4 p-3 mb-4 d-flex align-items-center justify-content-between border"
+                                style="background-color: #EDF3E8;">
+                                <div>
+                                    <h6 class="fw-medium fs-18 mb-1">Write a Note</h6>
+                                    <p class="fs-12 fw-normal text-dark mb-0">About this profile for future reference
+                                    </p>
+                                </div>
+                                <img src="../../../../assets/images/icon/edit-note-icon.png" width="24">
+                            </div> -->
+                        
+                            <!-- Upgrade Box -->
+                            @if (!Model.ContactDetailsUnlocked)
+                            {
+                                @if (Model.Registration.IsPremiumMember || Model.Registration.IsSpecialRequest)
+                                {
+                                    <div class="rounded-4 p-4 text-white mb-4" id="upgrade-section-bottom" style="background-color: #111111;">
+                                        <h5 class="fs-18 fw-medium mb-2">Contact Details</h5>
+                                        <p class="fs-12 fw-normal opacity-75 mb-4">Would you like to view @(user.Name)'s contact details?</p>
+                                        <button class="btn btn-lime-green text-white rounded-pill px-5 py-2 fs-12 fw-semibold"
+                                            onclick="showPremiumContactModal()">Unlock</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="rounded-4 p-4 text-white mb-4" id="upgrade-section-bottom" style="background-color: #111111;">
+                                        <h5 class="fs-18 fw-medium mb-2">Upgrade Your Profile</h5>
+                                        <p class="fs-12 fw-normal opacity-75 mb-4">Upgrade your profile to view contact details of interested profiles, send super interests, enjoy increased profile visibility, and access advanced search features for better matches. Unlock these premium features and elevate your experience!</p>
+                                        <button class="btn btn-lime-green text-white rounded-pill px-5 py-2 fs-12 fw-semibold"
+                                            onclick="showUpgradeModal()">Upgrade</button>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="rounded-4 p-4 text-white mb-4 d-none" id="upgrade-section-bottom" style="background-color: #111111;">
+                                </div>
+                            }
+                        </div>
+                        <!-- PROFILE DETAIL SECTION ENDS  -->
+
+                    </div>
+                </div>
+            </main>
+
+    <!-- MODAL SECTIONS STARTS -->
+
+    <!-- Upgrade Premium Modal -->
+    <div id="upgradeModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideUpgradeModal()">
+        <div class="upgrade-modal-card">
+            <div class="modal-close-btn" onclick="hideUpgradeModal()">
+                <i class="uil uil-times"></i>
+            </div>
+    
+            <div class="modal-body-scroll">
+                @if (!string.IsNullOrEmpty(user.ImagePath))
+                {
+                    <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 100px; height: 100px; border-radius: 50%;">
+                        <img id="modalProfileImg" src="@Html.Raw("/" + user.ImagePath)" alt="Profile"
+                            class="modal-profile-img" onerror="this.src='@Url.Content(defaultImage)'">
+                        @if (!Model.PhotosUnlocked)
+                        {
+                            <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                            <div class="modal-premium-lock">
+                                <i class="uil uil-lock-alt"></i>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <img id="modalProfileImg" src="@Url.Content(defaultImage)" alt="Profile"
+                        class="modal-profile-img">
+                }
+    
+                <h4 id="modalProfileName" class="fw-medium fs-18 mb-1" style="color: #000;">@Html.Raw(user.Name)</h4>
+                <p id="modalProfileId" class="text-muted fs-14 fw-normal mb-0">@user.RegisterNumber</p>
+    
+                <div class="modal-inner-box">
+                    <!-- Illustration Placeholder -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="position-relative d-flex align-items-center gap-2">
+    
+                            <img src="../../../../assets/images/icon/birds.png">
+    
+                        </div>
+                    </div>
+    
+                    <p class="mb-4 small px-3" style="color:#3E3E3E;line-height: 1.6; font-weight: 500;">
+                        To view the contact details you must be a premium member.
+                        <br>
+                        @*<a href="tel:+919847838325" class="customer-care-link">+919847838325</a>*@
+                    </p>
+    
+                </div>
+                <button class="btn btn-upgrade-now shadow" style="font-size: 17px;" onclick="showPackagesModal()">Upgrade
+                    Now</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Package Details Modal -->
+    <div id="packagesModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePackagesModal()">
+        <div class="upgrade-modal-card" style="max-width: 630px;">
+            <div class="modal-close-btn" onclick="hidePackagesModal()">
+                <i class="uil uil-times"></i>
+            </div>
+    
+            <div class="modal-body-scroll">
+                @if (!string.IsNullOrEmpty(user.ImagePath))
+                {
+                    <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 100px; height: 100px; border-radius: 50%;">
+                        <img id="packageModalProfileImg" src="@Html.Raw("/" + user.ImagePath)" alt="Profile"
+                            class="modal-profile-img" onerror="this.src='@Url.Content(defaultImage)'">
+                        @if (!Model.PhotosUnlocked)
+                        {
+                            <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                            <div class="modal-premium-lock">
+                                <i class="uil uil-lock-alt"></i>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <img id="packageModalProfileImg" src="@Url.Content(defaultImage)" alt="Profile"
+                        class="modal-profile-img">
+                }
+    
+                <h5 class="fw-medium fs-18 mb-2 px-3" style="color: #000;" id="packagesLocalModalTitle">Upgrade to premium membership to view contact
+                    details</h5>
+                <p class="text-muted fs-12 mb-3 px-4" id="packagesLocalModalSubTitle">Unlock access to contact details by upgrading to premium! Get
+                    closer to meaningful connections.</p>
+    
+                <div class="package-details-inner">
+                    <!-- Illustration -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="position-relative d-flex align-items-center gap-2">
+                            <img src="../../../../assets/images/icon/birds.png">
+                        </div>
+                    </div>
+    
+                    <h6 class="fw-medium fs-18 mb-2 text-uppercase" style="letter-spacing: 1px;">Membership Package</h6>
+    
+                    <div class="package-pill-days">180 DAYS</div><br>
+                    <div class="package-pill-price">₹ 2000</div>
+    
+                    <div class="mt-3 mb-3">
+                        <p class="fw-bold mb-3" style="font-size: 14px;">Features</p>
+                        <div class="d-flex justify-content-center">
+                            <div class="package-feature-list">
+                                <!-- <div class="package-feature-item">
+                                    <i class="uil uil-comment-alt-notes"></i>
+                                    <span>Personalised messages to 40 Members</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-comments"></i>
+                                    <span>Chat with prospects directly</span>
+                                </div> -->
+                                <div class="package-feature-item">
+                                    <i class="uil uil-mobile-android"></i>
+                                    <span>View mobile numbers 50</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-camera"></i>
+                                    <span>Send photo unlock requests</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <a asp-action="MakePayment" asp-controller="Transaction" class="btn btn-pay-online shadow" style="font-size: 17px;">Pay Online</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Contact Details Modal -->
+    <div id="premiumContactModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePremiumContactModal()">
+        <div class="upgrade-modal-card" style="max-width: 460px; overflow: visible;">
+            <!-- Premium Close Button -->
+            <div class="premium-modal-close" onclick="hidePremiumContactModal()">
+                <i class="uil uil-times"></i>
+            </div>
+
+            <div class="modal-body-scroll" style="padding: 30px 25px;">
+                <!-- Profile Header -->
+                <div class="premium-profile-header d-flex align-items-center gap-3 w-100 mb-3">
+                    @if (!string.IsNullOrEmpty(user.ImagePath))
+                    {
+                        <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 75px; height: 75px; border-radius: 50%;">
+                            <img id="premiumModalProfileImg" src="@Html.Raw("/" + user.ImagePath)" alt="Profile" class="premium-avatar" onerror="this.src='@Url.Content(defaultImage)'">
+                            @if (!Model.PhotosUnlocked)
+                            {
+                                <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                                <div class="modal-premium-lock">
+                                    <i class="uil uil-lock-alt"></i>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <img id="premiumModalProfileImg" src="@Url.Content(defaultImage)" alt="Profile" class="premium-avatar">
+                    }
+                    <div class="text-start">
+                        <h5 id="premiumModalProfileName" class="fw-bold mb-0 text-dark" style="font-size: 18px;">@Html.Raw(user.Name)</h5>
+                        <span id="premiumModalProfileId" class="text-muted fw-semibold" style="font-size: 13px;">@user.RegisterNumber</span>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 5px 0 20px 0; width: 100%;">
+
+                <p class="fw-medium text-center text-dark my-2" style="font-size: 14.5px; font-family: var(--font-poppins);">Would you like to view <span id="premiumModalAskName">@(user.Name)</span>’s contact details?</p>
+
+                <!-- Info Table -->
+                <div class="premium-info-table">
+                    <div class="premium-info-row">
+                        <div class="info-label">Membership Plan</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">@(Model.ActivePlan != null ? "Premium" : "None")</div>
+                    </div>
+                    <div class="premium-info-row">
+                        <div class="info-label">Remaining Contacts</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">@(Model.ActivePlan != null ? Model.ActivePlan.ViewCreditsPurchased - Model.ActivePlan.ViewCreditsUsed : 0)</div>
+                    </div>
+                    <div class="premium-info-row">
+                        <div class="info-label">Plan Validity</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">@(Model.ActivePlan != null ? Model.ActivePlan.ExpiresAt.ToString("dd MMM yyyy") : "N/A")</div>
+                    </div>
+                </div>
+ 
+                <!-- Action Buttons -->
+                @{
+                    bool showUpgradeBtn = false;
+                    if (Model.ActivePlan != null)
+                    {
+                        var remainingCredits = Model.ActivePlan.ViewCreditsPurchased - Model.ActivePlan.ViewCreditsUsed;
+                        var remainingDays = (Model.ActivePlan.ExpiresAt - DateTime.UtcNow).TotalDays;
+                        if (remainingCredits <= 5 || remainingDays <= 7)
+                        {
+                            showUpgradeBtn = true;
+                        }
+                    }
+                }
+                <div class="d-flex gap-3 w-100 mb-3">
+                    <button class="btn btn-premium-view flex-fill shadow-none" onclick="unlockContactDetails()">View</button>
+                    @if (showUpgradeBtn)
+                    {
+                        <button class="btn btn-premium-view flex-fill shadow-none" onclick="showPackagesModal()">Upgrade</button>
+                    }
+                    <button class="btn btn-premium-cancel flex-fill shadow-none" onclick="hidePremiumContactModal()">Cancel</button>
+                </div>
+
+                <!-- Warning/Notice Box --> 
+                <div class="premium-notice-box w-100">
+                    <p class="mb-0 text-center text-muted" style="font-size: 12px; line-height: 1.5;">
+                        Viewing this profile’s contact details again won’t reduce your available contact views.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <!-- Photo Unlock Confirmation Modal -->
+        <div id="photoUnlockModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePhotoUnlockModal()">
+            <div class="upgrade-modal-card" style="max-width: 450px;">
+                <div class="modal-close-btn" onclick="hidePhotoUnlockModal()">
+                    <i class="uil uil-times"></i>
+                </div>
+
+                <div class="modal-body-scroll" style="padding: 40px 20px;">
+                    <div class="mb-3">
+                        <div class="icon-circle shadow-sm"
+                            style="background-color: #00662d; color: white; width: 60px; height: 60px; font-size: 24px;">
+                            <i class="uil uil-lock-alt"></i>
+                        </div>
+                    </div>
+                    <h5 id="photoUnlockModalTitle" class="fw-medium fs-18 mb-2 px-3 text-center" style="color: #000; line-height: 1.5;">Request Photo Access?</h5>
+                    <p class="text-muted text-center px-3 mb-4 fs-14">This will send a request to the profile owner to unlock their photos for you.</p>
+
+                    <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                        <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                            style="margin-top: 0; background-color: #00662d !important;"
+                            onclick="confirmPhotoUnlock()">Yes, Send Request</button>
+                        <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                            style="margin-top: 0; background-color: #E93B3B !important;"
+                            onclick="hidePhotoUnlockModal()">No, Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Favourite Confirmation Modal -->
+        <div id="favouriteModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideFavouriteModal()">
+                    <div class="upgrade-modal-card" style="max-width: 450px;">
+                        <div class="modal-close-btn" onclick="hideFavouriteModal()">
+                            <i class="uil uil-times"></i>
+                        </div>
+    
+                        <div class="modal-body-scroll" style="padding: 40px 20px;">
+                            <div class="mb-3">
+                                <div class="icon-circle shadow-sm"
+                                    style="background-color: #648472; color: white; width: 60px; height: 60px; font-size: 24px;">
+                                    <i class="uis uis-star"></i>
+                                </div>
+                            </div>
+                            <h5 id="favouriteModalTitle" class="fw-medium fs-18 mb-4 px-3" style="color: #000; line-height: 1.5;">@(user.IsStarred ? "Are you sure you want to remove this person from Favourite?" : "Are you sure you want to add this person as Favourite?")</h5>
+    
+                            <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                                <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                                    style="margin-top: 0; background-color: #00662d !important;"
+                                    onclick="confirmFavourite()">Yes</button>
+                                <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                                    style="margin-top: 0; background-color: #E93B3B !important;"
+                                    onclick="hideFavouriteModal()">No</button>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+    
+            <!-- Interest Confirmation Modal -->
+            <div id="interestConfirmationModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideInterestModal()">
+                <div class="upgrade-modal-card" style="max-width: 450px;">
+                    <div class="modal-close-btn" onclick="hideInterestModal()">
+                        <i class="uil uil-times"></i>
+                    </div>
+
+                    <div class="modal-body-scroll" style="padding: 40px 20px;">
+                        <div class="mb-3">
+                            <div class="icon-circle shadow-sm"
+                                style="background-color: #648472; color: white; width: 60px; height: 60px; font-size: 24px;">
+                                <i class="uil uil-heart"></i>
+                            </div>
+                        </div>
+                        <h5 id="interestModalTitle" class="fw-medium fs-18 mb-4 px-3" style="color: #000; line-height: 1.5;">Confirm</h5>
+                        
+
+                        <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                            <button type="button" id="interestModalConfirmBtn" class="btn btn-upgrade-now shadow-none flex-fill"
+                                style="margin-top: 0; background-color: #00662d !important;"
+                                onclick="confirmInterestAction()">Yes, Send!</button>
+                            <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                                style="margin-top: 0; background-color: #E93B3B !important;"
+                                onclick="hideInterestModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blocked Confirmation Modal -->
+            <div id="blockedModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideBlockedModal()">
+                <div class="upgrade-modal-card" style="max-width: 450px;">
+                    <div class="modal-close-btn" onclick="hideBlockedModal()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 20px;">
+                        <div class="mb-3">
+                            <div class="icon-circle shadow-sm"
+                                style="background-color: #E93B3B; color: white; width: 60px; height: 60px; font-size: 24px;">
+                                <i class="uil uil-ban"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-medium fs-18 mb-4 px-3" style="color: #000; line-height: 1.5;">Are you sure you want to dismiss this profile? It will be removed from your matches.</h5>
+    
+                        <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                            <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                                style="margin-top: 0; background-color: #00662d !important;"
+                                onclick="confirmBlock()">Yes</button>
+                            <button type="button" class="btn btn-upgrade-now shadow-none flex-fill"
+                                style="margin-top: 0; background-color: #E93B3B !important;"
+                                onclick="hideBlockedModal()">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Action Required Modal -->
+            <div id="actionRequiredModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideActionRequiredModal()">
+                <div class="upgrade-modal-card">
+                    <div class="modal-close-btn" onclick="hideActionRequiredModal()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 20px;">
+                        <div class="mb-3">
+                            <div class="icon-circle shadow-sm"
+                                style="background-color: #FEF3F2; color: #E93B3B; width: 60px; height: 60px; font-size: 24px;">
+                                <i class="uil uil-exclamation-octagon"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-semibold fs-24 mb-3" style="color: #000;">Action Required</h4>
+                        <p class="text-muted fs-15 mb-4 mt-2" style="line-height: 1.6;">Please view the contact details of this profile before reporting.</p>
+    
+                        <button type="button" class="btn btn-upgrade-now shadow-none w-100 mt-3"
+                            onclick="hideActionRequiredModal()">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Main Modal -->
+            <div id="reportMainModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideReportModals()">
+                <div class="upgrade-modal-card" style="max-width: 480px;">
+                    <div class="modal-close-btn" onclick="hideReportModals()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 30px;">
+                        <div class="mb-3">
+                            <div class="icon-circle shadow-sm"
+                                style="background-color: #f0f0f0; color: #666; width: 80px; height: 80px; font-size: 32px;">
+                                @if (!string.IsNullOrEmpty(user.ImagePath))
+                                {
+                                    <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 60px; height: 60px; border-radius: 50%;">
+                                        <img id="reportMainImage" src="@Html.Raw("/" + user.ImagePath)" alt="Profile"
+                                            class="report-avatar-small" onerror="this.src='@Url.Content(defaultImage)'">
+                                        @if (!Model.PhotosUnlocked)
+                                        {
+                                            <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                                            <div class="modal-premium-lock">
+                                                <i class="uil uil-lock-alt"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img id="reportMainImage" src="@Url.Content(defaultImage)" alt="Profile"
+                                        class="report-avatar-small">
+                                }
+                            </div>
+                        </div>
+                        <h4 id="reportMainTitle" class="fw-medium fs-20 mb-1" style="color: #000;">Reporting @(user.Name.Split(" ")[0])</h4>
+                        <p class="text-muted fs-14 mb-4 px-3">Please explain why you are reporting <span
+                                id="reportMainName">@(user.Name.Split(" ")[0])</span>, we will not reveal your identity</p>
+    
+                        <div class="report-options-list">
+                            @if (Model.UserReportReasons != null)
+                            {
+                                foreach (var reason in Model.UserReportReasons)
+                                {
+                                    <button class="report-option-btn" onclick="handleReportReasonSelection('@Html.Raw(reason.Reason)', @reason.ShowDescriptionPopup.ToString().ToLower())">
+                                        @if (!string.IsNullOrEmpty(reason.IconName))
+                                        {
+                                            <i class="uil uil-@Html.Raw(reason.IconName)"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="uil uil-exclamation-circle"></i>
+                                        }
+                                        @reason.Reason
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Report Details Modal -->
+            <div id="reportDetailsModal" class="upgrade-modal-overlay"
+                onclick="if(event.target === this) hideReportModals()">
+                <div class="upgrade-modal-card" style="max-width: 480px;">
+                    <div class="modal-close-btn" onclick="hideReportModals()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 30px;">
+                        <h4 class="fw-semibold fs-24 mb-4" style="color: #000;">Tell us more</h4>
+                        <p class="text-muted fs-14 mb-4" style="line-height: 1.6;">Please provide us with more details
+                            about your complaint. Rest assured, we will keep this confidential and take appropriate
+                            action.</p>
+    
+                        <textarea class="report-textarea" placeholder="Enter Reason" id="reportReasonText"></textarea>
+    
+                        <button class="btn btn-upgrade-now shadow-none w-100"
+                            style="margin-top: 0; background-color: #a5be25 !important; padding: 15px;"
+                            onclick="submitReportNew()">SUBMIT</button>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Report Final Modal -->
+            <div id="reportFinalModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideReportModals()">
+                <div class="upgrade-modal-card" style="max-width: 480px;">
+                    <div class="modal-close-btn" onclick="hideReportModals()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 30px;">
+                        <div class="report-final-details mb-4">
+                            <div class="report-profile-header">
+                                @if (!string.IsNullOrEmpty(user.ImagePath))
+                                {
+                                    <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 60px; height: 60px; border-radius: 50%;">
+                                        <img id="reportFinalImage" src="@Html.Raw("/" + user.ImagePath)" alt="Profile"
+                                            class="report-avatar-small" onerror="this.src='@Url.Content(defaultImage)'">
+                                        @if (!Model.PhotosUnlocked)
+                                        {
+                                            <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                                            <div class="modal-premium-lock">
+                                                <i class="uil uil-lock-alt"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img id="reportFinalImage" src="@Url.Content(defaultImage)" alt="Profile"
+                                        class="report-avatar-small">
+                                }
+                                <div>
+                                    <h5 id="reportFinalName" class="fw-semibold fs-16 mb-0">@Html.Raw(user.Name)</h5>
+                                    <span id="reportFinalId" class="text-muted fs-12">@user.RegisterNumber?.ToUpper()</span>
+                                </div>
+                            </div>
+    
+                            <div class="report-info-group">
+                                <span class="report-info-label">Address</span>
+                                <p id="reportFinalAddress" class="report-info-value mb-0">@(!string.IsNullOrWhiteSpace(user.FamilyName) ? user.FamilyName + ", " : "")@(!string.IsNullOrWhiteSpace(user.FatherName) ? user.FatherName + ", " : "")@(!string.IsNullOrWhiteSpace(user.Post) ? user.Post + ", " : "")@(!string.IsNullOrWhiteSpace(user.PinCode) ? user.PinCode + ", " : "")@(!string.IsNullOrWhiteSpace(user.Village) ? user.Village : "")</p>
+                            </div>
+    
+                            <div class="report-info-group d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="report-info-label">Primary Number</span>
+                                    <p id="reportFinalPhone1" class="report-info-value mb-0">@displayCountryCode @user.Phone</p>
+                                </div>
+                                <button class="btn-call-small" onclick="window.location.href='tel:@user.Phone'">
+                                    <i class="uil uil-phone"></i>
+                                    Call
+                                </button>
+                            </div>
+                            
+                            @if (!string.IsNullOrWhiteSpace(user.LandlineNumber))
+                            {
+                                <div class="report-info-group d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="report-info-label">Secondary Number</span>
+                                        <p id="reportFinalPhone2" class="report-info-value mb-0">@displaySecondaryCountryCode @user.LandlineNumber</p>
+                                    </div>
+                                    <button class="btn-call-small" onclick="window.location.href='tel:@user.LandlineNumber'">
+                                        <i class="uil uil-phone"></i>
+                                        Call
+                                    </button>
+                                </div>
+                            }
+                        </div>
+    
+                        <div class="report-hint-box">
+                            Viewing this profile’s contact details again won’t reduce your available contact views.
+                        </div>
+    
+                        <h6 class="report-issue-title">Report a Profile Issue</h6>
+                        <p class="report-issue-text">If the contact number isn’t working or the person is already
+                            married, please report this profile. We’ll verify and restore your lost contact views.</p>
+    
+                        <button class="btn-report-final" onclick="showReportMainModal()">
+                            <i class="uil uil-exclamation-triangle"></i>
+                            Report This Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Unlocked Success Modal -->
+            <div id="contactUnlockedSuccessModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideContactUnlockedSuccessModal()">
+                <div class="upgrade-modal-card" style="max-width: 480px;">
+                    <div class="modal-close-btn" onclick="hideContactUnlockedSuccessModal()">
+                        <i class="uil uil-times"></i>
+                    </div>
+    
+                    <div class="modal-body-scroll" style="padding: 40px 30px;">
+                        <div class="text-center mb-4">
+                            <div class="icon-circle shadow-sm" style="background-color: #e8f5ee; color: #00662d; width: 60px; height: 60px; font-size: 28px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                <i class="uil uil-check-circle" style="font-size: 32px; line-height: 1;"></i>
+                            </div>
+                            <h4 class="fw-semibold fs-20 mb-1" style="color: #000; font-family: var(--font-poppins);">Contact Unlocked!</h4>
+                            <p class="text-muted fs-14">You have successfully unlocked the contact details.</p>
+                        </div>
+
+                        <div class="report-final-details mb-4">
+                            <div class="report-profile-header">
+                                @if (!string.IsNullOrEmpty(user.ImagePath))
+                                {
+                                    <div class="modal-image-blur-wrapper @(Model.PhotosUnlocked ? "photos-unlocked" : "")" style="width: 60px; height: 60px; border-radius: 50%;">
+                                        <img id="unlockFinalImage" src="@Html.Raw("/" + user.ImagePath)" alt="Profile"
+                                            class="report-avatar-small" onerror="this.src='@Url.Content(defaultImage)'">
+                                        @if (!Model.PhotosUnlocked)
+                                        {
+                                            <div class="modal-premium-blur" style="border-radius: 50%;"></div>
+                                            <div class="modal-premium-lock">
+                                                <i class="uil uil-lock-alt"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img id="unlockFinalImage" src="@Url.Content(defaultImage)" alt="Profile"
+                                        class="report-avatar-small">
+                                }
+                                <div>
+                                    <h5 id="unlockFinalName" class="fw-semibold fs-16 mb-0">@Html.Raw(user.Name)</h5>
+                                    <span id="unlockFinalId" class="text-muted fs-12">@user.RegisterNumber?.ToUpper()</span>
+                                </div>
+                            </div>
+    
+                            <div class="report-info-group">
+                                <span class="report-info-label">Address</span>
+                                <p id="unlockFinalAddress" class="report-info-value mb-0">@(!string.IsNullOrWhiteSpace(user.FamilyName) ? user.FamilyName + ", " : "")@(!string.IsNullOrWhiteSpace(user.FatherName) ? user.FatherName + ", " : "")@(!string.IsNullOrWhiteSpace(user.Post) ? user.Post + ", " : "")@(!string.IsNullOrWhiteSpace(user.PinCode) ? user.PinCode + ", " : "")@(!string.IsNullOrWhiteSpace(user.Village) ? user.Village : "")</p>
+                            </div>
+    
+                            <div class="report-info-group d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="report-info-label">Primary Number</span>
+                                    <p id="unlockFinalPhone1" class="report-info-value mb-0"></p>
+                                </div>
+                                <button id="unlockCallBtn1" class="btn-call-small">
+                                    <i class="uil uil-phone"></i>
+                                    Call
+                                </button>
+                            </div>
+                            
+                            <div id="unlockPhone2Group" class="report-info-group d-flex justify-content-between align-items-center" style="display:none !important;">
+                                <div>
+                                    <span class="report-info-label">Secondary Number</span>
+                                    <p id="unlockFinalPhone2" class="report-info-value mb-0"></p>
+                                </div>
+                                <button id="unlockCallBtn2" class="btn-call-small">
+                                    <i class="uil uil-phone"></i>
+                                    Call
+                                </button>
+                            </div>
+                        </div>
+    
+                        <button class="btn btn-upgrade-now shadow-none w-100"
+                            style="margin-top: 0; background-color: #00662d !important; padding: 15px; font-family: var(--font-poppins);"
+                            onclick="hideContactUnlockedSuccessModal()">DONE</button>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- MODAL SECTIONS ENDS -->
+
+<form id="unlockContactDetailsForm" method="post" asp-action="ViewUserContactDetails" asp-controller="User" style="display:none;">
+    <input type="hidden" name="ViewerUserId" value="@Model.Registration.Id"/>
+    <input type="hidden" name="ViewedUserId" value="@user.Id"/>
+</form>
+
+<form id="starform-@user.Id" method="post" asp-action="StarredIcon" asp-controller="User" style="display:none;">
+    <input type="hidden" name="StarId" value="@user.Id"/>
+    <input type="hidden" name="StarredId" value="@user.Id"/>
+    <input type="hidden" id="action-star-@user.Id" name="Action" value="@((user.IsStarred) ? "Remove" : "Add")"/>
+</form>
+
+<form id="reportForm" method="post" asp-action="ReportProfile" asp-controller="User" style="display:none;">
+    <input type="hidden" id="reportReason" name="Reason"/>
+    <input type="hidden" name="ReporterUserId" value="@Model.Registration!.Id"/>
+    <input type="hidden" name="ReportedUserId" value="@user.Id"/>
+    <input type="hidden" id="reportDetails" name="Details"/>
+</form>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        let reportReasonSelected = false;
+        let isContactUnlocked = @Model.ContactDetailsUnlocked.ToString().ToLower();
+        let selectedReportReason = "";
+        let isAlreadyReported = @Model.AlreadyReported.ToString().ToLower();
+
+        function showFavouriteModal() {
+            const modal = document.getElementById("favouriteModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideFavouriteModal() {
+            const modal = document.getElementById("favouriteModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showInterestModal() {
+            const modal = document.getElementById("interestConfirmationModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideInterestModal() {
+            const modal = document.getElementById("interestConfirmationModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        let pendingInterestAction = null;
+
+        function confirmInterestAction() {
+            hideInterestModal();
+            if (pendingInterestAction) {
+                pendingInterestAction();
+                pendingInterestAction = null;
+            }
+        }
+
+        function showBlockedModal() {
+            const modal = document.getElementById("blockedModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideBlockedModal() {
+            const modal = document.getElementById("blockedModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showUpgradeModal() {
+            const modal = document.getElementById("upgradeModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideUpgradeModal() {
+            const modal = document.getElementById("upgradeModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showPackagesModal(mode) {
+            hideUpgradeModal();
+            hidePremiumContactModal();
+            const modal = document.getElementById("packagesModal");
+            if (modal) {
+                const titleElem = document.getElementById('packagesLocalModalTitle');
+                const subTitleElem = document.getElementById('packagesLocalModalSubTitle');
+                if (titleElem && subTitleElem) {
+                    if (mode === 'photo') {
+                        titleElem.innerText = 'Upgrade to premium membership to request photo unlock';
+                        subTitleElem.innerText = 'Unlock the ability to request photo access by upgrading to premium! Connect with your perfect match today.';
+                    } else {
+                        titleElem.innerText = 'Upgrade to premium membership to view contact details';
+                        subTitleElem.innerText = 'Unlock access to contact details by upgrading to premium! Get closer to meaningful connections.';
+                    }
+                }
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hidePackagesModal() {
+            const modal = document.getElementById("packagesModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showPremiumContactModal() {
+            const modal = document.getElementById("premiumContactModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hidePremiumContactModal() {
+            const modal = document.getElementById("premiumContactModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showActionRequiredModal() {
+            const modal = document.getElementById("actionRequiredModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideActionRequiredModal() {
+            const modal = document.getElementById("actionRequiredModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function showReportMainModal() {
+            hideReportModals();
+            const modal = document.getElementById("reportMainModal");
+            if (modal) {
+                setTimeout(() => {
+                    modal.classList.add("active");
+                    document.body.style.overflow = "hidden";
+                }, 50);
+            }
+        }
+
+        function handleReportReasonSelection(reason, showDescription) {
+            selectedReportReason = reason;
+            hideReportModals();
+
+            if (showDescription) {
+                const modal = document.getElementById("reportDetailsModal");
+                if (modal) {
+                    setTimeout(() => {
+                        modal.classList.add("active");
+                        document.body.style.overflow = "hidden";
+                    }, 50);
+                }
+            } else {
+                // Skip description popup, clear any old description, submit directly
+                const reasonText = document.getElementById("reportReasonText");
+                if (reasonText) reasonText.value = "";
+                
+                submitReportNew();
+            }
+        }
+
+        function showReportFinalModal() {
+            hideReportModals();
+            const modal = document.getElementById("reportFinalModal");
+            if (modal) {
+                setTimeout(() => {
+                    modal.classList.add("active");
+                    document.body.style.overflow = "hidden";
+                }, 50);
+            }
+        }
+
+        function hideReportModals() {
+            const modals = ["reportMainModal", "reportDetailsModal", "reportFinalModal"];
+            modals.forEach((id) => {
+                const modal = document.getElementById(id);
+                if (modal) modal.classList.remove("active");
+            });
+            document.body.style.overflow = "";
+        }
+
+        function handleReportButtonClick() {
+            if (isAlreadyReported) {
+                Swal.fire({
+                    title: 'Already Reported',
+                    text: 'You have already reported this profile.',
+                    icon: 'info',
+                    width: '350px',
+                    confirmButtonColor: '#00662d'
+                });
+                return;
+            }
+
+            const isPremium = @Model.Registration.IsPremiumMember.ToString().ToLower() || @Model.Registration.IsSpecialRequest.ToString().ToLower();
+
+            if (!isPremium) {
+                showUpgradeModal();
+                return;
+            }
+
+            if (!isContactUnlocked) {
+                showActionRequiredModal();
+                return;
+            }
+
+            showReportFinalModal();
+        }
+
+        async function submitReportNew() {
+            const reason = selectedReportReason;
+            const details = document.getElementById('reportReasonText') ? document.getElementById('reportReasonText').value : "";
+            const reporterUserId = '@(Model.Registration?.Id)';
+            const reportedUserId = '@(user.Id)';
+            
+            const formData = new URLSearchParams();
+            formData.append('Reason', reason);
+            formData.append('Details', details);
+            formData.append('ReporterUserId', reporterUserId);
+            formData.append('ReportedUserId', reportedUserId);
+
+            try {
+                const response = await fetch('@Url.Action("ReportProfile", "User")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData.toString()
+                });
+
+                const result = await response.json();
+                hideReportModals();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Report Submitted',
+                        text: 'Thank you for reporting this profile. We will review it shortly.',
+                        icon: 'success',
+                        width: '350px',
+                        confirmButtonColor: '#00662d'
+                    });
+
+                    // Dynamically update UI to reported state
+                    isAlreadyReported = true;
+                    const reportTextSpan = document.getElementById('report-text-span');
+                    if (reportTextSpan) reportTextSpan.textContent = 'Reported';
+                    const reportIconCircle = document.getElementById('report-icon-circle');
+                    if (reportIconCircle) reportIconCircle.style.backgroundColor = '#6c757d';
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message,
+                        icon: 'error',
+                        width: '350px',
+                        confirmButtonColor: '#e43f52'
+                    });
+                }
+
+                // Reset the form details textarea
+                if (document.getElementById('reportReasonText')) {
+                    document.getElementById('reportReasonText').value = "";
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+            }
+        }
+
+        function showContactDetails(user) {
+            isContactUnlocked = true;
+
+            // Hide view contact button in both contact bar and status bar
+            const viewContactBtn = document.getElementById('view-contact-details-btn');
+            if (viewContactBtn) viewContactBtn.classList.add('d-none');
+
+            const statusBarViewContactBtn = document.getElementById('status-bar-view-contact-btn');
+            if (statusBarViewContactBtn) statusBarViewContactBtn.classList.add('d-none');
+
+            // Hide bottom upgrade section card
+            const upgradeSection = document.getElementById('upgrade-section-bottom');
+            if (upgradeSection) upgradeSection.classList.add('d-none');
+
+            // Hide lock covers
+            document.querySelectorAll('.contact-lock').forEach(div => {
+                div.classList.add('d-none');
+            });
+            document.querySelectorAll('.blur-wrapper').forEach(div => {
+                div.classList.remove('locked');
+            });
+
+            if (user !== null) {
+                // Update contact number in Contact Bar
+                const contactNumberElem = document.getElementById(`contactNumber-${@user.Id}`);
+                if (contactNumberElem) contactNumberElem.innerHTML = user.phone || "";
+
+                // Update WhatsApp link
+                const whatsappLink = document.getElementById('whatsapp-link');
+                if (whatsappLink && user.phone) {
+                    const cleanCode = (user.countryCode || "91").replace('+', '');
+                    whatsappLink.href = `https://wa.me/${cleanCode}${user.phone.replace(/\s+/g, '').replace('+', '')}`;
+                    whatsappLink.onclick = null;
+                    whatsappLink.target = "_blank";
+                    whatsappLink.removeAttribute('data-bs-toggle');
+                    whatsappLink.removeAttribute('data-bs-target');
+                }
+
+                // Update Family details pills
+                const familyNameElem = document.querySelector('.family-name-val');
+                if (familyNameElem) familyNameElem.innerText = user.familyName || "";
+                const fatherNameElem = document.querySelector('.father-name-val');
+                if (fatherNameElem) fatherNameElem.innerText = user.fatherName || "";
+                const postElem = document.querySelector('.post-val');
+                if (postElem) postElem.innerText = user.post || "";
+                const pincodeElem = document.querySelector('.pincode-val');
+                if (pincodeElem) pincodeElem.innerText = user.pinCode || "";
+
+                // Update Contact details pills
+                const phoneElem = document.querySelector('.phone-val');
+                if (phoneElem) phoneElem.innerText = (user.countryCode || "") + " " + (user.phone || "");
+                const landlineElem = document.querySelector('.landline-val');
+                if (landlineElem && user.landlineNumber) {
+                    landlineElem.innerText = (user.presentCountryCode || "") + " " + user.landlineNumber;
+                }
+            }
+        }
+
+        function showContactUnlockedSuccessModal(user) {
+            if (!user) return;
+
+            // Populate Primary Number
+            const phone1 = (user.countryCode || user.CountryCode || "").trim();
+            const number1 = (user.phone || "").trim();
+            const fullPhone1 = phone1 + " " + number1;
+            document.getElementById("unlockFinalPhone1").textContent = fullPhone1;
+
+            const cleanPhone1 = (phone1 + number1).replace(/\+/g, '').replace(/\s+/g, '');
+            document.getElementById("unlockCallBtn1").onclick = function() {
+                window.location.href = 'tel:' + cleanPhone1;
+            };
+
+            // Populate Secondary Number
+            const phone2 = (user.presentCountryCode || user.PresentCountryCode || "").trim();
+            const number2 = (user.landlineNumber || "").trim();
+            const secondaryGroup = document.getElementById("unlockPhone2Group");
+
+            if (number2) {
+                const fullPhone2 = phone2 + " " + number2;
+                document.getElementById("unlockFinalPhone2").textContent = fullPhone2;
+
+                const cleanPhone2 = (phone2 + number2).replace(/\+/g, '').replace(/\s+/g, '');
+                document.getElementById("unlockCallBtn2").onclick = function() {
+                    window.location.href = 'tel:' + cleanPhone2;
+                };
+                if (secondaryGroup) {
+                    secondaryGroup.style.setProperty('display', 'flex', 'important');
+                }
+            } else {
+                if (secondaryGroup) {
+                    secondaryGroup.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            // Open Modal
+            const modal = document.getElementById("contactUnlockedSuccessModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        function hideContactUnlockedSuccessModal() {
+            const modal = document.getElementById("contactUnlockedSuccessModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        }
+
+        function unlockContactDetails() {
+            hidePremiumContactModal();
+            const form = document.getElementById(`unlockContactDetailsForm`);
+            const formData = new FormData(form);
+            fetch(
+                form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showContactDetails(data.user);
+                        showContactUnlockedSuccessModal(data.user);
+                    } else {
+                        if (data.message.toLowerCase() === "insufficient credits.") {
+                            showPackagesModal();
+                        } else {
+                            Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (error.message !== "Unexpected token 'A', \"An error o\"... is not valid JSON") {
+                         Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+                    }
+                });
+        }
+
+        function confirmFavourite() {
+            hideFavouriteModal();
+            const itemId = '@user.Id';
+            const form = document.getElementById(`starform-${itemId}`);
+            const actionInput = document.getElementById(`action-star-${itemId}`);
+            const starText = document.getElementById(`startext-${itemId}`);
+
+            const isAdding = actionInput.value === 'Add';
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: isAdding ? 'Shortlisted!' : 'Removed!',
+                        text: isAdding ? 'Profile has been added to your favorites.' : 'Profile has been removed from your favorites.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    });
+                    if (isAdding) {
+                        if (starText) starText.textContent = 'Favourited';
+                        actionInput.value = 'Remove';
+                        document.getElementById('favouriteModalTitle').innerText = "Are you sure you want to remove this person from Favourite?";
+                    } else {
+                        if (starText) starText.textContent = 'Shortlist';
+                        actionInput.value = 'Add';
+                        document.getElementById('favouriteModalTitle').innerText = "Are you sure you want to add this person as Favourite?";
+                    }
+                } else {
+                    Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+            });
+        }
+
+        function confirmBlock() {
+            hideBlockedModal();
+            const profileId = '@user.Id';
+            const formData = new FormData();
+            formData.append('NotLikedId', profileId);
+
+            fetch('/User/NotLikeProfile', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Dismissed!',
+                        text: 'Profile has been removed from your matches.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    }).then(() => {
+                        window.location.href = '/dashboard';
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+            });
+        }
+
+        // Whether the viewed profile has already sent us an interest (from server)
+        const profileLikedUs = @Model.ProfileLikedUs.ToString().ToLower();
+
+        function handleInterestClick() {
+            const itemId = '@user.Id';
+            const form = document.getElementById(`likeform-${itemId}`);
+            const actionInput = document.getElementById(`action-like-${itemId}`);
+            const likeButton = document.getElementById(`likebutton-${itemId}`);
+            const interestInfo = document.getElementById('interest-info-section');
+
+            const isAdding = actionInput.value === 'Add';
+
+            if (isAdding) {
+                const confirmLabel = profileLikedUs ? 'Confirm Interest' : 'Express Interest';
+                const confirmText = profileLikedUs
+                    ? `Do you want to confirm interest in @(user.Name)?`
+                    : `Do you want to send interest to @(user.Name)?`;
+
+                const titleElem = document.getElementById('interestModalTitle');
+                if (titleElem) {
+                    titleElem.innerHTML = `<strong>${confirmLabel}</strong><br><br><span style="font-size: 15px; font-weight: 400; color: #555;">${confirmText}</span>`;
+                }
+
+                const confirmBtn = document.getElementById('interestModalConfirmBtn');
+                if (confirmBtn) {
+                    confirmBtn.textContent = 'Yes, Send!';
+                    confirmBtn.style.setProperty('background-color', '#00662d', 'important');
+                }
+
+                pendingInterestAction = function() {
+                    doSendInterestRequest(form, actionInput, likeButton, interestInfo, isAdding);
+                };
+                
+                showInterestModal();
+            } else {
+                // Cancel Interest popup
+                const titleElem = document.getElementById('interestModalTitle');
+                if (titleElem) {
+                    titleElem.innerHTML = `<strong>Cancel Interest</strong><br><br><span style="font-size: 15px; font-weight: 400; color: #555;">Are you sure you want to cancel interest in @(user.Name)?</span>`;
+                }
+
+                const confirmBtn = document.getElementById('interestModalConfirmBtn');
+                if (confirmBtn) {
+                    confirmBtn.textContent = 'Yes, Cancel!';
+                    confirmBtn.style.setProperty('background-color', '#E93B3B', 'important');
+                }
+
+                pendingInterestAction = function() {
+                    doSendInterestRequest(form, actionInput, likeButton, interestInfo, isAdding);
+                };
+
+                showInterestModal();
+            }
+        }
+
+        function doSendInterestRequest(form, actionInput, likeButton, interestInfo, isAdding) {
+            if (likeButton) likeButton.disabled = true;
+
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (likeButton) likeButton.disabled = false;
+                if (data.success) {
+                    Swal.fire({
+                        title: isAdding ? 'Interest Sent!' : 'Interest Removed!',
+                        text: isAdding ? 'Interest has been expressed successfully.' : 'Interest has been removed successfully.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                }
+            })
+            .catch(err => {
+                if (likeButton) likeButton.disabled = false;
+                console.error('Error:', err);
+                Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+            });
+        }
+
+        // Inline click handler for the interest button (send interest only)
+        function onInterestButtonClick(e) {
+            e.preventDefault();
+            const actionInput = document.getElementById('action-like-@user.Id');
+            // If interest already sent, do nothing — only Cancel Interest can remove it
+            if (actionInput && actionInput.value === 'Remove') return;
+            handleInterestClick();
+        }
+
+        // Inline click handler for the cancel interest button (remove interest only)
+        function onCancelInterestClick(e) {
+            e.preventDefault();
+            const form = document.getElementById('likeform-@user.Id');
+            const actionInput = document.getElementById('action-like-@user.Id');
+            const likeBtn = document.getElementById('likebutton-@user.Id');
+            const interestInfo = document.getElementById('interest-info-section');
+            if (actionInput) actionInput.value = 'Remove';
+
+            // Show cancellation popup
+            const titleElem = document.getElementById('interestModalTitle');
+            if (titleElem) {
+                titleElem.innerHTML = `<strong>Cancel Interest</strong><br><br><span style="font-size: 15px; font-weight: 400; color: #555;">Are you sure you want to cancel interest in @(user.Name)?</span>`;
+            }
+
+            const confirmBtn = document.getElementById('interestModalConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.textContent = 'Yes, Cancel!';
+                confirmBtn.style.setProperty('background-color', '#E93B3B', 'important');
+            }
+
+            pendingInterestAction = function() {
+                doSendInterestRequest(form, actionInput, likeBtn, interestInfo, false);
+            };
+
+            showInterestModal();
+        }
+
+        function respondToInterest(likedId, action) {
+            const url = action === 'Accept' ? '/AcceptInterest' : '/DeclineInterest';
+            const formData = new FormData();
+            formData.append('LikedId', likedId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: `Interest request has been ${action.toLowerCase()}ed.`,
+                        icon: 'success',
+                        width: '350px',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+            });
+        }
+
+        function sendSMSToast() {
+            Swal.fire({
+                title: 'Coming Soon',
+                text: 'The SMS sending feature is coming soon!',
+                icon: 'info',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        }
+
+        let selectedPhotoOwnerId = null;
+        function sendPhotoUnlockRequest(ownerId) {
+            if (!ownerId) return;
+            if (typeof window.isPremiumMember !== 'undefined' && !window.isPremiumMember) {
+                showPackagesModal('photo');
+                return;
+            }
+            selectedPhotoOwnerId = ownerId;
+
+            const title = document.getElementById('photoUnlockModalTitle');
+            if (title) {
+                title.innerText = `Request Photo Access from ${'@Html.Raw(Model.MatchedUserProfile.Name?.Replace("'", "\\'"))'}?`;
+            }
+            document.getElementById('photoUnlockModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hidePhotoUnlockModal() {
+            document.getElementById('photoUnlockModal').classList.remove('active');
+            document.body.style.overflow = '';
+            selectedPhotoOwnerId = null;
+        }
+
+        function confirmPhotoUnlock() {
+            if (!selectedPhotoOwnerId) return;
+
+            const formData = new FormData();
+            formData.append('ownerId', selectedPhotoOwnerId);
+
+            fetch('/RequestPhotoUnlock', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hidePhotoUnlockModal();
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Request Sent!',
+                        text: data.message || 'Unlock request is pending owner approval.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Could not send request.',
+                        icon: 'error',
+                        width: '320px'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hidePhotoUnlockModal();
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    icon: 'error',
+                    width: '320px'
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (isContactUnlocked) {
+                showContactDetails(null);
+            }
+        });
+    </script>
+
+    @if (!isViewerSelf && Model.Registration != null)
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+        <script>
+        (function () {
+            try {
+                if (typeof signalR !== 'undefined') {
+                    const presenceConn = new signalR.HubConnectionBuilder()
+                        .withUrl("/hubs/presence?userId=" + @Model.Registration.Id)
+                        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                        .configureLogging(signalR.LogLevel.Warning)
+                        .build();
+
+                    const targetProfileUserId = @user.Id;
+                    const presenceContainer = document.getElementById('profilePresenceContainer');
+
+                    presenceConn.on("UserOnline", function (onlineUserId) {
+                        if (onlineUserId === targetProfileUserId && presenceContainer) {
+                            presenceContainer.innerHTML = `
+                                <span class="profile-presence-badge online" title="Currently online">
+                                    <span class="profile-presence-dot"></span>
+                                    <span>Online</span>
+                                </span>
+                            `;
+                        }
+                    });
+
+                    presenceConn.on("UserOffline", function (offlineUserId) {
+                        if (offlineUserId === targetProfileUserId && presenceContainer) {
+                            presenceContainer.innerHTML = `
+                                <span class="profile-presence-badge offline" title="Last seen just now">
+                                    <i class="uil uil-clock-three"></i>
+                                    <span>Last seen just now</span>
+                                </span>
+                            `;
+                        }
+                    });
+
+                    presenceConn.start().catch(function (err) {
+                        console.warn("PresenceHub connection failed:", err);
+                    });
+                }
+            } catch (e) {
+                console.warn("SignalR presence setup error:", e);
+            }
+        })();
+        </script>
+    }
+}

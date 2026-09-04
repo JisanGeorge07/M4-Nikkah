@@ -1,0 +1,114 @@
+﻿@model FooterViewModel
+
+@{
+    var socialmedia = Model.SocialMedia!;
+    var contact = Model.Contact!;
+    var about = Model.About!;
+}
+
+<footer class="footer" style="background-image: url('/assets/images/svg-map.svg'); background-repeat: no-repeat; background-position: center;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 py-lg-5">
+                <div class="footer-py-60 text-center footeradd">
+                    <a href="~/" class="logo-footer">
+                        <img src="/assets/images/favicon.png" height="80" alt="">
+                    </a>
+                    <p class="mt-4 mx-auto">@Html.Raw(about.FooterBody)</p>
+                    @*t&c and privacy butttons*@
+                    <ul class="list-unstyled footmenu mb-0 mt-4">
+                        <li class="list-inline-item mb-0">
+                            <a href="@Url.Action("TermsConditions", "Home")" target="_blank" class="rounded">Terms & Conditions</a>
+                        </li>
+                        <li class="list-inline-item mb-0">
+                            <a href="@Url.Action("Privacy", "Home")" target="_blank" class="rounded">Privacy Policy</a>
+                        </li>
+                        <li class="list-inline-item mb-0">
+                            <a href="@Url.Action("ChildSafetyPolicy", "Home")" target="_blank" class="rounded">Child Safety Policy</a>
+                        </li>
+                    </ul>
+                    <ul class="list-unstyled social-icon foot-social-icon mb-0 mt-4">
+                        @foreach(var item in socialmedia)
+                        {
+                            if (item.Name.Contains("email"))
+                            {
+                                <li class="list-inline-item mb-0"><a href="mailto:@item.Url" class="rounded"><i class="uil uil-envelope align-middle" title="email"></i></a></li>
+                            }
+                            else if (item.Name.Contains("phone"))
+                            {
+                                <li class="list-inline-item mb-0"><a href="tel:@item.Url" class="rounded"><i class="uil uil-phone align-middle" title="phone"></i></a></li>
+                            }
+                            else
+                            {
+                                <li class="list-inline-item mb-0"><a href="@item.Url" target="_blank" class="rounded"><i class="uil uil-@item.Name align-middle" title="@item.Name"></i></a></li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-py-30 footer-bar bg-footer">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="text-center">
+                        <p class="mb-0">© @DateTime.UtcNow.Year M4NIKAH. All Rights Reserved.</p>
+                    </div>
+                </div><!--end col-->
+            </div><!--end row-->
+        </div><!--end container-->
+    </div>
+</footer>
+
+<div class="offcanvas offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header p-4 border-bottom">
+        <h5 id="offcanvasRightLabel" class="mb-0 m-auto">
+            <img src="assets/images/logo1.png" height="100" class="light-version" alt="">
+        </h5>
+        <button type="button" class="btn-close d-flex align-items-center text-dark" data-bs-dismiss="offcanvas" aria-label="Close"><i class="uil uil-times fs-4"></i></button>
+    </div>
+    <div class="offcanvas-body p-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 mt-4" style="z-index: 1">
+                    <div class="card-body p-3 accordion text-center">
+                        <h5 class="card-title">Address</h5>
+                        <p>@Html.Raw(contact.Address)</p>
+                    </div>
+                </div>
+                <div class="card border-0 mt-4" style="z-index: 1">
+                    <div class="card-body p-3 accordion text-center">
+                        <h6 class="card-title">@Html.Raw(contact.Email)</h6>
+                    </div>
+                </div>
+                <div class="card border-0 mt-4" style="z-index: 1">
+                    <div class="card-body p-3 accordion text-center">
+                        <h6 class="card-title">@Html.Raw(contact.Phone)</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas-footer p-4 border-top text-center">
+        <ul class="list-unstyled social-icon social mb-0">
+            @foreach (var item in socialmedia)
+            {
+                if (item.Name.Contains("email"))
+                {
+                    <li class="list-inline-item mb-0"><a href="mailto:@item.Url" class="rounded"><i class="uil uil-envelope align-middle" title="email"></i></a></li>
+                }
+                else if (item.Name.Contains("phone"))
+                {
+                    <li class="list-inline-item mb-0"><a href="tel:@item.Url" class="rounded"><i class="uil uil-phone align-middle" title="phone"></i></a></li>
+                }
+                else
+                {
+                    <li class="list-inline-item mb-0"><a href="@item.Url" target="_blank" class="rounded"><i class="uil uil-@item.Name align-middle" title="@item.Name"></i></a></li>
+                }
+            }
+        </ul>
+    </div>
+</div>

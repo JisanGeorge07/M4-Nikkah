@@ -1,0 +1,85 @@
+@model Application.Models.UserReportReasonDto
+@{
+    ViewBag.Title = "User Report Reason";
+}
+
+@section Title
+{
+    <a asp-action="UserReportReasonGetAll" class="btn btn-primary btn-xs">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    Entry
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("PostReason", "UserReports", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="modal-body row">
+                        <input type="hidden" asp-for="@Model.Id">
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Reason</label>
+                            <input type="text" class="form-control" asp-for="@Model.Reason">
+                        </div>
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Icon Name</label>
+                            <input type="text" class="form-control" asp-for="@Model.IconName">
+                        </div>
+
+                        @*<div class="mb-3 col-md-12">
+                            <label class="col-form-label">Icon (41 x 42)</label>
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <br/>
+                                <img src="/@Model.ImagePath" width="150" alt="image-preview"/>
+                                <br/>
+                            }
+                            <input type="hidden" asp-for="@Model.ImagePath">
+                            <input type="file" class="form-control" id="Image" name="Image">
+                        </div>*@
+
+                        @* <div class="mb-3 col-md-12">
+                            <label class="col-form-label">URL</label>
+                            <input type="text" class="form-control" asp-for="@Model.Url">
+                        </div> *@
+
+                        @if (Model.Id is > 0)
+                        {
+                            <div class="mb-3 col-md-12">
+                                <label class="col-form-label">Display Order</label>
+                                <input type="number" min="1" class="form-control" asp-for="@Model.DisplayOrder">
+                            </div>
+                        }
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Enabled</label>
+                            <input asp-for="@Model.IsActive" type="checkbox" class="form-check-input"/>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Show Description Popup (Tell us more)</label>
+                            <input asp-for="@Model.ShowDescriptionPopup" type="checkbox" class="form-check-input"/>
+                        </div>
+
+
+                        <div class="btn-group">
+                            @if (Model.Id is > 0)
+                            {
+                                <button asp-action="DeleteReason" asp-route-id="@Model.Id"
+                                        onclick="return confirm('Are you sure you want to delete this entity?')" class="btn btn-danger">
+                                    Delete
+                                </button>
+                            }
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

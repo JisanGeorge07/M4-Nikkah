@@ -1,0 +1,914 @@
+@model URMARRY.Areas.Admin.Models.EnquiryViewModel
+@{
+    ViewBag.Title = "Enquiry";
+    // Layout = "/Views/Shared/_Layout.cshtml";
+    var enquiry = Model.Enquiry!;
+    var MaritalStatuses = Model.MaritalStatuses!;
+    var ProfileFor = Model.ProfileFor!;
+    var Nationalities = Model.Nationalities!;
+    var States = Model.States!;
+    var Districts = Model.Districts!;
+    var Cities = Model.Cities!;
+    var BodyFeatures = Model.BodyFeatures!;
+    var Professions = Model.Professions!;
+    var MotherTongues = Model.MotherTongues!;
+    var Communities = Model.Communities!;
+    var Religiousnesses = Model.Religiousnesses!;
+    var FinancialStatuses = Model.FinancialStatuses!;
+    var ReligionCastes = Model.ReligionCastes!;
+    var dateOfBirth = !string.IsNullOrEmpty(enquiry.DOB) ? enquiry.DOB : "01/01/1990";
+    var str = dateOfBirth.Replace("-", "/").Split('/');
+    var day = string.Empty;
+    var month = string.Empty;
+    var year = str[2];
+    if(str[0].Length < 2)
+    {
+        day = "0" + str[0];
+    }
+    else
+    {
+        day = str[0];
+    }
+    if(str[1].Length < 2)
+    {
+        month = "0" + str[1];
+    }
+    else
+    {
+        month = str[1];
+    }
+    if (day.Length > 2)
+    {
+        var y = year;
+        var d = day;
+        day = y;
+        year = d;
+    }
+    var dob = day + "/" + month + "/" + year;
+    DateTime myDate = DateTime.ParseExact(dob, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+}
+
+@section Title
+{
+    <a asp-action="MemberList" asp-controller="Enquiry" asp- class="btn btn-primary btn-xs">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    Enquiry
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("Post", "Enquiry", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    var Model = enquiry;
+                    // ReSharper disable once LocalVariableHidesMember InconsistentNaming
+                    <div class="modal-body row">
+                        <input type="hidden" id="Id" name="Id" value="@Model.Id">
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Register Number (It will auto generate if this an old user)</label>
+                            <input type="text" class="form-control" asp-for="@Model.RegisterNumber" readonly>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Profile For</label>
+                            <select class="form-control" id="ProfileForId" name="ProfileForId" required>
+                                @foreach (var item in ProfileFor)
+                                {
+                                    if (enquiry.ProfileForId == item.Id)
+                                    {
+                                        <option value="@item.Id" selected="selected">@item.Title</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@item.Title</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Name</label>
+                            <input type="text" class="form-control" asp-for="@Model.Name" required>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Phone</label>
+                            <input type="text" class="form-control" asp-for="@Model.Phone">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Gender</label>
+                            <select class="form-control" id="Gender" name="Gender" required>
+                                @if (enquiry.Gender == "Male")
+                                {
+                                    <option value="Male" selected="selected">Male</option>
+                                    <option value="Female">Female</option>
+                                }
+                                else
+                                {
+                                    <option value="Male">Male</option>
+                                    <option value="Female" selected="selected">Female</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Date of birth</label>
+                            <input class="form-control" id="DOB" name="DOB" type="date" placeholder="" value="@myDate.ToString("yyyy-MM-dd")" required>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Religion</label>
+                            <select class="form-control" name="ReligionId" id="ReligionId" required>
+                                @foreach (var item in ReligionCastes)
+                                {
+                                    if (item.Id == enquiry.ReligionId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Nationality</label>
+                            <select class="form-control" name="NationalityId" id="NationalityId" required>
+                                @foreach (var item in Nationalities)
+                                {
+                                    if (item.Id == enquiry.NationalityId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Email</label>
+                            <input type="email" class="form-control" asp-for="@Model.Email" required>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Password</label>
+                            <input type="text" class="form-control" asp-for="@Model.Password" required>
+                        </div>
+                        
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Marital Status</label>
+                            <select class="form-control" name="MaritalStatusId" id="MaritalStatusId" required>
+                                @foreach (var item in MaritalStatuses)
+                                {
+                                    if (item.Id == enquiry.MaritalStatusId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+                        <div class="mb-3 col-md-12" id="childrenContainer" style="display: none;">
+                            <label class="col-form-label" for="inputNumberOfChildren">Number of Children</label>
+                            <select class="form-control" name="NumberOfChildrens" id="NumberOfChildrens" placeholder="Enter number of children">
+
+                                @for (int i = 0; i <= 5; i++)
+                                {
+                                    if (i == enquiry.NumberOfChildrens)
+                                    {
+                                        <option value="@i" selected="selected">@i</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@i">@i</option>
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Height</label>
+                            <select class="form-control" name="HeightId" id="HeightId" required>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == BodyFeature.Height))
+                                {
+                                    if (item.Id == enquiry.HeightId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Weight</label>
+                            <select class="form-control" name="WeightId" id="WeightId" required>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == BodyFeature.Weight))
+                                {
+                                    if (item.Id == enquiry.WeightId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Complexion</label>
+                            <select class="form-control" name="ComplexionId" id="ComplexionId" required>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == BodyFeature.Complexion))
+                                {
+                                    if (item.Id == enquiry.ComplexionId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Body Type</label>
+                            <select class="form-control" name="BodyTypeId" id="BodyTypeId" required>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == BodyFeature.BodyType))
+                                {
+                                    if (item.Id == enquiry.BodyTypeId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Physically Challenged</label>
+                            <select class="form-control" id="IsPhysicallyChallenged" name="IsPhysicallyChallenged" required>
+                                @if (enquiry.IsPhysicallyChallenged)
+                                {
+                                    <option value="true" selected="selected">Yes</option>
+                                    <option value="false">No</option>
+                                }
+                                else
+                                {
+                                    <option value="true">Yes</option>
+                                    <option value="false" selected="selected">No</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12" id="physicalChallengeDetailContainer" style="display: @(enquiry.IsPhysicallyChallenged ? "block" : "none");">
+                            <label class="col-form-label">Physically Challenged Detail</label>
+                            <select class="form-control" id="PhysicallyChallengedDetail" name="PhysicallyChallengedDetail">
+                                <option value="">Select Detail</option>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.PhysicalDisability))
+                                {
+                                    if (item.Title == enquiry.PhysicallyChallengedDetail)
+                                    {
+                                        <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Highest Education</label>
+                            <select class="form-control" name="HighestEducation" id="HighestEducation" required>
+                                @foreach (var item in BodyFeatures.Where(x => x.Type == BodyFeature.Education))
+                                {
+                                    if (item.Title == enquiry.HighestEducation)
+                                    {
+                                        <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Education Type</label>
+                            <input type="text" class="form-control" asp-for="@Model.EducationType">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Profession</label>
+                            <select class="form-control" name="ProfessionId" id="ProfessionId">
+                                @foreach (var item in Professions)
+                                {
+                                    if (item.Id == enquiry.ProfessionId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Profession Type</label>
+                            <input type="text" class="form-control" asp-for="@Model.ProfessionType">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Mother Tongue</label>
+                            <select class="form-control" name="MotherTongueId" id="MotherTongueId" required>
+                                @foreach (var item in MotherTongues)
+                                {
+                                    if (item.Id == enquiry.MotherTongueId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+                     
+                        @*@if (enquiry.CasteId > 0)
+                        {
+                            <div class="mb-3 col-md-12">
+                                <label class="col-form-label">Caste</label>
+                                <input type="text" class="form-control" value="@Model.ReligionCastes.FirstOrDefault(x => x.Id == enquiry.CasteId).Title" readonly>
+                            </div>
+                        }*@
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Community</label>
+                            <select class="form-control" name="CommunityId" id="CommunityId" required>
+                                @foreach (var item in Communities)
+                                {
+                                    if (item.Id == enquiry.CommunityId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Religiousness</label>
+                            <select class="form-control form-select" name="ReligiousnessId" id="ReligiousnessId" required>
+                                @foreach (var item in Religiousnesses)
+                                {
+                                    if (item.Id == enquiry.ReligiousnessId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Financial Status</label>
+                            <select class="form-control" name="FinancialStatusId" id="FinancialStatusId" required>
+                                @foreach (var item in FinancialStatuses)
+                                {
+                                    if (item.Id == enquiry.FinancialStatusId)
+                                    {
+                                        <option value="@item.Id" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Id">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>                            
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Family Name</label>
+                            <input type="text" class="form-control" asp-for="@Model.FamilyName">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Father Name</label>
+                            <input type="text" class="form-control" asp-for="@Model.FatherName">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Post</label>
+                            <input type="text" class="form-control" asp-for="@Model.Post">
+                        </div>                                               
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Pin Code</label>
+                            <input type="text" class="form-control" asp-for="@Model.PinCode">
+                        </div>
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label" for="Country">Country</label>
+                            <select class="form-control" name="Country" id="Country" required>
+                                @foreach (var item in Nationalities)
+                                {
+                                    if (item.Title == enquiry.Country)
+                                    {
+                                        <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12" id="stateContainer">
+                            <label class="col-form-label" for="inputState">State</label>
+                            <select class="form-control" name="State" id="State" required>
+                                @foreach (var item in States)
+                                {
+                                    if (item.Name == enquiry.State)
+                                    {
+                                        <option value="@item.Name" data-state-id="@item.Id" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name" data-state-id="@item.Id">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12" id="districtContainer">
+                            <label class="col-form-label" for="District">District</label>
+                            <select class="form-control" name="District" id="District" required>
+                                @foreach (var item in Districts)
+                                {
+                                    if (item.Name == enquiry.District)
+                                    {
+                                        <option value="@item.Name" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                     @*    <div class="mb-3 col-md-12">
+                            <label class="col-form-label">City</label>
+                            <input type="text" class="form-control" asp-for="@Model.Village">
+                        </div> *@
+                        <div class="mb-3 col-md-12" id="cityContainer">
+                            <label class="col-form-label" for="Village">City</label>
+                            <select class="form-control" name="Village" id="Village" required>
+                                @foreach (var item in Cities)
+                                {
+                                    if (item.Name == enquiry.Village)
+                                    {
+                                        <option value="@item.Name" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label" for="inputPCountry">Present Country</label>
+                            <select class="form-control" name="PresentCountry" id="PresentCountry" required>
+                                @foreach (var item in Nationalities)
+                                {
+                                    if (item.Title == enquiry.PresentCountry)
+                                    {
+                                        <option value="@item.Title" selected="selected">@Html.Raw(item.Title)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                     @*    <div class="mb-3 col-md-12">
+                            <label class="col-form-label" for="PresentState">Present State</label>
+                            <select class="form-control" name="PresentState" id="PresentState" required>
+                                @foreach (var item in States)
+                                {
+                                    if (item.Name == enquiry.PresentState)
+                                    {
+                                        <option value="@item.Name" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div> *@
+                 @*        <div class="mb-3 col-md-12">
+                            <label class="col-form-label" for="PresentDistrict">Present District</label>
+                            <select class="form-control" name="PresentDistrict" id="PresentDistrict" required>
+                                @foreach (var item in Districts)
+                                {
+                                    if (item.Name == enquiry.PresentDistrict)
+                                    {
+                                        <option value="@item.Name" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div> *@
+               @*          <div class="mb-3 col-md-12">
+                            <label class="col-form-label" for="PresentCity">Present City</label>
+                            <select class="form-control" name="PresentCity" id="PresentCity" required>
+                                @foreach (var item in Cities)
+                                {
+                                    if (item.Name == enquiry.PresentCity)
+                                    {
+                                        <option value="@item.Name" selected="selected">@Html.Raw(item.Name)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.Name">@Html.Raw(item.Name)</option>
+                                    }
+                                }
+                            </select>
+                        </div> *@
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Telephone Number</label>
+                            <input type="text" class="form-control" asp-for="@Model.LandlineNumber">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Profile Image</label>
+                            @if(!string.IsNullOrEmpty(enquiry.ImagePath))
+                            {
+                                <br />
+                                <img src="@Html.Raw("/" + enquiry.ImagePath)" width="180">
+                                <br />
+                            }
+                            else
+                            {
+                                <br />
+                                <img src="@Url.Content(string.Equals(enquiry.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" width="180">
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@enquiry.ImagePath">
+                            <input type="file" class="form-control" id="Image" name="Image">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">About</label>
+                            <textarea class="form-control" asp-for="@Model.About" cols="20" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Is Verified?</label>
+                            <input asp-for="@Model.IsVerified" type="checkbox" class="form-check-input" />
+                        </div>
+
+                      @* <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Is Premium member?</label>
+                            <input asp-for="@Model.IsPremiumMember" type="checkbox" class="form-check-input"/>
+                        </div>*@
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Is special request?</label>
+                            <input asp-for="@Model.IsSpecialRequest" type="checkbox" class="form-check-input" />
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Is Complete?</label>
+                            <input asp-for="@Model.IsComplete" type="checkbox" class="form-check-input" />
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Enabled</label>
+                            <input asp-for="@Model.IsActive" type="checkbox" class="form-check-input" />
+                        </div>
+                        
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Registration Approved</label>
+                            <input asp-for="@Model.IsVisible" type="checkbox" class="form-check-input" />
+                        </div>
+ 
+                        <div class="mb-3 col-md-12">
+                            <label class="form-check-label">Show On Home Page</label>
+                            <input asp-for="@Model.ShowOnHomePage" type="checkbox" class="form-check-input" />
+                        </div>
+
+                        <div class="btn-group">
+                            @*<button asp-action="Delete" asp-route-id="@Model.Id"
+                                    onclick="return confirm('Are you sure you want to delete this entity?')" class="btn btn-danger" type="button">
+                                Delete
+                            </button>*@
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+ <style>
+    .select2-container {
+            box-sizing: border-box;
+            display: inline-block;
+            margin: 0;
+            width: 100% !important;
+            position: relative;
+            vertical-align: middle;
+        }
+
+        .select2-selection--single {
+            height: 48px; /* Adjust based on design */
+            padding-left: 5px; /* Space for the icon */
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-selection__rendered {
+            line-height: 48px; /* Match the input height */
+        }
+
+        .select2-selection__arrow {
+            height: 48px; /* Adjust based on design */
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: black;
+        }
+
+
+        .select2-container--default .select2-selection--single {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            height:35.5px;
+        }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                color: #444;
+                line-height: 30px;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 26px;
+                position: absolute;
+                top: 12px;
+                right: 1px;
+                width: 20px;
+            }
+
+                .select2-container--default .select2-selection--single .select2-selection__arrow b {
+                    border-color: #888 transparent transparent transparent;
+                    border-style: solid;
+                    border-width: 5px 4px 0 4px;
+                    height: 0;
+                    left: 50%;
+                    margin-left: -20px;
+                    margin-top: -10px;
+                    position: absolute;
+                    top: 50%;
+                    width: 0;
+                }
+
+    </style>
+
+<script>
+    $(document).ready(function () {
+        $('#Country').change(function () {
+            var selectedCountry = $(this).val();
+            if (selectedCountry === 'India') {
+                $('#stateContainer').show();  // Show the state dropdown if 'India' is selected
+                $('#districtContainer').show();
+                $('#State').prop('disabled', false);
+            } else {
+                $('#stateContainer').hide();  // Hide the state dropdown if any other country is selected
+                $('#districtContainer').hide();
+                $('#cityContainer').hide();
+                $('#State').prop('disabled', true);
+            }
+        });
+
+        // Trigger the change event on page load to handle the initial state
+        $('#Country').trigger('change');
+    });
+
+    $(document).ready(function () {
+        $('#State').change(function () {
+            var selectedState = $(this).val();
+            if (selectedState === 'Kerala') {
+                $('#cityContainer').show();  // Show the state dropdown if 'India' is selected
+                $('#Village').prop('disabled', false);  // Enable the city dropdown
+            } else {
+                $('#cityContainer').hide();  // Hide the state dropdown if any other country is selected
+                $('#Village').prop('disabled', true);  // Enable the city dropdown
+            }
+            var selectedStateId = $(this).data('state-id');
+        });
+        // Trigger the change event on page load
+        $('#State').trigger('change');
+    });
+    </script>
+<script>
+    $(document).ready(function () {
+        $('#State').change(function () {
+            var selectedStateId = $(this).data('state-id');
+            $('#District').empty(); // Clear the existing options
+            $('#District').append('
+                < option value = "" > Select District</option > '); // Add the default option
+
+            // Filter districts based on selected state
+            $('#districtContainer option[data-state-id]').each(function () {
+                    var districtStateId = $(this).data('state-id');
+                    if (districtStateId == selectedStateId) {
+                        $('#District').append($(this).clone());
+                    }
+                });
+
+            // Optionally, you can trigger change event for the district dropdown here
+            $('#District').trigger('change');
+        });
+
+        // Trigger the state change event on page load if a state is already selected (e.g., in edit scenarios)
+        $('#State').trigger('change');
+    });
+
+</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#State').change(function () {
+            var stateName = $(this).val();  // Get the selected state's name
+
+            // Make an AJAX call to fetch districts based on the selected state name
+            $.ajax({
+                url: '/Home/GetDistrictsByStateName', // Action method to fetch districts by state name
+                type: 'GET',
+                data: { stateName: stateName },
+                dataType: 'json',
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.open("GET", '/Home/GetDistrictsByStateName?stateName=' + encodeURIComponent(stateName), true);
+                    xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Clear existing options in the district dropdown
+                        $('#District').empty();
+                        $('#District').append('<option value="">District</option>');
+
+                        // Populate the district dropdown with new options
+                        $.each(response.message, function (index, item) {
+                            $('#District').append('<option value="' + item.name + '">' + item.name + '</option>');
+                        });
+                    }
+                    else {
+
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+        //  $('#State').trigger('change');
+
+    });
+
+    $(document).ready(function () {
+        $('#District').change(function () {
+            var districtName = $(this).val();  // Get the selected state's name
+
+            // Make an AJAX call to fetch districts based on the selected state name
+            $.ajax({
+                url: '/Home/GetCityByDistictName', // Action method to fetch districts by state name
+                type: 'GET',
+                data: { districtName: districtName },
+                dataType: 'json',
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.open("GET", '/Home/GetCityByDistictName?districtName=' + encodeURIComponent(districtName), true);
+                    xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+                    return xhr;
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Clear existing options in the district dropdown
+                        $('#Village').empty();
+                        $('#Village').append('<option value="">City</option>');
+
+                        // Populate the district dropdown with new options
+                        $.each(response.message, function (index, item) {
+                            $('#Village').append('<option value="' + item.name + '">' + item.name + '</option>');
+                        });
+                    }
+                    else {
+
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+        //  $('#District').trigger('change');
+    });
+
+    $(document).ready(function () {
+        $('#Country').select2({
+            placeholder: 'Country',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#State').select2({
+            placeholder: 'State',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#District').select2({
+            placeholder: 'District',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#Village').select2({
+            placeholder: 'City',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#PresentCountry').select2({
+            placeholder: 'PresentCountry',
+            allowClear: false
+        });
+    });
+
+    $(document).ready(function () {
+        $('#IsPhysicallyChallenged').change(function () {
+            var selectedVal = $(this).val();
+            if (selectedVal === 'true') {
+                $('#physicalChallengeDetailContainer').show();
+            } else {
+                $('#physicalChallengeDetailContainer').hide();
+                $('#PhysicallyChallengedDetail').val('');
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        $('#MaritalStatusId').change(function () {
+            var selectedVal = $(this).val();
+            if (selectedVal == '2' || selectedVal == '3' || selectedVal == '4' || selectedVal == '5' || selectedVal == '6') {
+                $('#childrenContainer').show();
+            } else {
+                $('#childrenContainer').hide();
+                $('#NumberOfChildrens').val('0');
+            }
+        });
+        $('#MaritalStatusId').trigger('change');
+    });
+</script>

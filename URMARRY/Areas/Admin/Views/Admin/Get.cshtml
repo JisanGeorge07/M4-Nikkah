@@ -1,0 +1,47 @@
+﻿@model Application.ViewModels.AccountSettingsViewModel
+@{
+    ViewBag.Title = "WelcomeContent";
+}
+
+@section Title
+{
+    Account Settings
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Account Settings</h4>
+            </div>
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("Get", "Admin", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="row">
+                        @Html.ValidationMessage("invalid", new { @class = "text-danger" })
+                        <input type="hidden" name="UserID" id="UserID" value="@Model.UserId"/>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input class="form-control" type="text" value="@Model.Email" name="Email" id="Email" readonly="readonly">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Old Password</label>
+                            <input class="form-control" type="password" id="OldPassword" name="OldPassword">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Password</label>
+                            <input class="form-control" type="password" id="Password" name="Password">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Confirm Password</label>
+                            <input class="form-control" type="password" id="CPassword" name="CPassword">
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary w-md">Save</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

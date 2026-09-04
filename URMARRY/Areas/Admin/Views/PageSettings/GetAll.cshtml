@@ -1,0 +1,48 @@
+﻿@using Application.Helpers
+@model List<Application.Models.PageSettingsDto>
+@{
+    ViewBag.Title = "Page settings";
+}
+
+@section Title
+{
+    Page management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                    <tr>
+                        <th width="50%">Title</th>
+                        <th width="20%">URL</th>
+                        <th width="20%">Status</th>
+                        <th width="10%">Priority</th>
+                        <th width="20%">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                                <td>@Html.Raw(item.Title)</td>
+                            <td>@Html.Raw("/" + item.Name)</td>
+                            <td>
+                                @Html.Raw(item.IsActive ? "Enabled" : "Disabled")
+                            </td>
+                            <td>@Html.Raw(item.DisplayOrder)</td>
+                            <td>
+                                <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

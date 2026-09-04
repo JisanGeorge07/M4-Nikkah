@@ -1,0 +1,34 @@
+﻿@model Application.Models.Transactions.PaymentGatewayRequest
+
+<form id="paymentForm" action="@Model.Udf2" method="post">
+    <input type="hidden" name="key" value="@Model.Key" />
+    <input type="hidden" name="txnid" value="@Model.TxnId" />
+    <input type="hidden" name="amount" value="@Model.Amount" />
+    <input type="hidden" name="productinfo" value="@Model.ProductInfo" />
+    <input type="hidden" name="firstname" value="@Model.FirstName" />
+    <input type="hidden" name="email" value="@Model.Email" />
+    <input type="hidden" name="phone" value="@Model.Phone" />
+    <input type="hidden" name="surl" value="@Model.Surl" />
+    <input type="hidden" name="furl" value="@Model.Furl" />
+    <input type="hidden" name="hash" value="@Model.Hash" />
+    <input type="hidden" name="udf1" value="@Model.Udf1" />
+@*     <input type="hidden" name="udf2" value="@Model.Udf2" />
+    <input type="hidden" name="udf3" value="@Model.Udf3" />
+    <input type="hidden" name="udf4" value="@Model.Udf4" /> *@
+    <input type="hidden" name="udf5" value="@Model.Udf5" />
+    @* <input type="submit" value="Pay Now" /> *@
+</form>
+<p id="manualRedirect" style="display:none;">
+    If you are not automatically redirected, <a href="javascript:document.getElementById('paymentForm').submit();">click here</a>.
+</p>
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+            // If form has not been submitted within 5 seconds, show the manual redirect link
+            document.getElementById('manualRedirect').style.display = 'block';
+        }, 2000); // 2 seconds delay
+
+        // Automatically submit the form
+        document.getElementById("paymentForm").submit();
+    });
+</script>

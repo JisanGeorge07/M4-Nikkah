@@ -1,0 +1,729 @@
+@model URMARRY.Areas.Admin.Models.StaffProfileViewDetailModel
+@{
+    ViewBag.Title = $"Profile Details - {Model.User.Name} ({Model.User.RegisterNumber})";
+    var user = Model.User;
+    var plan = Model.ActivePlan;
+    var images = Model.UserImages;
+    var followUps = Model.FollowUps;
+}
+
+@section Title
+{
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="AssignProfiles" asp-controller="Staff" class="btn btn-outline-secondary btn-sm" title="Back to Assign Profiles">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            <span class="fw-bold">Profile Details: @user.Name</span>
+            <span class="badge bg-soft-primary text-primary font-size-13 px-2 py-1">@user.RegisterNumber</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/admin/enquiry/@user.Id" target="_blank" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                <i class="fas fa-pencil-alt"></i> Edit in Enquiry
+            </a>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+}
+
+<style>
+    .profile-hero-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+    .profile-avatar-wrapper {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        background: #f1f5f9;
+        flex-shrink: 0;
+    }
+    .profile-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .info-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        margin-bottom: 20px;
+    }
+    .info-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .info-card-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        background-color: #f8fafc;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .info-card-body {
+        padding: 18px;
+    }
+    .detail-group {
+        margin-bottom: 14px;
+    }
+    .detail-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+    .detail-value {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #0f172a;
+        word-break: break-word;
+    }
+    .detail-value.empty {
+        color: #94a3b8;
+        font-style: italic;
+    }
+    .gallery-img-wrapper {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1/1;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .gallery-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.2s ease;
+    }
+    .gallery-img:hover {
+        transform: scale(1.05);
+    }
+    .timeline-container {
+        position: relative;
+        padding-left: 20px;
+        border-left: 2px solid #e2e8f0;
+        margin-left: 8px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-badge {
+        position: absolute;
+        left: -27px;
+        top: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .timeline-item.success-status .timeline-badge {
+        background-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+    .timeline-item.warning-status .timeline-badge {
+        background-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+    .timeline-item.danger-status .timeline-badge {
+        background-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    @@media print {
+        .btn, nav, .navbar, .header, #page-topbar, .footer {
+            display: none !important;
+        }
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+
+<!-- Profile Summary Hero Card -->
+<div class="card profile-hero-card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-start gap-4 flex-wrap flex-md-nowrap">
+            <!-- Avatar -->
+            <div class="profile-avatar-wrapper">
+                @if (!string.IsNullOrEmpty(user.ImagePath))
+                {
+                    <img src="@user.ImagePath" alt="@user.Name" class="profile-avatar-img" onerror="this.onerror=null; this.src='/assets/images/users/user-dummy-img.jpg';" />
+                }
+                else
+                {
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-soft-primary text-primary">
+                        <i class="fas fa-user font-size-36"></i>
+                    </div>
+                }
+            </div>
+
+            <!-- Profile Overview Header -->
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1">@user.Name</h3>
+                        <div class="d-flex align-items-center gap-2 flex-wrap text-muted font-size-13">
+                            <span><i class="bi bi-card-heading text-primary me-1"></i> ID: <strong>@user.RegisterNumber</strong></span>
+                            <span>&bull;</span>
+                            <span><i class="bi bi-person-badge text-secondary me-1"></i> For: <strong>@(Model.ProfileForTitle ?? "Self")</strong></span>
+                            <span>&bull;</span>
+                            <span><i class="bi bi-calendar-event me-1"></i> Registered: <strong>@user.CreatedOn.ToString("dd MMM yyyy")</strong></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Badges -->
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        @if (user.IsPremiumMember)
+                        {
+                            <span class="badge bg-success font-size-12 px-3 py-2"><i class="fas fa-crown me-1"></i> Premium Member</span>
+                        }
+                        else if (user.IsComplete && user.IsVisible && user.IsVerified)
+                        {
+                            <span class="badge bg-primary font-size-12 px-3 py-2"><i class="fas fa-check-circle me-1"></i> Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark font-size-12 px-3 py-2"><i class="fas fa-hourglass-half me-1"></i> Pending Verification</span>
+                        }
+
+                        @if (user.IsVerified)
+                        {
+                            <span class="badge bg-soft-success text-success border border-success font-size-12 px-2.5 py-1.5"><i class="fas fa-shield-alt me-1"></i> Verified</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-soft-secondary text-secondary border font-size-12 px-2.5 py-1.5"><i class="fas fa-shield-alt me-1"></i> Unverified</span>
+                        }
+                    </div>
+                </div>
+
+                <hr class="my-3 opacity-25" />
+
+                <!-- Quick Highlights -->
+                <div class="row g-3 font-size-13">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="text-muted font-size-11 text-uppercase fw-semibold">Assigned Staff</div>
+                        <div class="fw-bold text-dark d-flex align-items-center gap-1 mt-1">
+                            <i class="fas fa-user-circle text-info"></i>
+                            @(Model.AssignedStaffName ?? "Unassigned")
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="text-muted font-size-11 text-uppercase fw-semibold">Gender / Age</div>
+                        <div class="fw-bold text-dark mt-1">
+                            @user.Gender, @(Model.Age > 0 ? $"{Model.Age} Years" : "N/A")
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="text-muted font-size-11 text-uppercase fw-semibold">Contact Number</div>
+                        <div class="fw-bold text-dark mt-1">
+                            @(user.CountryCode ?? "+91") @(user.Phone ?? "N/A")
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="text-muted font-size-11 text-uppercase fw-semibold">Email Address</div>
+                        <div class="fw-bold text-dark mt-1 text-truncate">
+                            @(user.Email ?? "N/A")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column: Personal, Religious, Education, Physical -->
+    <div class="col-lg-8">
+        
+        <!-- 1. Personal & Basic Information -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-person-fill text-primary"></i> Personal & Basic Information
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Full Name</div>
+                        <div class="detail-value">@(user.Name ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Profile Created For</div>
+                        <div class="detail-value">@(Model.ProfileForTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Gender</div>
+                        <div class="detail-value">@(user.Gender ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Date of Birth</div>
+                        <div class="detail-value">@(user.DOB ?? "N/A") (@Model.Age Years)</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Marital Status</div>
+                        <div class="detail-value">@(Model.MaritalStatusTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Number of Children</div>
+                        <div class="detail-value">@(user.NumberOfChildrens?.ToString() ?? "0")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Nationality</div>
+                        <div class="detail-value">@(Model.NationalityTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Mother Tongue</div>
+                        <div class="detail-value">@(Model.MotherTongueTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Special Request</div>
+                        <div class="detail-value">@(user.IsSpecialRequest ? "Yes" : "No")</div>
+                    </div>
+                    <div class="col-12 detail-group mb-0">
+                        <div class="detail-label">About Self</div>
+                        <div class="detail-value text-muted p-2 rounded bg-light border border-light">
+                            @(!string.IsNullOrWhiteSpace(user.About) ? user.About : "No bio / self-description provided.")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Religious & Community Details -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-moon-stars-fill text-warning"></i> Religious & Community Information
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Religion</div>
+                        <div class="detail-value">@(Model.ReligionTitle ?? "Muslim")</div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Caste / Sub-caste</div>
+                        <div class="detail-value">@(Model.CasteTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Community</div>
+                        <div class="detail-value">@(Model.CommunityTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Religiousness</div>
+                        <div class="detail-value">@(Model.ReligiousnessTitle ?? "N/A")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Physical Attributes -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-person-arms-up text-info"></i> Physical Attributes & Appearance
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 col-sm-6 detail-group">
+                        <div class="detail-label">Height</div>
+                        <div class="detail-value">@(Model.HeightTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 detail-group">
+                        <div class="detail-label">Weight</div>
+                        <div class="detail-value">@(Model.WeightTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 detail-group">
+                        <div class="detail-label">Complexion</div>
+                        <div class="detail-value">@(Model.ComplexionTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 detail-group">
+                        <div class="detail-label">Body Type</div>
+                        <div class="detail-value">@(Model.BodyTypeTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 detail-group mb-0">
+                        <div class="detail-label">Physically Challenged</div>
+                        <div class="detail-value">@(user.IsPhysicallyChallenged ? "Yes" : "No")</div>
+                    </div>
+                    @if (user.IsPhysicallyChallenged)
+                    {
+                        <div class="col-md-6 col-sm-6 detail-group mb-0">
+                            <div class="detail-label">Disability Detail</div>
+                            <div class="detail-value">@(user.PhysicallyChallengedDetail ?? "N/A")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Education & Profession -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-mortarboard-fill text-success"></i> Education & Professional Career
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Highest Education</div>
+                        <div class="detail-value">@(user.HighestEducation ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 detail-group">
+                        <div class="detail-label">Education Stream / Type</div>
+                        <div class="detail-value">@(user.EducationType ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Profession</div>
+                        <div class="detail-value">@(Model.ProfessionTitle ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Profession Details</div>
+                        <div class="detail-value">@(user.ProfessionType ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Financial Status</div>
+                        <div class="detail-value">@(Model.FinancialStatusTitle ?? "N/A")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Location & Addresses -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-geo-alt-fill text-danger"></i> Contact & Location Details
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-primary font-size-12 text-uppercase fw-bold mb-3 border-bottom pb-1">
+                            <i class="bi bi-house-door-fill me-1"></i> Permanent Address
+                        </h6>
+                        <div class="detail-group">
+                            <div class="detail-label">Village / Town</div>
+                            <div class="detail-value">@(user.Village ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Post Office</div>
+                            <div class="detail-value">@(user.Post ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">District</div>
+                            <div class="detail-value">@(user.District ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">State & Country</div>
+                            <div class="detail-value">@(user.State ?? "N/A"), @(user.Country ?? "India") (@(user.PinCode ?? "N/A"))</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary font-size-12 text-uppercase fw-bold mb-3 border-bottom pb-1">
+                            <i class="bi bi-building me-1"></i> Present / Working Location
+                        </h6>
+                        <div class="detail-group">
+                            <div class="detail-label">Present City</div>
+                            <div class="detail-value">@(user.PresentCity ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Present District</div>
+                            <div class="detail-value">@(user.PresentDistrict ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Present State</div>
+                            <div class="detail-value">@(user.PresentState ?? "N/A")</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Present Country</div>
+                            <div class="detail-value">@(user.PresentCountry ?? "India")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Family Information -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-people-fill text-secondary"></i> Family Information
+            </div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Family Name / House Name</div>
+                        <div class="detail-value">@(user.FamilyName ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Father's Name</div>
+                        <div class="detail-value">@(user.FatherName ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 detail-group">
+                        <div class="detail-label">Landline Number</div>
+                        <div class="detail-value">@(user.LandlineNumber ?? "N/A")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Uploaded Photo Gallery -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-images text-primary"></i> Uploaded Photo Gallery
+            </div>
+            <div class="info-card-body">
+                @{
+                    var photoList = new List<string>();
+                    if (!string.IsNullOrEmpty(user.ImagePath)) photoList.Add(user.ImagePath);
+                    if (images != null)
+                    {
+                        if (!string.IsNullOrEmpty(images.Image1Path) && !photoList.Contains(images.Image1Path)) photoList.Add(images.Image1Path);
+                        if (!string.IsNullOrEmpty(images.Image2Path) && !photoList.Contains(images.Image2Path)) photoList.Add(images.Image2Path);
+                        if (!string.IsNullOrEmpty(images.Image3Path) && !photoList.Contains(images.Image3Path)) photoList.Add(images.Image3Path);
+                        if (!string.IsNullOrEmpty(images.Image4Path) && !photoList.Contains(images.Image4Path)) photoList.Add(images.Image4Path);
+                        if (!string.IsNullOrEmpty(images.Image5Path) && !photoList.Contains(images.Image5Path)) photoList.Add(images.Image5Path);
+                    }
+                }
+
+                @if (photoList.Count > 0)
+                {
+                    <div class="row g-3">
+                        @foreach (var photo in photoList)
+                        {
+                            <div class="col-6 col-sm-4 col-md-3">
+                                <a href="@photo" target="_blank" class="gallery-img-wrapper d-block" title="Click to view full photo">
+                                    <img src="@photo" alt="Photo" class="gallery-img" onerror="this.onerror=null; this.src='/assets/images/users/user-dummy-img.jpg';" />
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4 border rounded bg-light" style="border-style: dashed !important;">
+                        <i class="bi bi-image font-size-30 text-secondary opacity-50 d-block mb-1"></i>
+                        No gallery images uploaded yet.
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Verification, Plan, Credentials, Follow-ups -->
+    <div class="col-lg-4">
+        
+        <!-- Account & Security Info -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-shield-lock-fill text-dark"></i> Account & Credentials
+            </div>
+            <div class="info-card-body">
+                <div class="detail-group">
+                    <div class="detail-label">Email / Login ID</div>
+                    <div class="detail-value fw-semibold text-primary">@(user.Email ?? "N/A")</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Primary Mobile</div>
+                    <div class="detail-value fw-semibold">@(user.CountryCode ?? "+91") @(user.Phone ?? "N/A")</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Password</div>
+                    <div class="detail-value">
+                        @if (!string.IsNullOrEmpty(Model.DecryptedPassword))
+                        {
+                            <span class="badge bg-light text-dark border px-2 py-1 font-size-12">@Model.DecryptedPassword</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted font-size-12">Encrypted</span>
+                        }
+                    </div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Profile Visibility</div>
+                    <div class="detail-value">
+                        @if (user.IsVisible)
+                        {
+                            <span class="badge bg-soft-success text-success">Visible to Public</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-soft-danger text-danger">Hidden / Inactive</span>
+                        }
+                    </div>
+                </div>
+                <div class="detail-group mb-0">
+                    <div class="detail-label">Source</div>
+                    <div class="detail-value">@(user.Source ?? "Website Registration")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Verification Status -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-file-earmark-check-fill text-info"></i> Document Verification
+            </div>
+            <div class="info-card-body">
+                <div class="detail-group">
+                    <div class="detail-label">Verification Request Enabled</div>
+                    <div class="detail-value">
+                        @(user.DocumentVerificationEnabled ? "Yes (Enabled)" : "No")
+                    </div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Verification Complete</div>
+                    <div class="detail-value">
+                        @if (user.DocumentVerificationComplete)
+                        {
+                            <span class="badge bg-success">Verified & Approved</span>
+                        }
+                        else if (user.DocumentVerificationRejected)
+                        {
+                            <span class="badge bg-danger">Rejected</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        }
+                    </div>
+                </div>
+                <div class="detail-group mb-0">
+                    <div class="detail-label">ID Proof & Verification Documents</div>
+                    <div class="detail-value mt-1">
+                        @if (Model.VerificationDocuments != null && Model.VerificationDocuments.Count > 0)
+                        {
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var doc in Model.VerificationDocuments)
+                                {
+                                    var docTitle = !string.IsNullOrWhiteSpace(doc.OriginalFileName) ? doc.OriginalFileName : (!string.IsNullOrWhiteSpace(doc.DocumentType) ? doc.DocumentType : "Document");
+                                    var docUrl = doc.DocumentUrl != null && !doc.DocumentUrl.StartsWith("/") ? "/" + doc.DocumentUrl : doc.DocumentUrl;
+                                    <a href="@docUrl" target="_blank" class="btn btn-soft-info btn-sm d-flex align-items-center gap-1 w-100 justify-content-center font-size-12">
+                                        <i class="bi bi-file-earmark-text"></i> View @docTitle
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(user.VerificationDocumentUrl))
+                        {
+                            var singleUrl = user.VerificationDocumentUrl.StartsWith("/") ? user.VerificationDocumentUrl : "/" + user.VerificationDocumentUrl;
+                            <a href="@singleUrl" target="_blank" class="btn btn-soft-info btn-sm d-flex align-items-center gap-1 w-100 justify-content-center">
+                                <i class="bi bi-eye"></i> View Uploaded ID Document
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted font-size-12">No document uploaded yet</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership & Plan Info -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-gem text-success"></i> Membership & Plan
+            </div>
+            <div class="info-card-body">
+                @if (user.IsPremiumMember && plan != null)
+                {
+                    <div class="detail-group">
+                        <div class="detail-label">Membership Type</div>
+                        <div class="detail-value text-success fw-bold"><i class="fas fa-crown me-1"></i> Premium Member</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Contacts Purchased</div>
+                        <div class="detail-value"><span class="badge bg-primary">@plan.ViewCreditsPurchased</span></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Contacts Remaining</div>
+                        <div class="detail-value"><span class="badge bg-success">@(plan.ViewCreditsPurchased - plan.ViewCreditsUsed)</span></div>
+                    </div>
+                    <div class="detail-group mb-0">
+                        <div class="detail-label">Expiry Date</div>
+                        <div class="detail-value text-danger fw-semibold">@plan.ExpiresAt.ToString("dd MMM yyyy")</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-award font-size-24 opacity-50 d-block mb-1"></i>
+                        Standard / Free Member
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- CRM Follow-ups & Interaction History -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="bi bi-headset text-primary"></i> Staff Follow-ups (@followUps.Count)
+            </div>
+            <div class="info-card-body">
+                @if (followUps.Count > 0)
+                {
+                    @foreach (var f in followUps)
+                    {
+                        var typeName = f.FollowUpType.ToString();
+                        var typeBadge = f.FollowUpType == Domain.FollowUpType.ProfileVerification ? "bg-soft-info text-info" : (f.FollowUpType == Domain.FollowUpType.PremiumFollowUp ? "bg-soft-success text-success" : "bg-soft-warning text-warning");
+
+                        <div class="border rounded p-3 mb-3 bg-light">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge @typeBadge font-size-11 px-2 py-1">@typeName</span>
+                                <span class="text-muted font-size-11">@(f.NextFollowUpDate.HasValue ? f.NextFollowUpDate.Value.ToString("dd MMM yyyy") : "Awaiting contact")</span>
+                            </div>
+                            <div class="font-size-12 text-muted mb-2">
+                                <strong>Remarks:</strong> @(f.LatestRemarks ?? "None")
+                            </div>
+
+                            <!-- Timelines -->
+                            @if (f.Timelines != null && f.Timelines.Count > 0)
+                            {
+                                <div class="timeline-container mt-3 pt-2 border-top">
+                                    @foreach (var t in f.Timelines.OrderByDescending(x => x.CreatedOn))
+                                    {
+                                        <div class="timeline-item">
+                                            <div class="timeline-badge"></div>
+                                            <div class="d-flex align-items-center justify-content-between font-size-11 text-muted">
+                                                <span><strong>@(t.StaffName ?? "Staff")</strong> (@(t.ContactType?.ToString() ?? "Initial"))</span>
+                                                <span>@t.CreatedOn.ToString("dd-MM-yy HH:mm")</span>
+                                            </div>
+                                            <div class="font-size-12 text-dark mt-1">
+                                                @t.Remarks
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3 font-size-12">
+                        No follow-ups recorded yet.
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

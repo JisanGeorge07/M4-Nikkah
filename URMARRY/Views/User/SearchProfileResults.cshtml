@@ -1,0 +1,573 @@
+@using Application.Models
+@model UserDashboardViewModel
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    <link href="/assets/account/assets/css/style.min.css" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+    
+    var height = Model.BodyFeatures!.Where(x => x.Type == BodyFeature.Height);
+    var weight = Model.BodyFeatures!.Where(x => x.Type == BodyFeature.Weight);
+    var religion = Model.ReligionCaste!;
+    var profession = Model.Profession!;
+    var maritalstatus = Model.MaritalStatus!;
+    var community = Model.Community!;
+    
+    DateTime today = DateTime.UtcNow;
+}
+
+<main class="flex-fill p-4" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <h4 class="fw-semibold mb-4" style="color: #2C2C2C;">Search Results</h4>
+
+        <div class="row g-4 matchprofile" id="profile-grid">
+        @foreach (var item in Model.RegistrationList)
+        {
+            if (item != null)
+            {
+                // Calculate Age
+                int age1 = 0;
+                if (!string.IsNullOrEmpty(item.DOB))
+                {
+                    try {
+                        var dobParts = item.DOB.Replace("-", "/").Trim().Split('/');
+                        string day = dobParts[0].PadLeft(2, '0');
+                        string month = dobParts[1].PadLeft(2, '0');
+                        string year = dobParts[2];
+                        if (day.Length > 2) { var temp = day; day = year; year = temp; }
+                        
+                        DateTime dob = DateTime.ParseExact($"{day}/{month}/{year}", "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                        age1 = today.Year - dob.Year;
+                        if (dob > today.AddYears(-age1)) age1--;
+                    } catch { }
+                }
+
+                // Prepare URLs and Paths
+                var profileUrl = Url.Action("Profile", "User", new { url = item.RegisterNumber ?? item.Id.ToString() });
+                var imagePath = !string.IsNullOrEmpty(item.ImagePath) ? "/" + item.ImagePath : (string.Equals(item.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png");
+                
+                // Prepare Details String
+                var hTitle = height.FirstOrDefault(x => x.Id == item.HeightId)?.Title;
+                var wTitle = weight.FirstOrDefault(x => x.Id == item.WeightId)?.Title;
+                var mTitle = maritalstatus.FirstOrDefault(x => x.Id == item.MaritalStatusId)?.Title;
+                var pTitle = profession.FirstOrDefault(x => x.Id == item.ProfessionId)?.Title;
+                var cTitle = community.FirstOrDefault(x => x.Id == item.CommunityId)?.Title;
+                var rTitle = religion.FirstOrDefault(x => x.Id == item.ReligionId)?.Title;
+                
+                var details = new List<string> {
+                    age1 + " Yrs",
+                    hTitle != null ? System.Text.RegularExpressions.Regex.Replace(hTitle, @"\s*(feet|ft|\([^)]*\))", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase) : null,
+                    // wTitle != null ? wTitle + " kg" : null,
+                    mTitle,
+                    cTitle,
+                    item.HighestEducation,
+                    item.Village,
+                    item.District,
+                    item.State
+                }.Where(s => !string.IsNullOrEmpty(s)).ToList(); 
+                var profileDetails = string.Join(", ", details);
+
+                // Actions State 
+                var starClass = item.IsStarred ? "glow-star" : "";
+                
+                var fav = Model.UserFavouriteProfile?.FirstOrDefault(x => x.LikedId == item.Id);
+                var heartClass = "";
+                if (fav != null)
+                {
+                    if (fav.Status == 0) heartClass = "glow-heart-pending";
+                    else if (fav.Status == 1) heartClass = "glow-heart-accepted";
+                    else if (fav.Status == 2) heartClass = "glow-heart-declined";
+                }
+                else if (item.IsLiked)
+                {
+                    heartClass = "glow-heart";
+                }
+
+                <div class="col-12 col-md-6 col-lg-4" id="matchingProfile-@item.Id">
+                    <div class="profile-card position-relative overflow-hidden rounded animate-card" onclick="location.href='@profileUrl'">
+
+                        <!-- Background Image -->
+                        <div class="profile-bg position-absolute top-0 start-0 w-100 h-100"
+                             style="background-image: url('@imagePath');">
+                        </div>
+
+                         <!-- Watermark Image -->
+                         @if (!imagePath.Contains("_wm"))
+                         {
+                             <img src="/assets/images/card-watermark.png" class="card-watermark position-absolute" alt="Watermark">
+                         }
+
+                         <div class="single-chart">
+										<svg viewBox="0 0 36 36" class="circular-chart green">
+										  <path class="circle-bg"
+											d="M18 2.0845
+											  a 15.9155 15.9155 0 0 1 0 31.831
+											  a 15.9155 15.9155 0 0 1 0 -31.831"
+										  />
+										  <path class="circle"
+											stroke-dasharray="@(item.total_matching_score), 100"
+											d="M18 2.0845
+											  a 15.9155 15.9155 0 0 1 0 31.831
+											  a 15.9155 15.9155 0 0 1 0 -31.831"
+										  />
+										  <text x="18" y="20.35" class="percentage">@(item.total_matching_score)%</text>
+										</svg>
+						</div>
+
+                        <!-- Overlay -->
+                        <div class="profile-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+                        <!-- Premium Blur Layer / Lock -->
+                        @if (!item.PhotosUnlocked && !string.IsNullOrEmpty(item.ImagePath))
+                        {
+                            <div class="premium-blur position-absolute top-0 start-0 w-100 h-100" style="z-index: 2;"></div>
+                            
+                            <div class="premium-lock" style="z-index: 3; cursor: @(item.PhotoUnlockRequestStatus == 0 ? "default" : "pointer");"
+                                 onclick="@(item.PhotoUnlockRequestStatus == 0 ? "" : $"event.stopPropagation(); showPhotoUnlockModal({item.Id}, '{Html.Raw((item.Name ?? "").Replace("'", "\\'"))}')")">
+                                <i class="uil uil-@(item.PhotoUnlockRequestStatus == 0 ? "clock" : "lock")"></i>
+                                <span class="premium-text">
+                                    @if (item.PhotoUnlockRequestStatus == 0)
+                                    {
+                                        <text>Request Pending...</text>
+                                    }
+                                    else if (item.PhotoUnlockRequestStatus == 2)
+                                    {
+                                        <text>Request Rejected - Retry?</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Unlock Images</text>
+                                    }
+                                </span>
+                            </div>
+                        }
+
+                        <!-- Content -->
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3 text-center text-white" style="z-index: 3;">
+
+                            <h5 class="fw-semibold mb-1">
+                                @Html.Raw(item.Name)
+                                @if (item.DocumentVerificationComplete && item.DocumentVerificationFollowupApproved)
+                                {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
+                                        <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                                    </svg>
+                                }
+                            </h5>
+
+                            <p class="small mb-2 text-white-50">
+                                @profileDetails
+                            </p> 
+
+                            <!-- Buttons -->
+                            <div class="d-flex justify-content-center gap-2 mt-2 position-relative">
+
+                                <button class="action-btn" style="background-color: #A5BE25;" id="starbutton-@item.Id" onclick="event.stopPropagation(); showInteractionModal(this, 'favourite')">
+                                    <i data-lucide="star" class="@starClass" fill="white" style="color: white; width: 18px; height: 18px; border-radius: 50%;"></i>
+                                </button>
+
+                                <button class="action-btn" style="background-color: #00662D;" id="likebutton-@item.Id" onclick="event.stopPropagation(); showInteractionModal(this, 'interest')">
+                                    <i data-lucide="heart" class="@heartClass" fill="white" style="color: white; width: 18px; height: 18px; border-radius: 50%;"></i>
+                                </button>
+
+                                <button class="action-btn" style="background-color: #648472;" id="notlikebutton-@item.Id" onclick="event.stopPropagation(); showInteractionModal(this, 'reject')">
+                                    <i data-lucide="circle-x" style="color: white; width: 18px; height: 18px;"></i>
+                                </button>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @if (!Model.RegistrationList.Any())
+    {
+        <div id="no-results" class="text-center py-5 w-100">
+            <img src="/assets/images/icon/no-match.png" alt="no-match" height="200px">
+            <h4 class="text-black fw-semibold fs-5 lh-base align-middle mt-3 mb-1">
+                No Profiles Found
+            </h4>
+            <div class="col-lg-6 mx-auto">
+                <p class="fw-normal fs-13 lh-base text-center align-middle text-black mb-3"
+                    style="font-size: 12px;">
+                    Sorry, we couldn't find any results for your search.
+                </p>
+                <div class="text-center mt-2">
+                    <a asp-controller="User" asp-action="SearchProfile" class="btn" 
+                       style="display: inline-block; padding: 10px 24px; background-color: #00662d; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: all 0.2s ease; border: none; box-shadow: 0 4px 6px rgba(0, 102, 45, 0.15);"
+                       onmouseover="this.style.backgroundColor='#004d22'; this.style.transform='translateY(-1px)';"
+                       onmouseout="this.style.backgroundColor='#00662d'; this.style.transform='translateY(0)';">
+                        Return to Search
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    </div>
+</main>
+
+<!-- Interaction Confirmation Modal -->
+<div id="interactionModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideInteractionModal()">
+    <div class="upgrade-modal-card" style="max-width: 450px;">
+        <div class="modal-close-btn" onclick="hideInteractionModal()">
+            <i class="uil uil-times"></i>
+        </div>
+        <div class="modal-body-scroll" style="padding: 40px 20px;">
+            <h5 id="interactionModalTitle" class="fw-medium fs-18 mb-4 px-3 text-center" style="color: #000; line-height: 1.5;">Are you sure?</h5>
+            <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                <button class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #00662d !important;" onclick="handleInteractionYes()">Yes</button>
+                <button class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #E93B3B !important;" onclick="handleInteractionNo()">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Unlock Confirmation Modal -->
+<div id="photoUnlockModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePhotoUnlockModal()">
+    <div class="upgrade-modal-card" style="max-width: 450px;">
+        <div class="modal-close-btn" onclick="hidePhotoUnlockModal()">
+            <i class="uil uil-times"></i>
+        </div>
+        <div class="modal-body-scroll" style="padding: 40px 20px;">
+            <h5 id="photoUnlockModalTitle" class="fw-medium fs-18 mb-4 px-3 text-center" style="color: #000; line-height: 1.5;">Request Photo Access?</h5>
+            <p class="text-muted text-center px-3 mb-4 fs-14">This will send a request to the profile owner to unlock their photos for you.</p>
+            <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                <button id="btnConfirmPhotoUnlock" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #00662d !important;">Yes, Send Request</button>
+                <button class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #E93B3B !important;" onclick="hidePhotoUnlockModal()">No, Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    (function () {
+        // State variables for the interaction modal
+        const isPremiumMember = @Model.Registration.IsPremiumMember.ToString().ToLower();
+        let currentActionBtn = null;
+        let currentActionType = null;
+        let isRemovingInteraction = false;
+
+        // Custom window overrides to handle Search page interaction behavior
+        window.showInteractionModal = function(btn, type) {
+            if (typeof event !== 'undefined' && event) event.stopPropagation();
+            currentActionBtn = btn;
+            currentActionType = type;
+
+            const iconEl = btn.querySelector('i, svg');
+            isRemovingInteraction = false;
+
+            if (iconEl) {
+                if (type === 'favourite' && iconEl.classList.contains('glow-star')) {
+                    isRemovingInteraction = true;
+                } else if (type === 'interest') {
+                    if (iconEl.classList.contains('glow-heart-accepted')) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Interest Accepted!',
+                                text: 'You already have an accepted/mutual interest with this profile.',
+                                icon: 'success',
+                                confirmButtonColor: '#0d6b38'
+                            });
+                        } else {
+                            alert('Interest already accepted!');
+                        }
+                        return;
+                    } else if (iconEl.classList.contains('glow-heart-pending')) {
+                        isRemovingInteraction = true;
+                    } else if (iconEl.classList.contains('glow-heart')) {
+                        isRemovingInteraction = true;
+                    }
+                }
+            }
+
+
+            const modal = document.getElementById('interactionModal');
+            const title = document.getElementById('interactionModalTitle');
+
+            if (type === 'favourite') {
+                if (isRemovingInteraction) {
+                    title.innerText = 'Are you sure you want to remove this person from favorites?';
+                } else {
+                    title.innerText = 'Are you sure you want to add this person to favorites?';
+                }
+            } else if (type === 'interest') {
+                if (isRemovingInteraction) {
+                    title.innerText = 'Are you sure you want to remove this person from interested?';
+                } else {
+                    title.innerText = 'Are you sure you want to express interest in this person?';
+                }
+            } else if (type === 'reject') {
+                title.innerText = 'Are you sure you want to dismiss this profile? It will be removed from your search results.';
+            }
+
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.hideInteractionModal = function() {
+            const modal = document.getElementById('interactionModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            currentActionBtn = null;
+            currentActionType = null;
+            isRemovingInteraction = false;
+        };
+
+        window.handleInteractionNo = function() {
+            window.hideInteractionModal();
+        };
+
+        window.handleInteractionYes = function() {
+            if (currentActionBtn) {
+                const idParts = currentActionBtn.id.split('-');
+                const itemId = idParts[1];
+                if (!itemId) {
+                    console.error("No profile ID found on action button: ", currentActionBtn.id);
+                    window.hideInteractionModal();
+                    return;
+                }
+
+                const iconEl = currentActionBtn.querySelector('i, svg');
+                const cardColumn = document.getElementById('matchingProfile-' + itemId) || currentActionBtn.closest('.col-12');
+
+                const fadeAndRemoveCard = () => {
+                    if (cardColumn) {
+                        cardColumn.style.transition = 'opacity 0.4s ease';
+                        cardColumn.style.opacity = '0';
+                        setTimeout(() => {
+                            cardColumn.remove();
+                            // Check if there are any profile cards left
+                            const grid = document.getElementById('profile-grid');
+                            if (grid && !grid.querySelector('[id^="matchingProfile-"]')) {
+                                // Show "No results" message dynamically
+                                let noResultsEl = document.getElementById('no-results');
+                                if (!noResultsEl) {
+                                    const fallbackHtml = `
+                                        <div id="no-results" class="text-center py-5 w-100">
+                                            <img src="/assets/images/icon/no-match.png" alt="no-match" height="200px">
+                                            <h4 class="text-black fw-semibold fs-5 lh-base align-middle mt-3 mb-1">
+                                                No Profiles Found
+                                            </h4>
+                                            <div class="col-lg-6 mx-auto">
+                                                <p class="fw-normal fs-13 lh-base text-center align-middle text-black mb-3" style="font-size: 12px;">
+                                                    Sorry, we couldn't find any results for your search.
+                                                </p>
+                                                <div class="text-center mt-2">
+                                                    <a href="/User/SearchProfile" class="btn" 
+                                                       style="display: inline-block; padding: 10px 24px; background-color: #00662d; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; transition: all 0.2s ease; border: none; box-shadow: 0 4px 6px rgba(0, 102, 45, 0.15);"
+                                                       onmouseover="this.style.backgroundColor='#004d22'; this.style.transform='translateY(-1px)';"
+                                                       onmouseout="this.style.backgroundColor='#00662d'; this.style.transform='translateY(0)';">
+                                                        Return to Search
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>`;
+                                    grid.insertAdjacentHTML('afterend', fallbackHtml);
+                                } else {
+                                    noResultsEl.style.display = 'block';
+                                }
+                            }
+                        }, 400);
+                    }
+                };
+
+                if (currentActionType === 'reject') {
+                    const formData = new FormData();
+                    formData.append('NotLikedId', itemId);
+
+                    fetch('/User/NotLikeProfile', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Dismissed!',
+                                text: 'Profile has been dismissed successfully.',
+                                icon: 'success',
+                                width: '320px',
+                                confirmButtonColor: '#00662d'
+                            });
+                            fadeAndRemoveCard();
+                        } else {
+                            Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        Swal.fire('Error', 'Failed to process request.', 'error');
+                    });
+                } else {
+                    const isAdding = !isRemovingInteraction;
+                    const actionText = isAdding ? 'Add' : 'Remove';
+
+                    if (currentActionType === 'favourite') {
+                        const formData = new FormData();
+                        formData.append('StarId', itemId);
+                        formData.append('StarredId', itemId);
+                        formData.append('Action', actionText);
+
+                        fetch('/User/StarredIcon', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: isAdding ? 'Shortlisted!' : 'Removed!',
+                                    text: isAdding ? 'Profile has been added to your favorites.' : 'Profile has been removed from your favorites.',
+                                    icon: 'success',
+                                    width: '320px',
+                                    confirmButtonColor: '#00662d'
+                                });
+                                if (iconEl) {
+                                    if (isAdding) {
+                                        iconEl.classList.add('glow-star');
+                                    } else {
+                                        iconEl.classList.remove('glow-star');
+                                    }
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error:', err);
+                            Swal.fire('Error', 'Failed to process request.', 'error');
+                        });
+
+                    } else if (currentActionType === 'interest') {
+                        const formData = new FormData();
+                        formData.append('LikedId', itemId);
+                        formData.append('Action', actionText);
+
+                        fetch('/User/UserFavouriteProfile', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: isAdding ? 'Interest Sent!' : 'Interest Removed!',
+                                    text: isAdding ? 'Interest has been expressed successfully.' : 'Interest has been removed successfully.',
+                                    icon: 'success',
+                                    width: '320px',
+                                    confirmButtonColor: '#00662d'
+                                });
+                                if (iconEl) {
+                                    if (isAdding) {
+                                        iconEl.classList.add('glow-heart-pending');
+                                        iconEl.classList.remove('glow-heart');
+                                        iconEl.classList.remove('glow-heart-accepted');
+                                    } else {
+                                        iconEl.classList.remove('glow-heart-pending');
+                                        iconEl.classList.remove('glow-heart-accepted');
+                                        iconEl.classList.remove('glow-heart');
+                                    }
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error:', err);
+                            Swal.fire('Error', 'Failed to process request.', 'error');
+                        });
+                    }
+                }
+            }
+            window.hideInteractionModal();
+        };
+
+        // Photo Unlock Modal script integration
+        let selectedPhotoOwnerId = null;
+        window.showPhotoUnlockModal = function(ownerId, ownerName) {
+            if (typeof event !== 'undefined' && event) event.stopPropagation();
+            if (typeof window.isPremiumMember !== 'undefined' && !window.isPremiumMember) {
+                if (typeof showPackagesLayoutModal === 'function') {
+                    showPackagesLayoutModal('photo');
+                } else {
+                    alert('Please upgrade to premium membership to request photo unlock.');
+                }
+                return;
+            }
+            selectedPhotoOwnerId = ownerId;
+
+            const title = document.getElementById('photoUnlockModalTitle');
+            if (title) {
+                title.innerText = `Request Photo Access from ${ownerName || 'User'}?`;
+            }
+            document.getElementById('photoUnlockModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.hidePhotoUnlockModal = function() {
+            document.getElementById('photoUnlockModal').classList.remove('active');
+            document.body.style.overflow = '';
+            selectedPhotoOwnerId = null;
+        };
+
+        document.getElementById('btnConfirmPhotoUnlock').addEventListener('click', function() {
+            if (!selectedPhotoOwnerId) return;
+            
+            const formData = new FormData();
+            formData.append('ownerId', selectedPhotoOwnerId);
+
+            fetch('/RequestPhotoUnlock', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.hidePhotoUnlockModal();
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Request Sent!',
+                        text: data.message || 'Unlock request is pending owner approval.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Could not send request.',
+                        icon: 'error',
+                        width: '320px'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.hidePhotoUnlockModal();
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    icon: 'error',
+                    width: '320px'
+                });
+            });
+        });
+
+        // Initialize Lucide icons on load
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    })();
+    </script>
+}

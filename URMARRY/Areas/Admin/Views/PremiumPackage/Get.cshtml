@@ -1,0 +1,50 @@
+@model Domain.PremiumPackage
+@{
+    ViewBag.Title = Model.Id > 0 ? "Edit Premium Package" : "Add Premium Package";
+}
+
+@section Title {
+    <a asp-action="Index" class="btn btn-secondary btn-xs me-2">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    @(Model.Id > 0 ? "Edit Premium Package" : "Add Premium Package")
+}
+
+<div class="row">
+    <div class="col-md-8 col-lg-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Post" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Package Name <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="PackageName" class="form-control" placeholder="e.g. Standard Premium Package, Gold Plan" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Price (₹) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0" asp-for="Price" class="form-control" placeholder="e.g. 2000.00" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter package details or inclusions"></textarea>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" asp-for="IsActive" class="form-check-input" id="IsActiveCheck" />
+                        <label class="form-check-label" for="IsActiveCheck">Active Package</label>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-2">
+                        <a asp-action="Index" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Save Package</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

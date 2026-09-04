@@ -1,0 +1,184 @@
+@model CustomerLoginViewModel
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>M4NIKAH - We help you find your perfect life partner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="M4NIKAH - We help you find your perfect life partner">
+
+    <!-- favicon -->
+    <link rel="shortcut icon" href="/assets/images/favicon.png">
+
+    <!-- Css -->
+    <link href="/assets/css/bootstrap.min.css" id="bootstrap-style" class="theme-opt" rel="stylesheet" type="text/css">
+    <!-- Icons Css -->
+    <link href="/assets/libs/%40mdi/font/css/materialdesignicons.min.css" rel="stylesheet" type="text/css">
+    <link href="/assets/libs/%40iconscout/unicons/css/line.css" type="text/css" rel="stylesheet">
+    <!-- Style Css-->
+    <link href="/assets/css/style.min.css" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+    
+    <style>
+        .password-field-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 20px;
+            top: 0;
+            bottom: 0;
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            color: #989898;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+            font-size: 20px;
+        }
+
+        .password-toggle-btn:hover {
+            color: #00662d;
+        }
+
+        .password-field-container .reg-input-custom {
+            padding-right: 50px !important;
+        }
+    </style>
+</head>
+
+<body>
+   
+    <div class="back-to-home">
+        <a href="~/" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+    </div>
+
+    <!-- Hero Start -->
+    <section class="position-relative" style="background: url('/assets/images/login_bg.jpg') center;">
+        <div class="bg-overlay bg-linear-gradient-2"></div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 p-0">
+                    <div class="d-flex flex-column min-vh-100 p-4">
+                        <!-- Start Logo -->
+                        <div class="text-center mb-3">
+                            <a href="~/"><img src="/assets/images/favicon.png" alt=""></a>
+                        </div>
+                        <!-- End Logo -->
+                        <!-- Start Content -->
+                        <div class="title-heading my-auto">
+                            <div class="card form-signin px-4 py-5 rounded-md shadow-sm setpdiv">
+                                <form asp-action="Login" asp-controller="User">
+                                    <div class="text-center">
+                                        <h5 class="mb-4">Login</h5>                                        
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="mb-3">
+                                                <input type="email" class="reg-input-custom" asp-for="LoginEmail" placeholder="Email Address *">
+                                                @Html.ValidationMessageFor(x => x.LoginEmail, "", new { @class = "text-danger", @style = "padding-left: 15px; font-size: 12px;" })
+                                            </div>                                            
+                                        </div><!--end col-->
+
+                                        <div class="col-lg-12">
+                                            <div class="mb-3">
+                                                <div class="password-field-container">
+                                                    <input type="password" class="reg-input-custom" asp-for="LoginPassword" placeholder="Password *">
+                                                    <button type="button" class="password-toggle-btn">
+                                                        <i class="uil uil-eye"></i>
+                                                    </button>
+                                                </div>
+                                                @Html.ValidationMessageFor(x => x.LoginPassword, "", new { @class = "text-danger", @style = "padding-left: 15px; font-size: 12px;" })
+                                            </div>                                            
+                                        </div><!--end col-->
+
+                                        <div class="col-lg-12">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="mb-3">
+                                                </div>
+                                                <small class="text-muted mb-0"><a asp-action="ForgotPassword" asp-controller="User" class="text-muted fw-semibold">Forgot password ?</a></small>
+                                            </div>
+                                        </div><!--end col-->
+
+                                        <div class="col-lg-12">
+                                            <button type="submit" class="btn btn-primary rounded-md w-100"><i class="uil uil-user"></i> Login </button>                                            
+                                        </div><!--end col-->
+
+                                        <div class="col-lg-12 mt-3 text-center">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small><a asp-action="LoginWithEmailOtp" asp-controller="User" class="text-muted fw-semibold"><i class="uil uil-envelope-alt me-1"></i>Login with Email OTP</a></small>
+                                                <small><a asp-action="LoginWithMobileOtp" asp-controller="User" class="text-muted fw-semibold"><i class="uil uil-phone me-1"></i>Login with Mobile OTP</a></small>
+                                            </div>
+                                        </div><!--end col-->
+
+                                        <div class="col-12 text-center mt-4">
+                                            @Html.ValidationMessage("error", new { @class = "text-danger" })
+                                        </div>
+                                        
+                                        <div class="col-12 text-center mt-4">
+                                            <small>
+                                                <span class="text-muted me-2">Don't have an account ?</span>
+                                                <a asp-action="" asp-controller="Home" class="text-dark fw-bold">Sign Up</a>
+                                            </small>
+                                        </div><!--end col-->
+                                    </div><!--end row-->
+                                </form>
+                            </div>
+                        </div>
+                        <!-- End Content -->
+                        <!-- Start Footer -->
+                        <div class="text-center text-white pt-3">
+                            <p class="mb-0">© @DateTime.UtcNow.Year M4NIKAH. All Rights Reserved.</p>
+                        </div>
+                        <!-- End Footer -->
+                    </div>
+                </div><!--end col-->
+            </div><!--end row-->
+        </div><!--end container-->
+    </section>
+    <script src="/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/libs/feather-icons/feather.min.js"></script>
+    <script src="/assets/js/plugins.init.js"></script>
+    <script src="/assets/js/app.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var toggleButtons = document.querySelectorAll(".password-toggle-btn");
+            toggleButtons.forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    var container = btn.closest(".password-field-container");
+                    if (!container) return;
+                    var input = container.querySelector("input");
+                    if (!input) return;
+                    var icon = btn.querySelector("i");
+                    if (!icon) return;
+
+                    if (input.type === "password") {
+                        input.type = "text";
+                        icon.classList.remove("uil-eye");
+                        icon.classList.add("uil-eye-slash");
+                    } else {
+                        input.type = "password";
+                        icon.classList.remove("uil-eye-slash");
+                        icon.classList.add("uil-eye");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+
+
+</html>

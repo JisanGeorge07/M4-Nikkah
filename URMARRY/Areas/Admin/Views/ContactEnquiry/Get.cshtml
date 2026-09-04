@@ -1,0 +1,65 @@
+﻿@model Application.Models.ContactEnquiryDto
+@{
+	ViewBag.Title = "Enquiry";
+}
+
+@section Title
+	{
+    Enquiry
+}
+
+<div class="row">
+	<div class="col-xl-7 mx-auto">
+		<div class="card border-top border-0 border-4 border-white">
+			<div class="card-body p-5">
+				<div class="float-lg-end">
+					<a asp-action="GetAll" asp-controller="ContactEnquiry" asp-route-type="@Model.Purpose" class="btn btn-success btn-sm"><i class='bx bxs-arrow-to-left'></i></a>
+				</div>
+				<div class="card-title d-flex align-items-center">
+					<h5 class="mb-0 text-white">Enquiry</h5>
+				</div>
+				<hr>
+				@using (Html.BeginForm("Post", "Career", FormMethod.Post, new { enctype = "multipart/form-data", @class = "row g-3" }))
+				{
+					@if (!string.IsNullOrWhiteSpace(Model.Name))
+					{
+						<div class="col-md-12">
+							<label for="Name" class="form-label">Name</label>
+							<input type="text" class="form-control" asp-for="Name" readonly>
+						</div>
+					}
+					@if (!string.IsNullOrWhiteSpace(Model.Email))
+					{
+						<div class="col-md-12">
+							<label for="Email" class="form-label">Email</label>
+							<input type="text" class="form-control" asp-for="Email" readonly>
+						</div>
+					}
+					@if (!string.IsNullOrWhiteSpace(Model.Subject))
+					{
+						<div class="col-md-12">
+							<label for="Subject" class="form-label">Subject</label>
+							<input type="text" class="form-control" asp-for="Subject" readonly>
+						</div>
+					}
+					@if (!string.IsNullOrWhiteSpace(Model.Message))
+					{
+						<div class="col-md-12">
+							<label for="Message" class="form-label">Message</label>
+							<textarea class="form-control" asp-for="Message" readonly="readonly"></textarea>
+						</div>
+					}
+
+					<div class="col-12">
+						<div class="d-grid">
+							<button asp-action="Delete" asp-route-id="@Model.Id"
+			onclick="return confirm('Are you sure you want to delete this entity?')" class="btn btn-danger btn-lg px-5">
+								<i class='bx bxs-trash'></i>Delete
+							</button>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+</div>

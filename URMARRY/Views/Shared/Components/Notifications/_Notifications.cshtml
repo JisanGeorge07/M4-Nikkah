@@ -1,0 +1,98 @@
+@model Application.ViewModels.NotificationViewModel
+@{
+    var notificationList = Model.notificationDto;
+    var loggedInUser = Model.Registration;
+    var allRegistrations = Model.AllRegistrations;
+}
+
+<div class="dropdown-header">Notifications</div>
+
+@if (notificationList?.Count() > 0)
+{
+    <div class="notification-list-container" style="max-height: 300px; overflow-y: auto;">
+        @foreach (var notification in notificationList)
+        {
+            var user = allRegistrations?.FirstOrDefault(x => x.Id == notification.UserId);
+            <a asp-action="Profile" asp-controller="User" asp-route-url="@user?.RegisterNumber" class="dropdown-item">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        @if (!string.IsNullOrEmpty(notification.profileImageUrl))
+                        {
+                            <img src="@Html.Raw("/" + notification.profileImageUrl)"
+                                 class="avatar avatar-md-sm rounded-circle border shadow" alt="">
+                        }
+                        else
+                        {
+                            <img src="@Url.Content(string.Equals(notification.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                 class="avatar avatar-md-sm rounded-circle border shadow" alt="">
+                        }
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <small class="text-muted d-block">@notification.Notify_Message</small>
+                        <div class="d-flex align-items-center flex-wrap mt-1">
+                            <i class="uil uil-clock text-muted me-1"></i>
+                            <small class="text-muted">@GetTimeAgo(notification.CreatedOn)</small>
+                            @if (notification.InterestStatus != null && !notification.IsStatusUpdatePrompt)
+                            {
+                                @if (notification.InterestStatus == "Pending")
+                                {
+                                    <span class="badge rounded-pill ms-2" style="background: rgba(255, 193, 7, 0.15); color: #ffc107; font-size: 10px; padding: 2px 8px;">Pending</span>
+                                }
+                                else if (notification.InterestStatus == "Accepted")
+                                {
+                                    <span class="badge rounded-pill ms-2" style="background: rgba(40, 167, 69, 0.15); color: #28a745; font-size: 10px; padding: 2px 8px;">Accepted</span>
+                                }
+                                else if (notification.InterestStatus == "Declined")
+                                {
+                                    <span class="badge rounded-pill ms-2" style="background: rgba(108, 117, 125, 0.15); color: #6c757d; font-size: 10px; padding: 2px 8px;">Declined</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <a class="dropdown-item">
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                <i class="uil uil-envelope"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h6 class="mb-0">No Notifications</h6>
+                <small class="text-muted">You don't have any notifications yet!</small>
+            </div>
+        </div>
+    </a>
+}
+
+@functions {
+    public string GetTimeAgo(DateTime dateTime)
+    {
+        var now = DateTime.Now;
+        if (dateTime.Kind == DateTimeKind.Utc || Math.Abs((DateTime.UtcNow - dateTime).TotalHours) < Math.Abs((DateTime.Now - dateTime).TotalHours))
+        {
+            now = DateTime.UtcNow;
+        }
+        var timeSpan = now - dateTime;
+        if (timeSpan.TotalSeconds < 0)
+        {
+            timeSpan = TimeSpan.Zero;
+        }
+
+        if (timeSpan.TotalMinutes < 1)
+            return "Just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{timeSpan.Minutes} min ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{timeSpan.Hours} hours ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{timeSpan.Days} days ago";
+        if (timeSpan.TotalDays < 365)
+            return $"{timeSpan.Days / 30} months ago";
+        return $"{timeSpan.Days / 365} years ago";
+    }
+}

@@ -1,0 +1,55 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    ViewData["Title"] = "Profile Suspended";
+}
+
+<style>
+    /* Premium Hover effect styling */
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(165, 190, 37, 0.3) !important;
+        background: linear-gradient(135deg, #128742, #0b6b2e) !important;
+    }
+    .btn-light:hover {
+        background-color: #e9ecef !important;
+        color: #212529 !important;
+    }
+</style>
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+<div id="no-results" class="text-center py-5 d-flex flex-column align-items-center justify-content-center" style="min-height: 90vh;">
+    <img src="/assets/images/icon/dismissed-profiles.svg" alt="no-match" height="200px">
+    <h4 class="text-black fw-semibold fs-5 lh-base align-middle mt-3 mb-1">
+        Profile Suspended
+    </h4>
+    <div class="col-lg-6 mx-auto">
+        <p class="fw-normal fs-13 lh-base text-center align-middle text-black"
+            style="font-size: 12px;">
+            Your profile has been suspended due to policy violations or other reasons.
+Please contact our Help & Support team for further details and assistance with reactivation.
+        </p>
+    </div>
+
+    <div class="d-grid gap-2 col-11 col-sm-6 col-md-4 mx-auto mt-4">
+        @if (ViewBag.HasPendingAppeal == true)
+        {
+            
+            <button class="btn btn-secondary py-2 fw-semibold d-flex align-items-center justify-content-center gap-2" style="border-radius: 8px; font-size: 14px; cursor: not-allowed;" disabled>
+                <i class="uil uil-lock"></i> Help & Support (Appeal Pending)
+            </button>
+        }
+        else
+        {
+            <a asp-controller="User" asp-action="HelpSupport" class="btn btn-primary py-2 fw-semibold d-flex align-items-center justify-content-center gap-2" 
+               style="border-radius: 8px; background: linear-gradient(135deg, #a5be25, #128742); border: none; box-shadow: 0 4px 12px rgba(165, 190, 37, 0.2); transition: all 0.2s ease; font-size: 14px;">
+                <i class="uil uil-home"></i> Help & Support
+            </a>
+        }
+    </div>
+</div>
+</div>
+</div>
+</main>
+
+                            

@@ -1,0 +1,66 @@
+@using Application.Constants
+@using Application.Helpers
+@model URMARRY.Areas.Admin.Models.EnquiryViewModel
+@{
+    ViewBag.Title = "Enquiries";
+
+    var enquiries = Model.Enquiries!;
+}
+
+@section Title
+    {
+    Premium Members List
+}
+@if (enquiries.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        Members List
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th width="30%">Name</th>
+                                <th width="25%">Phone</th>
+                                <th width="20%">Sent on</th>
+                                <th width="25%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in enquiries)
+                            {
+                                <tr>
+                                    <td>@Html.Raw(item.Name)</td>
+                                    <td>@Html.Raw($"{( !string.IsNullOrEmpty(item.CountryCode ?? item.Country) ? CountryCodeHelper.GetCountryCode(item.CountryCode ?? item.Country) + " " : "" )}{item.Phone}")</td>
+                                    <td>@Html.Raw(item.CreatedOn?.ToShortDateString())</td>
+                                    <td>
+                                        <a asp-action="Print" asp-route-id="@item.Id"
+                                           class="btn btn-warning btn-xs ml-2" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        <a asp-action="Get" asp-route-id="@item.Id"
+                                           class="btn btn-primary btn-xs ml-2">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        <a asp-action="Matching" asp-route-id="@item.Id"
+                                           class="btn btn-success btn-xs ml-2">
+                                            Matching
+                                        </a>
+                                        <a asp-action="Delete" asp-controller="Enquiry" asp-route-id="@item.Id" class="btn btn-danger btn-xs ml-2">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

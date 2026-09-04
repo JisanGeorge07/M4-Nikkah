@@ -1,0 +1,1324 @@
+@model URMARRY.Areas.Admin.Models.CrossStaffComparisonViewModel
+@{
+    ViewBag.Title = "Cross-Staff Comparison";
+    var monthNames = new[] { "", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+}
+
+@section Title
+{
+    Cross-Staff Comparison
+}
+
+@section css {
+    <style>
+        /* ─── General ──────────────────────────────────────── */
+        .nav-tabs .nav-link { font-weight: 600; color: #495057; border: none; border-bottom: 3px solid transparent; padding: 12px 20px; transition: all 0.3s; }
+        .nav-tabs .nav-link.active { color: #556ee6; border-bottom-color: #556ee6; background: transparent; }
+        .nav-tabs .nav-link:hover { color: #556ee6; }
+
+        /* ─── Metric Cards ─────────────────────────────────── */
+        .metric-card { border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s; border: none; }
+        .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important; }
+        .metric-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* ─── Badge Colors ─────────────────────────────────── */
+        .badge-soft-secondary { background-color: rgba(116,120,141,0.18); color: #74788d; }
+        .badge-soft-warning { background-color: rgba(241,180,76,0.18); color: #f1b44c; }
+        .badge-soft-success { background-color: rgba(52,195,143,0.18); color: #34c38f; }
+        .badge-soft-primary { background-color: rgba(85,110,230,0.18); color: #556ee6; }
+        .badge-soft-dark { background-color: rgba(52,58,64,0.18); color: #343a40; }
+        .badge-soft-danger { background-color: rgba(244,106,106,0.18); color: #f46a6a; }
+        .badge-soft-info { background-color: rgba(80,165,241,0.18); color: #50a5f1; }
+
+        /* ─── Rankings ─────────────────────────────────────── */
+        .rank-card { border-radius: 10px; transition: all 0.2s; }
+        .rank-card:hover { transform: translateX(4px); }
+        .rank-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #ffb300); color: #fff; box-shadow: 0 2px 8px rgba(255,179,0,0.3); }
+        .rank-2 { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #fff; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #b8722d); color: #fff; }
+        .rank-default { background: #e9ecef; color: #495057; }
+
+        /* ─── Filter Bar ───────────────────────────────────── */
+        .filter-bar { background: #f8f9fa; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
+        .filter-bar .form-select, .filter-bar .form-control { font-size: 13px; border-radius: 8px; }
+        .filter-bar label { font-size: 12px; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+        /* ─── DataTables Responsive ────────────────────────── */
+        table.dataTable > tbody > tr.child ul.dtr-details {
+            display: flex !important; flex-wrap: wrap !important; gap: 12px !important;
+            list-style-type: none !important; margin: 0 !important; padding: 12px 15px !important;
+        }
+        table.dataTable > tbody > tr.child ul.dtr-details > li {
+            border-bottom: none !important; padding: 8px 14px !important;
+            background-color: #f8f9fa !important; border: 1px solid #e9ecef !important;
+            border-radius: 8px !important; display: inline-flex !important;
+            align-items: center !important; gap: 8px !important;
+        }
+        table.dataTable > tbody > tr.child span.dtr-title { font-weight: 600 !important; color: #495057 !important; }
+        table.dataTable > tbody > tr.child span.dtr-data { color: #212529 !important; font-weight: 500 !important; }
+
+        /* ─── Progress Bar ─────────────────────────────────── */
+        .target-progress { height: 8px; border-radius: 4px; background: #e9ecef; overflow: hidden; }
+        .target-progress-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+        /* ─── Payroll Checkbox ──────────────────────────────── */
+        .payroll-check { width: 18px; height: 18px; cursor: pointer; }
+
+        /* ─── Audit Log Modal ──────────────────────────────── */
+        .audit-timeline { position: relative; padding-left: 30px; }
+        .audit-timeline::before { content: ''; position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: #e9ecef; }
+        .audit-item { position: relative; padding: 12px 0; }
+        .audit-item::before { content: ''; position: absolute; left: -22px; top: 16px; width: 10px; height: 10px; border-radius: 50%; background: #556ee6; border: 2px solid #fff; box-shadow: 0 0 0 2px #556ee6; }
+
+        .chart-container { position: relative; height: 320px; }
+    </style>
+}
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FILTER BAR                                              -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<form id="filterForm" method="get" asp-action="Index" asp-controller="CrossStaffComparison">
+    <div class="filter-bar shadow-sm">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2 col-sm-6">
+                <label>Period</label>
+                <select name="period" class="form-select" id="periodFilter">
+                    <option value="Day" selected="@(Model.Period == "Day")">Day</option>
+                    <option value="Week" selected="@(Model.Period == "Week")">Week</option>
+                    <option value="Month" selected="@(Model.Period == "Month")">Month</option>
+                    <option value="Year" selected="@(Model.Period == "Year")">Year</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label>Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    @foreach (var dept in Model.Departments)
+                    {
+                        <option value="@dept" selected="@(Model.Department == dept)">@dept</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1 col-sm-6">
+                <label>Gender</label>
+                <select name="gender" class="form-select">
+                    <option value="">All</option>
+                    <option value="Male" selected="@(Model.Gender == "Male")">Male</option>
+                    <option value="Female" selected="@(Model.Gender == "Female")">Female</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label>Premium Package</label>
+                <select name="premiumPackageId" class="form-select">
+                    <option value="">All Packages</option>
+                    @foreach (var pkg in Model.PremiumPackages)
+                    {
+                        <option value="@pkg.Id" selected="@(Model.PremiumPackageId == pkg.Id)">@pkg.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1 col-sm-6">
+                <label>Grade</label>
+                <select name="verificationGrade" class="form-select">
+                    <option value="">All</option>
+                    <option value="A" selected="@(Model.VerificationGrade == "A")">Grade A</option>
+                    <option value="B" selected="@(Model.VerificationGrade == "B")">Grade B</option>
+                    <option value="C" selected="@(Model.VerificationGrade == "C")">Grade C</option>
+                    <option value="D" selected="@(Model.VerificationGrade == "D")">Grade D</option>
+                </select>
+            </div>
+            <div class="col-md-1 col-sm-6">
+                <label>Year</label>
+                <select name="year" class="form-select">
+                    @for (int y = DateTime.UtcNow.Year; y >= DateTime.UtcNow.Year - 3; y--)
+                    {
+                        <option value="@y" selected="@(Model.FilterYear == y)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1 col-sm-6">
+                <label>Month</label>
+                <select name="month" class="form-select">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(Model.FilterMonth == m)">@monthNames[m].Substring(0, 3)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label>Salary Status</label>
+                <select name="salaryStatus" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="Draft" selected="@(Model.SalaryStatus == "Draft")">Draft</option>
+                    <option value="UnderReview" selected="@(Model.SalaryStatus == "UnderReview")">Under Review</option>
+                    <option value="Approved" selected="@(Model.SalaryStatus == "Approved")">Approved</option>
+                    <option value="Paid" selected="@(Model.SalaryStatus == "Paid")">Paid</option>
+                    <option value="Locked" selected="@(Model.SalaryStatus == "Locked")">Locked</option>
+                    <option value="Reopened" selected="@(Model.SalaryStatus == "Reopened")">Reopened</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary btn-sm px-4">
+                    <i class="fas fa-filter me-1"></i> Apply Filters
+                </button>
+                <a asp-action="Index" asp-controller="CrossStaffComparison" class="btn btn-outline-secondary btn-sm px-3 ms-1">
+                    <i class="fas fa-undo me-1"></i> Reset
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TABS                                                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<ul class="nav nav-tabs mt-2" id="crossStaffTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="comparison-tab" data-bs-toggle="tab" href="#comparisonPanel" role="tab">
+            <i class="fas fa-chart-bar me-1"></i> Staff Comparison
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="aggregates-tab" data-bs-toggle="tab" href="#aggregatesPanel" role="tab">
+            <i class="fas fa-layer-group me-1"></i> Org-Wide Aggregates
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="rankings-tab" data-bs-toggle="tab" href="#rankingsPanel" role="tab">
+            <i class="fas fa-trophy me-1"></i> Rankings
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="payroll-tab" data-bs-toggle="tab" href="#payrollPanel" role="tab">
+            <i class="fas fa-money-check-alt me-1"></i> Payroll Control
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content mt-3" id="crossStaffTabContent">
+
+    <!-- ═════════════════════════════════════════════════════ -->
+    <!-- TAB 1: STAFF COMPARISON TABLE & CHART                 -->
+    <!-- ═════════════════════════════════════════════════════ -->
+    <div class="tab-pane fade show active" id="comparisonPanel" role="tabpanel">
+
+        <!-- Chart -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Staff-wise Premium Conversions (Boys vs Girls)</h6>
+                <div class="chart-container">
+                    <canvas id="conversionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="fas fa-table text-primary me-2"></i>Staff Comparison Table</h6>
+                <div class="table-responsive">
+                    <table id="comparisonTable" class="table table-hover table-bordered dt-responsive nowrap w-100" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Staff</th>
+                                <th>Dept</th>
+                                <th>Conv (Boys)</th>
+                                <th>Conv (Girls)</th>
+                                <th>Total Conv</th>
+                                <th>Collection (Boys)</th>
+                                <th>Collection (Girls)</th>
+                                <th>Total Collection</th>
+                                <th>Target %</th>
+                                <th>Grade A</th>
+                                <th>Grade B</th>
+                                <th>Grade C</th>
+                                <th>Grade D</th>
+                                <th>Total Verif.</th>
+                                <th>Incentive</th>
+                                <th>Leave Ded.</th>
+                                <th>Complaint Ded.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.StaffRows)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold">@row.StaffName</span>
+                                        @if (!row.IsActive)
+                                        {
+                                            <span class="badge badge-soft-danger ms-1" style="font-size:10px;">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>@(row.Department ?? "—")</td>
+                                    <td class="text-center"><span class="badge badge-soft-primary">@row.PremiumConversionsBoys</span></td>
+                                    <td class="text-center"><span class="badge badge-soft-danger">@row.PremiumConversionsGirls</span></td>
+                                    <td class="text-center fw-bold">@row.TotalPremiumConversions</td>
+                                    <td class="text-end">₹@row.PremiumCollectionBoys.ToString("N0")</td>
+                                    <td class="text-end">₹@row.PremiumCollectionGirls.ToString("N0")</td>
+                                    <td class="text-end fw-bold">₹@row.TotalPremiumCollection.ToString("N0")</td>
+                                    <td>
+                                        <div class="target-progress" title="@row.DailyTargetAchievementPercent%">
+                                            <div class="target-progress-bar @(row.DailyTargetAchievementPercent >= 80 ? "bg-success" : row.DailyTargetAchievementPercent >= 50 ? "bg-warning" : "bg-danger")"
+                                                 style="width: @row.DailyTargetAchievementPercent%"></div>
+                                        </div>
+                                        <small class="text-muted">@row.DailyTargetAchievementPercent%</small>
+                                    </td>
+                                    <td class="text-center">@row.VerificationGradeA</td>
+                                    <td class="text-center">@row.VerificationGradeB</td>
+                                    <td class="text-center">@row.VerificationGradeC</td>
+                                    <td class="text-center">@row.VerificationGradeD</td>
+                                    <td class="text-center fw-bold">@row.TotalVerifications</td>
+                                    <td class="text-end text-success fw-semibold">₹@row.IncentivePayable.ToString("N0")</td>
+                                    <td class="text-end text-danger">₹@row.LeaveDeductions.ToString("N0")</td>
+                                    <td class="text-end text-danger">₹@row.ComplaintDeductions.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════ -->
+    <!-- TAB 2: ORG-WIDE AGGREGATES                            -->
+    <!-- ═════════════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="aggregatesPanel" role="tabpanel">
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-3">
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon bg-soft-primary text-primary me-3"><i class="fas fa-rupee-sign"></i></div>
+                            <div>
+                                <p class="text-muted mb-1" style="font-size:12px;">Total Premium Collection</p>
+                                <h5 class="mb-0">₹@Model.OrgAggregates.TotalPremiumCollection.ToString("N0")</h5>
+                                <small>
+                                    <span class="badge badge-soft-primary">Boys: ₹@Model.OrgAggregates.TotalPremiumCollectionBoys.ToString("N0")</span>
+                                    <span class="badge badge-soft-danger ms-1">Girls: ₹@Model.OrgAggregates.TotalPremiumCollectionGirls.ToString("N0")</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon" style="background:rgba(52,195,143,0.1);color:#34c38f;"><i class="fas fa-gift"></i></div>
+                            <div class="ms-3">
+                                <p class="text-muted mb-1" style="font-size:12px;">Total Incentive Payable</p>
+                                <h5 class="mb-0 text-success">₹@Model.OrgAggregates.TotalIncentivePayable.ToString("N0")</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon" style="background:rgba(241,180,76,0.1);color:#f1b44c;"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="ms-3">
+                                <p class="text-muted mb-1" style="font-size:12px;">Estimated vs Approved Payroll</p>
+                                <h5 class="mb-0">₹@Model.OrgAggregates.TotalEstimatedPayroll.ToString("N0")</h5>
+                                <small class="text-muted">Approved: <span class="fw-bold text-success">₹@Model.OrgAggregates.TotalApprovedPayroll.ToString("N0")</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card metric-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon" style="background:rgba(80,165,241,0.1);color:#50a5f1;"><i class="fas fa-bullseye"></i></div>
+                            <div class="ms-3">
+                                <p class="text-muted mb-1" style="font-size:12px;">Daily Target Achievement</p>
+                                <h5 class="mb-0">@Model.OrgAggregates.DailyTargetAchievementRate%</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade-Wise Verification Report -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="fas fa-shield-alt text-primary me-2"></i>Grade-Wise Verification Report (Org-Wide)</h6>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 rounded" style="background:rgba(52,195,143,0.08);">
+                            <h3 class="text-success mb-1">@Model.OrgAggregates.OrgVerificationGradeA</h3>
+                            <span class="badge badge-soft-success px-3">Grade A — DetailedVerify</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 rounded" style="background:rgba(85,110,230,0.08);">
+                            <h3 class="text-primary mb-1">@Model.OrgAggregates.OrgVerificationGradeB</h3>
+                            <span class="badge badge-soft-primary px-3">Grade B — Verify</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 rounded" style="background:rgba(241,180,76,0.08);">
+                            <h3 class="text-warning mb-1">@Model.OrgAggregates.OrgVerificationGradeC</h3>
+                            <span class="badge badge-soft-warning px-3">Grade C — Started</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 rounded" style="background:rgba(244,106,106,0.08);">
+                            <h3 class="text-danger mb-1">@Model.OrgAggregates.OrgVerificationGradeD</h3>
+                            <span class="badge badge-soft-danger px-3">Grade D — Pending/Hold</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <span class="text-muted">Total Verifications: <strong>@Model.OrgAggregates.OrgTotalVerifications</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Org Comparison Chart -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="fas fa-chart-pie text-primary me-2"></i>Collection Split & Verification Distribution</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container" style="height:260px;">
+                            <canvas id="collectionPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container" style="height:260px;">
+                            <canvas id="gradeDonutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════ -->
+    <!-- TAB 3: RANKINGS                                       -->
+    <!-- ═════════════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="rankingsPanel" role="tabpanel">
+        <div class="row g-3">
+            <!-- Top Performers -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0 pb-0">
+                        <h6 class="mb-0"><i class="fas fa-trophy text-warning me-2"></i>Top Performing Staff</h6>
+                    </div>
+                    <div class="card-body pt-2">
+                        @if (Model.TopPerformers.Any())
+                        {
+                            @foreach (var tp in Model.TopPerformers)
+                            {
+                                <div class="d-flex align-items-center p-2 mb-2 rank-card border rounded">
+                                    <div class="rank-badge @(tp.Rank == 1 ? "rank-1" : tp.Rank == 2 ? "rank-2" : tp.Rank == 3 ? "rank-3" : "rank-default") me-3">
+                                        @tp.Rank
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">@tp.StaffName</h6>
+                                        <small class="text-muted">@(tp.Department ?? "—")</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success">Score: @tp.PerformanceScore.ToString("N0")</div>
+                                        <small class="text-muted">Conv: @tp.TotalConversions | ₹@tp.TotalCollection.ToString("N0") | Verif: @tp.TotalVerifications</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                                No staff data available for the selected period.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Performers -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-transparent border-0 pb-0">
+                        <h6 class="mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Low Performing Staff</h6>
+                    </div>
+                    <div class="card-body pt-2">
+                        @if (Model.LowPerformers.Any())
+                        {
+                            @foreach (var lp in Model.LowPerformers)
+                            {
+                                <div class="d-flex align-items-center p-2 mb-2 rank-card border rounded">
+                                    <div class="rank-badge rank-default me-3">@lp.Rank</div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">@lp.StaffName</h6>
+                                        <small class="text-muted">@(lp.Department ?? "—")</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-danger">Score: @lp.PerformanceScore.ToString("N0")</div>
+                                        <small class="text-muted">Conv: @lp.TotalConversions | ₹@lp.TotalCollection.ToString("N0") | Verif: @lp.TotalVerifications</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                                No staff data available for the selected period.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════ -->
+    <!-- TAB 4: PAYROLL CONTROL PANEL                          -->
+    <!-- ═════════════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="payrollPanel" role="tabpanel">
+
+        <!-- Bulk Action Toolbar -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <button type="button" class="btn btn-success btn-sm" id="btnBulkApprove" disabled>
+                    <i class="fas fa-check-double me-1"></i> Bulk Approve
+                </button>
+                <button type="button" class="btn btn-dark btn-sm ms-1" id="btnBulkLock" disabled>
+                    <i class="fas fa-lock me-1"></i> Bulk Lock
+                </button>
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btnExportRegister">
+                    <i class="fas fa-file-excel me-1"></i> Export Payroll Register (Excel)
+                </button>
+            </div>
+        </div>
+
+        <!-- Payroll Table -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="payrollTable" class="table table-hover table-bordered dt-responsive nowrap w-100" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:30px;">
+                                    <input type="checkbox" class="payroll-check" id="selectAllPayroll">
+                                </th>
+                                <th>Staff</th>
+                                <th>Dept</th>
+                                <th>Period</th>
+                                <th>Basic Salary</th>
+                                <th>Admin Incentive</th>
+                                <th>Total Incentive</th>
+                                <th>Deduction</th>
+                                <th>Estimated</th>
+                                <th>Approved</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pr in Model.PayrollRows)
+                            {
+                                <tr data-payroll-id="@pr.PayrollId">
+                                    <td>
+                                        <input type="checkbox" class="payroll-check payroll-item-check" value="@pr.PayrollId"
+                                               @(pr.Status == "Locked" ? "disabled" : "")>
+                                    </td>
+                                    <td class="fw-semibold">@pr.StaffName</td>
+                                    <td>@(pr.Department ?? "—")</td>
+                                    <td>@monthNames[pr.Month] @pr.Year</td>
+                                    <td class="text-end">₹@pr.BasicSalary.ToString("N0")</td>
+                                    <td class="text-end">
+                                        @if (pr.AdminIncentive > 0)
+                                        {
+                                            <span class="badge bg-soft-success text-success fw-bold font-size-12">+₹@pr.AdminIncentive.ToString("N0")</span>
+                                            @if (!string.IsNullOrEmpty(pr.AdminIncentiveRemarks))
+                                            {
+                                                <i class="fas fa-info-circle text-muted ms-1" title="@pr.AdminIncentiveRemarks"></i>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">₹0</span>
+                                        }
+                                    </td>
+                                    <td class="text-end text-success">+₹@pr.TotalIncentive.ToString("N0")</td>
+                                    <td class="text-end text-danger">-₹@pr.TotalDeduction.ToString("N0")</td>
+                                    <td class="text-end fw-bold">₹@pr.EstimatedPayroll.ToString("N0")</td>
+                                    <td class="text-end fw-bold text-primary">₹@pr.ApprovedPayroll.ToString("N0")</td>
+                                    <td>
+                                        <span class="badge @pr.StatusBadgeClass px-2 py-1">
+                                            @(pr.Status == "UnderReview" ? "Under Review" : pr.Status)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-success btn-sm btn-edit-admin-incentive"
+                                                    data-payroll-id="@pr.PayrollId"
+                                                    data-staff-name="@pr.StaffName"
+                                                    data-basic-salary="@pr.BasicSalary"
+                                                    data-system-incentive="@(pr.TotalIncentive - pr.AdminIncentive)"
+                                                    data-admin-incentive="@pr.AdminIncentive"
+                                                    data-items='@System.Text.Json.JsonSerializer.Serialize(pr.AdminIncentiveItems.Select(i => new { id = i.Id, amount = i.Amount, label = i.Label ?? "", createdOn = i.CreatedOn.ToString("dd MMM yyyy") }))'
+                                                    data-status="@pr.Status"
+                                                    title="Add / Edit Admin Incentive">
+                                                <i class="fas fa-gift"></i>
+                                            </button>
+                                            @if (pr.Status == "Locked" || pr.Status == "Approved")
+                                            {
+                                                <button type="button" class="btn btn-outline-warning btn-sm btn-reopen"
+                                                        data-payroll-id="@pr.PayrollId" data-staff-name="@pr.StaffName"
+                                                        title="Reopen">
+                                                    <i class="fas fa-lock-open"></i>
+                                                </button>
+                                            }
+                                            <button type="button" class="btn btn-outline-info btn-sm btn-audit-log"
+                                                    data-payroll-id="@pr.PayrollId" data-staff-name="@pr.StaffName"
+                                                    title="Audit Log">
+                                                    <i class="fas fa-history"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary btn-sm btn-salary-slip"
+                                                    data-payroll-id="@pr.PayrollId" data-staff-name="@pr.StaffName"
+                                                    title="Salary Slip (PDF)">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- ADMIN INCENTIVE MODAL                                   -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="adminIncentiveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-success text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white"><i class="fas fa-gift me-2"></i>Admin Given Incentive</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">Add incentive for: <strong id="modalIncentiveStaffName" class="text-dark"></strong></p>
+                <input type="hidden" id="modalIncentivePayrollId">
+                
+                <div class="card bg-light border-0 mb-3" style="border-radius: 8px;">
+                    <div class="card-body p-3 font-size-13">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Basic Salary:</span>
+                            <span class="fw-semibold" id="modalIncentiveBasicSalary">₹0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">System Calculated Incentive:</span>
+                            <span class="fw-semibold text-success" id="modalIncentiveSystemIncentive">+₹0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Admin Incentive Total:</span>
+                            <span class="fw-semibold text-success" id="modalIncentiveAdminTotal">+₹0</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-1 mt-1">
+                            <span class="text-muted fw-bold">Live Total Incentive:</span>
+                            <span class="fw-bold text-success" id="modalIncentiveLiveTotal">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Incentive Items List -->
+                <div id="adminIncentiveItemsList" class="mb-3" style="display:none;">
+                    <label class="form-label fw-semibold">Added Incentives</label>
+                    <div id="adminIncentiveItemsContainer" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
+                <!-- Add New Incentive -->
+                <div class="card border border-dashed mb-0" style="border-radius: 8px;">
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-5">
+                                <label for="modalAdminIncentiveInput" class="form-label fw-semibold font-size-12 mb-1">Amount (₹) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white">₹</span>
+                                    <input type="number" class="form-control" id="modalAdminIncentiveInput" min="1" step="1" placeholder="e.g. 200">
+                                </div>
+                            </div>
+                            <div class="col-5">
+                                <label for="modalAdminIncentiveLabel" class="form-label fw-semibold font-size-12 mb-1">Label</label>
+                                <input type="text" class="form-control form-control-sm" id="modalAdminIncentiveLabel" placeholder="e.g. Festival bonus" maxlength="100">
+                            </div>
+                            <div class="col-2">
+                                <button type="button" class="btn btn-success btn-sm w-100" id="btnAddAdminIncentive" style="border-radius: 6px;" title="Add Incentive">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted font-size-11 mt-1 d-block">Each entry adds to the staff's monthly salary.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- REOPEN MODAL                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="reopenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-lock-open me-2"></i>Reopen Payroll</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Reopening payroll for: <strong id="reopenStaffName"></strong></p>
+                <input type="hidden" id="reopenPayrollId">
+                <div class="mb-3">
+                    <label for="reopenReason" class="form-label">Reason for Reopening <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reopenReason" rows="3" placeholder="Enter reason..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning btn-sm" id="btnConfirmReopen">
+                    <i class="fas fa-lock-open me-1"></i> Confirm Reopen
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- AUDIT LOG MODAL                                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="auditLogModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-history me-2"></i>Audit Log — <span id="auditStaffName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="auditLogContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="text-muted mt-2">Loading audit log...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // ─── DataTables ────────────────────────────────────
+            $('#comparisonTable').DataTable({
+                responsive: true,
+                ordering: true,
+                pageLength: 25,
+                dom: 'Bfrtip',
+                buttons: ['copy', 'excel', 'print'],
+                order: [[4, 'desc']]
+            });
+
+            $('#payrollTable').DataTable({
+                responsive: true,
+                ordering: true,
+                pageLength: 25,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        exportOptions: { columns: ':not(:first-child):not(:last-child)' }
+                    },
+                    {
+                        extend: 'excel',
+                        title: 'Staff Payroll Register',
+                        exportOptions: { columns: ':not(:first-child):not(:last-child)' }
+                    },
+                    {
+                        text: '<i class="fas fa-file-pdf me-1"></i> PDF',
+                        className: 'btn btn-secondary btn-sm',
+                        action: function () {
+                            printTableAsPdf('payrollTable', 'Staff Payroll Register');
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        title: 'Staff Payroll Register',
+                        exportOptions: { columns: ':not(:first-child):not(:last-child)' }
+                    }
+                ],
+                columnDefs: [{ orderable: false, targets: [0, 11] }]
+            });
+
+            // ─── Print Table As PDF (opens print window) ─────
+            function printTableAsPdf(tableId, title) {
+                var $table = $('#' + tableId);
+                var $clone = $table.clone();
+
+                // Remove first column (checkbox) and last column (Actions)
+                $clone.find('tr').each(function () {
+                    $(this).find('th:first-child, td:first-child').remove();
+                    $(this).find('th:last-child, td:last-child').remove();
+                });
+
+                $clone.find('input, button, .btn, select').remove();
+                $clone.removeAttr('id');
+                $clone.find('[id]').removeAttr('id');
+
+                var printWin = window.open('', '_blank', 'width=1200,height=900');
+                if (!printWin) {
+                    Swal.fire('Blocked', 'Popup blocker prevented opening the PDF. Please allow popups for this site.', 'warning');
+                    return;
+                }
+
+                var html = '<!DOCTYPE html><html><head><title>' + title + '</title>' +
+                    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">' +
+                    '<style>' +
+                    'body { padding: 20px; font-family: "Segoe UI", sans-serif; background: #fff; color: #212529; }' +
+                    '.header-title { color: #00662d; font-weight: 700; }' +
+                    'table { font-size: 11px; }' +
+                    'table thead th { background-color: #00662d !important; color: #fff !important; font-size: 10px; white-space: nowrap; padding: 6px 4px !important; }' +
+                    'table td { padding: 6px 4px !important; white-space: nowrap; }' +
+                    '.badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; display: inline-block; }' +
+                    '.bg-warning, .badge-soft-warning { background-color: #fff8e6 !important; color: #b78103 !important; border: 1px solid #ffe5b4; }' +
+                    '.bg-success, .badge-soft-success { background-color: #e8f5e9 !important; color: #00662d !important; border: 1px solid #c8e6c9; }' +
+                    '.bg-secondary, .badge-soft-secondary { background-color: #f1f3f5 !important; color: #495057 !important; border: 1px solid #dee2e6; }' +
+                    '.bg-danger, .badge-soft-danger { background-color: #ffebee !important; color: #c62828 !important; border: 1px solid #ffcdd2; }' +
+                    '.bg-info, .badge-soft-info { background-color: #e3f2fd !important; color: #1565c0 !important; border: 1px solid #bbdefb; }' +
+                    '@@media print { body { padding: 10px; } }' +
+                    '@@page { size: landscape; margin: 10mm; }' +
+                    '</style></head><body>' +
+                    '<div class="text-center mb-3">' +
+                    '<h4 class="header-title">' + title + '</h4>' +
+                    '<p class="text-muted mb-0" style="font-size:12px;">Generated on ' + new Date().toLocaleDateString('en-IN') + '</p>' +
+                    '<hr></div>' +
+                    '<div class="table-responsive">' + $clone[0].outerHTML + '</div>' +
+                    '<div class="text-center mt-4 text-muted small">' +
+                    '<em>M4 Nikah — System Generated Report. Use browser\'s "Save as PDF" to download.</em></div>' +
+                    '<script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };<\/script>' +
+                    '</body></html>';
+
+                printWin.document.write(html);
+                printWin.document.close();
+            }
+
+
+
+            // ─── Charts ───────────────────────────────────────
+            var staffNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StaffRows.Select(r => r.StaffName).ToArray()));
+            var convBoys = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StaffRows.Select(r => r.PremiumConversionsBoys).ToArray()));
+            var convGirls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StaffRows.Select(r => r.PremiumConversionsGirls).ToArray()));
+
+            if (staffNames.length > 0) {
+                // Conversion Chart
+                new Chart(document.getElementById('conversionChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: staffNames,
+                        datasets: [
+                            {
+                                label: 'Boys (Male)',
+                                data: convBoys,
+                                backgroundColor: 'rgba(85, 110, 230, 0.7)',
+                                borderColor: 'rgba(85, 110, 230, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Girls (Female)',
+                                data: convGirls,
+                                backgroundColor: 'rgba(244, 106, 106, 0.7)',
+                                borderColor: 'rgba(244, 106, 106, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+
+                // Collection Pie Chart
+                new Chart(document.getElementById('collectionPieChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Boys (Male)', 'Girls (Female)'],
+                        datasets: [{
+                            data: [@Model.OrgAggregates.TotalPremiumCollectionBoys, @Model.OrgAggregates.TotalPremiumCollectionGirls],
+                            backgroundColor: ['rgba(85, 110, 230, 0.8)', 'rgba(244, 106, 106, 0.8)'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Collection Split (Boys vs Girls)' } }
+                    }
+                });
+
+                // Grade Donut
+                new Chart(document.getElementById('gradeDonutChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Grade A', 'Grade B', 'Grade C', 'Grade D'],
+                        datasets: [{
+                            data: [@Model.OrgAggregates.OrgVerificationGradeA, @Model.OrgAggregates.OrgVerificationGradeB, @Model.OrgAggregates.OrgVerificationGradeC, @Model.OrgAggregates.OrgVerificationGradeD],
+                            backgroundColor: ['rgba(52,195,143,0.8)', 'rgba(85,110,230,0.8)', 'rgba(241,180,76,0.8)', 'rgba(244,106,106,0.8)'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Verification Grade Distribution' } }
+                    }
+                });
+            }
+
+            // ─── Payroll Checkbox Logic ───────────────────────
+            $('#selectAllPayroll').on('change', function () {
+                var checked = $(this).prop('checked');
+                $('.payroll-item-check:not(:disabled)').prop('checked', checked);
+                updateBulkButtons();
+            });
+
+            $(document).on('change', '.payroll-item-check', function () {
+                updateBulkButtons();
+            });
+
+            function updateBulkButtons() {
+                var count = $('.payroll-item-check:checked').length;
+                $('#btnBulkApprove, #btnBulkLock').prop('disabled', count === 0);
+            }
+
+            function getSelectedPayrollIds() {
+                return $('.payroll-item-check:checked').map(function () { return parseInt($(this).val()); }).get();
+            }
+
+            // ─── Admin Incentive (Multi-Item) ─────────────────
+            var currentSystemIncentive = 0;
+            var currentAdminIncentiveTotal = 0;
+            var currentItems = [];
+            var incentiveModalChanged = false;
+
+            function renderIncentiveItems(items) {
+                currentItems = items || [];
+                currentAdminIncentiveTotal = currentItems.reduce(function (sum, i) { return sum + i.amount; }, 0);
+                var $container = $('#adminIncentiveItemsContainer');
+                $container.empty();
+
+                if (currentItems.length === 0) {
+                    $('#adminIncentiveItemsList').hide();
+                } else {
+                    $('#adminIncentiveItemsList').show();
+                    currentItems.forEach(function (item) {
+                        var labelHtml = item.label ? '<span class="text-dark fw-medium font-size-13">' + $('<span>').text(item.label).html() + '</span>' : '<span class="text-muted font-size-12 fst-italic">No label</span>';
+                        var row = '<div class="d-flex align-items-center justify-content-between py-2 px-3 mb-1" style="background:#f0fdf4; border-radius:6px; border:1px solid #dcfce7;">' +
+                            '<div>' + labelHtml + '</div>' +
+                            '<div class="d-flex align-items-center gap-2">' +
+                            '<span class="fw-semibold text-success">+₹' + item.amount.toLocaleString('en-IN') + '</span>' +
+                            '<button type="button" class="btn btn-outline-danger btn-sm px-1 py-0 btn-delete-incentive-item" data-item-id="' + item.id + '" title="Remove" style="font-size:11px; line-height:1.4;"><i class="fas fa-trash-alt"></i></button>' +
+                            '</div></div>';
+                        $container.append(row);
+                    });
+                }
+                updateLiveIncentivePreview();
+            }
+
+            function updateLiveIncentivePreview() {
+                var total = currentSystemIncentive + currentAdminIncentiveTotal;
+                $('#modalIncentiveAdminTotal').text('+₹' + currentAdminIncentiveTotal.toLocaleString('en-IN'));
+                $('#modalIncentiveLiveTotal').text('₹' + total.toLocaleString('en-IN'));
+            }
+
+            $(document).on('click', '.btn-edit-admin-incentive', function () {
+                var payrollId = $(this).data('payroll-id');
+                var staffName = $(this).data('staff-name');
+                var basicSalary = parseFloat($(this).data('basic-salary')) || 0;
+                var systemIncentive = parseFloat($(this).data('system-incentive')) || 0;
+                var items = $(this).data('items') || [];
+                var status = $(this).data('status');
+
+                if (status === 'Locked') {
+                    Swal.fire('Locked', 'This payroll is locked. Please reopen it first to modify incentives.', 'warning');
+                    return;
+                }
+
+                incentiveModalChanged = false;
+                currentSystemIncentive = systemIncentive;
+                $('#modalIncentivePayrollId').val(payrollId);
+                $('#modalIncentiveStaffName').text(staffName);
+                $('#modalIncentiveBasicSalary').text('₹' + basicSalary.toLocaleString('en-IN'));
+                $('#modalIncentiveSystemIncentive').text('+₹' + systemIncentive.toLocaleString('en-IN'));
+                $('#modalAdminIncentiveInput').val('');
+                $('#modalAdminIncentiveLabel').val('');
+
+                renderIncentiveItems(items);
+                new bootstrap.Modal('#adminIncentiveModal').show();
+            });
+
+            // Enter key to add incentive
+            $('#modalAdminIncentiveInput, #modalAdminIncentiveLabel').on('keypress', function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('#btnAddAdminIncentive').click();
+                }
+            });
+
+            // Reload page on modal close if any incentive was added or removed
+            $('#adminIncentiveModal').on('hidden.bs.modal', function () {
+                if (incentiveModalChanged) {
+                    location.reload();
+                }
+            });
+
+            // Add new incentive item
+            $('#btnAddAdminIncentive').on('click', function () {
+                var payrollId = parseInt($('#modalIncentivePayrollId').val());
+                var amount = parseFloat($('#modalAdminIncentiveInput').val()) || 0;
+                var label = $('#modalAdminIncentiveLabel').val().trim();
+
+                if (amount <= 0) {
+                    Swal.fire('Invalid', 'Please enter a valid amount greater than 0.', 'warning');
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '/admin/staff/cross-comparison/payroll/update-admin-incentive',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        payrollId: payrollId,
+                        amount: amount,
+                        label: label || null
+                    }),
+                    success: function (res) {
+                        if (res.success) {
+                            incentiveModalChanged = true;
+                            $('#modalAdminIncentiveInput').val('');
+                            $('#modalAdminIncentiveLabel').val('');
+                            renderIncentiveItems(res.items);
+                            Swal.fire({ icon: 'success', title: 'Added!', text: res.message, timer: 1500, showConfirmButton: false });
+                            var $triggerBtn = $('.btn-edit-admin-incentive[data-payroll-id="' + payrollId + '"]');
+                            $triggerBtn.data('items', res.items);
+                            $triggerBtn.data('admin-incentive', res.adminIncentive);
+                        } else {
+                            Swal.fire('Error', res.message || 'Failed to add incentive.', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Server error while adding incentive.', 'error');
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false).html('<i class="fas fa-plus"></i>');
+                    }
+                });
+            });
+
+            // Delete incentive item
+            $(document).on('click', '.btn-delete-incentive-item', function () {
+                var itemId = $(this).data('item-id');
+                var payrollId = parseInt($('#modalIncentivePayrollId').val());
+                var $row = $(this).closest('div.d-flex');
+
+                Swal.fire({
+                    title: 'Remove this incentive?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Remove',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+
+                    $row.css('opacity', '0.5');
+                    $.ajax({
+                        url: '/admin/staff/cross-comparison/payroll/delete-admin-incentive-item',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ itemId: itemId, payrollId: payrollId }),
+                        success: function (res) {
+                            if (res.success) {
+                                incentiveModalChanged = true;
+                                renderIncentiveItems(res.items);
+                                var $triggerBtn = $('.btn-edit-admin-incentive[data-payroll-id="' + payrollId + '"]');
+                                $triggerBtn.data('items', res.items);
+                                $triggerBtn.data('admin-incentive', res.adminIncentive);
+                            } else {
+                                $row.css('opacity', '1');
+                                Swal.fire('Error', res.message || 'Failed to remove incentive.', 'error');
+                            }
+                        },
+                        error: function () {
+                            $row.css('opacity', '1');
+                            Swal.fire('Error', 'Server error while removing incentive.', 'error');
+                        }
+                    });
+                });
+            });
+
+            // ─── Bulk Approve ─────────────────────────────────
+            $('#btnBulkApprove').on('click', function () {
+                var ids = getSelectedPayrollIds();
+                if (ids.length === 0) return;
+                Swal.fire({
+                    title: 'Approve ' + ids.length + ' payroll(s)?',
+                    text: 'This will set estimated payroll as approved amount.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Approve',
+                    confirmButtonColor: '#34c38f'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/admin/staff/cross-comparison/payroll/bulk-approve',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(ids),
+                            success: function (res) {
+                                Swal.fire('Done!', res.message, 'success').then(function () { location.reload(); });
+                            },
+                            error: function () { Swal.fire('Error', 'Failed to approve.', 'error'); }
+                        });
+                    }
+                });
+            });
+
+            // ─── Bulk Lock ────────────────────────────────────
+            $('#btnBulkLock').on('click', function () {
+                var ids = getSelectedPayrollIds();
+                if (ids.length === 0) return;
+                Swal.fire({
+                    title: 'Lock ' + ids.length + ' payroll(s)?',
+                    text: 'Locked records cannot be edited without reopening.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Lock',
+                    confirmButtonColor: '#343a40'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/admin/staff/cross-comparison/payroll/bulk-lock',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(ids),
+                            success: function (res) {
+                                Swal.fire('Done!', res.message, 'success').then(function () { location.reload(); });
+                            },
+                            error: function () { Swal.fire('Error', 'Failed to lock.', 'error'); }
+                        });
+                    }
+                });
+            });
+
+            // ─── Reopen ───────────────────────────────────────
+            $(document).on('click', '.btn-reopen', function () {
+                $('#reopenPayrollId').val($(this).data('payroll-id'));
+                $('#reopenStaffName').text($(this).data('staff-name'));
+                $('#reopenReason').val('');
+                new bootstrap.Modal('#reopenModal').show();
+            });
+
+            $('#btnConfirmReopen').on('click', function () {
+                var reason = $('#reopenReason').val();
+                if (!reason) { Swal.fire('Required', 'Please enter a reason.', 'warning'); return; }
+                $.ajax({
+                    url: '/admin/staff/cross-comparison/payroll/reopen',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ payrollId: parseInt($('#reopenPayrollId').val()), reason: reason }),
+                    success: function (res) {
+                        bootstrap.Modal.getInstance(document.getElementById('reopenModal')).hide();
+                        Swal.fire('Done!', res.message, 'success').then(function () { location.reload(); });
+                    },
+                    error: function () { Swal.fire('Error', 'Failed to reopen.', 'error'); }
+                });
+            });
+
+            // ─── Audit Log ────────────────────────────────────
+            $(document).on('click', '.btn-audit-log', function () {
+                var payrollId = $(this).data('payroll-id');
+                $('#auditStaffName').text($(this).data('staff-name'));
+                $('#auditLogContent').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="text-muted mt-2">Loading...</p></div>');
+                new bootstrap.Modal('#auditLogModal').show();
+
+                $.get('/admin/staff/cross-comparison/payroll/audit-log/' + payrollId, function (logs) {
+                    if (!logs || logs.length === 0) {
+                        $('#auditLogContent').html('<div class="text-center text-muted py-4"><i class="fas fa-info-circle fa-2x mb-2 d-block"></i>No audit log entries found.</div>');
+                        return;
+                    }
+                    var html = '<div class="audit-timeline">';
+                    logs.forEach(function (log) {
+                        var date = new Date(log.performedOn).toLocaleString();
+                        html += '<div class="audit-item">';
+                        html += '<div class="fw-semibold">' + log.action + '</div>';
+                        if (log.previousStatus) html += '<small class="text-muted">' + log.previousStatus + ' → ' + log.newStatus + '</small><br>';
+                        if (log.previousAmount != null) html += '<small class="text-muted">Amount: ₹' + log.previousAmount + ' → ₹' + log.newAmount + '</small><br>';
+                        html += '<small class="text-muted">By: ' + log.performedBy + ' | ' + date + '</small>';
+                        if (log.reason) html += '<br><small class="text-info"><i class="fas fa-comment-alt me-1"></i>' + log.reason + '</small>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                    $('#auditLogContent').html(html);
+                });
+            });
+
+            // ─── Salary Slip PDF ──────────────────────────────
+            $(document).on('click', '.btn-salary-slip', function () {
+                var $btn = $(this);
+                var payrollId = $btn.data('payroll-id');
+                var staffName = $btn.data('staff-name') || 'Staff';
+                var originalHtml = $btn.html();
+
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Loading...');
+
+                $.get('/admin/staff/cross-comparison/export/salary-slip/' + payrollId)
+                    .done(function (data) {
+                        if (!data) {
+                            Swal.fire('Error', 'Could not retrieve salary slip data.', 'error');
+                            return;
+                        }
+
+                        var fmt = function (val) {
+                            var n = parseFloat(val) || 0;
+                            return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+
+                        var printWin = window.open('', '_blank', 'width=800,height=900');
+                        if (!printWin) {
+                            Swal.fire('Blocked', 'Popup blocker prevented opening the receipt. Please allow popups.', 'warning');
+                            return;
+                        }
+
+                        var html = '<!DOCTYPE html><html><head>' +
+                            '<title>Salary Slip - ' + (data.staffName || staffName) + '</title>' +
+                            '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">' +
+                            '<style>' +
+                            'body { padding: 40px; font-family: "Segoe UI", sans-serif; background: #fff; color: #212529; }' +
+                            '.header-title { color: #00662d; font-weight: 700; }' +
+                            '.table-custom th { background-color: #00662d !important; color: #fff !important; }' +
+                            '@@page { size: portrait; margin: 15mm; }' +
+                            '</style></head><body>' +
+                            '<div class="text-center mb-4">' +
+                            '<h2 class="header-title">M4 NIKAH — SALARY SLIP</h2>' +
+                            '<p class="text-muted mb-0">' + (data.month || '') + ' ' + (data.year || '') + '</p><hr></div>' +
+                            '<div class="row mb-4 fs-6">' +
+                            '<div class="col-6"><strong>Staff Name:</strong> ' + (data.staffName || 'N/A') + '</div>' +
+                            '<div class="col-6"><strong>Department:</strong> ' + (data.department || 'N/A') + '</div>' +
+                            '<div class="col-6 mt-2"><strong>Designation:</strong> ' + (data.designation || 'N/A') + '</div>' +
+                            '<div class="col-6 mt-2"><strong>Status:</strong> <span class="badge bg-success">' + (data.status || 'N/A') + '</span></div>' +
+                            '</div>' +
+                            '<table class="table table-bordered align-middle table-custom">' +
+                            '<thead><tr><th>Salary Component</th><th class="text-end">Amount (₹)</th></tr></thead>' +
+                            '<tbody>' +
+                            '<tr><td>Basic Salary</td><td class="text-end">₹' + fmt(data.basicSalary) + '</td></tr>' +
+                            '<tr><td>Premium Incentive (Boys)</td><td class="text-end">₹' + fmt(data.premiumIncentiveBoys) + '</td></tr>' +
+                            '<tr><td>Premium Incentive (Girls)</td><td class="text-end">₹' + fmt(data.premiumIncentiveGirls) + '</td></tr>' +
+                            '<tr><td>Verification Incentive</td><td class="text-end">₹' + fmt(data.verificationIncentive) + '</td></tr>' +
+                            (data.dailyTargetIncentive > 0 ? '<tr><td>Daily Target Incentive</td><td class="text-end">₹' + fmt(data.dailyTargetIncentive) + '</td></tr>' : '');
+
+                        // Render individual admin incentive items
+                        if (data.adminIncentiveItems && data.adminIncentiveItems.length > 0) {
+                            data.adminIncentiveItems.forEach(function (item) {
+                                html += '<tr><td>Admin Incentive' + (item.label ? ' <small class="text-muted">(' + item.label + ')</small>' : '') + '</td><td class="text-end text-success">+₹' + fmt(item.amount) + '</td></tr>';
+                            });
+                        } else if (data.adminIncentive > 0) {
+                            // Fallback for old payrolls without items
+                            html += '<tr><td>Admin Given Incentive' + (data.adminIncentiveRemarks ? ' <small class="text-muted">(' + data.adminIncentiveRemarks + ')</small>' : '') + '</td><td class="text-end text-success">+₹' + fmt(data.adminIncentive) + '</td></tr>';
+                        }
+
+                        html +=
+                            '<tr class="fw-bold table-light"><td>Total Incentive</td><td class="text-end text-success">₹' + fmt(data.totalIncentive) + '</td></tr>' +
+                            '<tr class="text-danger"><td>(−) Leave Deduction</td><td class="text-end">₹' + fmt(data.leaveDeduction) + '</td></tr>' +
+                            '<tr class="text-danger"><td>(−) Complaint Deduction</td><td class="text-end">₹' + fmt(data.complaintDeduction) + '</td></tr>' +
+                            '<tr class="fw-bold table-light text-danger"><td>Total Deduction</td><td class="text-end">₹' + fmt(data.totalDeduction) + '</td></tr>' +
+                            '<tr><td>Estimated Payroll</td><td class="text-end">₹' + fmt(data.estimatedPayroll) + '</td></tr>' +
+                            '<tr class="fw-bold table-success fs-5"><td>Approved / Net Payable</td><td class="text-end text-success">₹' + fmt(data.netPayable) + '</td></tr>' +
+                            '</tbody></table>' +
+                            '<div class="text-center mt-5 text-muted small">' +
+                            '<em>This is a computer-generated document. No signature required.</em></div>' +
+                            '<script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };<\/script>' +
+                            '</body></html>';
+
+                        printWin.document.write(html);
+                        printWin.document.close();
+                    })
+                    .fail(function () {
+                        Swal.fire('Error', 'Error fetching salary slip details.', 'error');
+                    })
+                    .always(function () {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    });
+            });
+
+            // ─── Export Payroll Register (Excel via DataTables) ─
+            $('#btnExportRegister').on('click', function () {
+                $.get('/admin/staff/cross-comparison/export/payroll-register?year=@Model.FilterYear&month=@Model.FilterMonth', function (data) {
+                    if (!data || data.length === 0) {
+                        Swal.fire('Info', 'No payroll data found for selected period.', 'info');
+                        return;
+                    }
+                    // Create CSV and trigger download
+                    var headers = ['Staff Name', 'Department', 'Designation', 'Basic Salary', 'Admin Incentive', 'Total Incentive', 'Total Deduction', 'Estimated Payroll', 'Approved Payroll', 'Net Payable', 'Status'];
+                    var csv = headers.join(',') + '\n';
+                    data.forEach(function (row) {
+                        csv += [
+                            '"' + row.staffName + '"',
+                            '"' + row.department + '"',
+                            '"' + row.designation + '"',
+                            row.basicSalary,
+                            row.adminIncentive || 0,
+                            row.totalIncentive,
+                            row.totalDeduction,
+                            row.estimatedPayroll,
+                            row.approvedPayroll,
+                            row.netPayable,
+                            '"' + row.status + '"'
+                        ].join(',') + '\n';
+                    });
+                    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    var link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'PayrollRegister_@(monthNames[Model.FilterMonth])_@(Model.FilterYear).csv';
+                    link.click();
+                });
+            });
+
+            // ─── Fix select defaults on page load ─────────────
+            $('select[name="period"]').val('@Model.Period');
+        });
+    </script>
+}

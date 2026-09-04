@@ -1,0 +1,78 @@
+@model Application.ViewModels.ChangeAdminPhoneViewModel
+@{
+    ViewBag.Title = "Change Phone Number";
+}
+
+@section Title
+{
+    Change Phone Number
+}
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h4 class="card-title mb-0">Change Admin Phone Number</h4>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-check-circle me-2"></i>@ViewBag.SuccessMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid && string.IsNullOrEmpty(ViewBag.SuccessMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="mdi mdi-alert-circle me-2"></i>
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger mb-0" })
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <form asp-action="ChangePhone" asp-controller="Admin" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Registered Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-phone-lock"></i></span>
+                            <input class="form-control" type="text" value="@(string.IsNullOrEmpty(Model.CurrentPhone) ? "Not set" : Model.CurrentPhone)" readonly="readonly" style="background-color: #f8f9fa;">
+                        </div>
+                        <small class="text-muted">This is the number where OTP verification codes are currently sent for your login.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Phone Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-phone"></i></span>
+                            <input class="form-control" type="text" asp-for="NewPhoneNumber" placeholder="Enter new phone number (e.g. 9876543210)" required autocomplete="tel">
+                        </div>
+                        <span asp-validation-for="NewPhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-lock-check"></i></span>
+                            <input class="form-control" type="password" asp-for="Password" placeholder="Enter your current password to confirm" required autocomplete="current-password">
+                        </div>
+                        <small class="text-muted">For security reasons, your current password is required to approve this change.</small>
+                        <span asp-validation-for="Password" class="text-danger d-block"></span>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-md">
+                            <i class="mdi mdi-content-save me-1"></i> Update Phone Number
+                        </button>
+                        <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

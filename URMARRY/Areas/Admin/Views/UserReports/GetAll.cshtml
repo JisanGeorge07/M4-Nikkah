@@ -1,0 +1,64 @@
+@using Domain
+@model List<Application.Models.UserReportDto>
+@{
+    ViewBag.Title = "User Reports";
+    List<RegistrationDto> users = ViewBag.users;
+}
+
+@section Title
+{
+    User Reports management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <a asp-action="Get" asp-route-id="0" class="btn btn-primary btn-xs">New</a>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table dt-responsive nowrap w-100">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reported User</th>
+                        <th>By</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (UserReportDto item in Model)
+                    {
+                        <tr style="background-color: @(item.Status switch
+                                                        {
+                                                            UserReportStatus.Actioned => "#0080001c",
+                                                            UserReportStatus.Dismissed => "#8071001c",
+                                                            _ => "#003e801c"
+                                                        });
+                                    outline: @(item.Status switch
+                                         {
+                                             UserReportStatus.Pending => "solid #ff7373 thin",
+                                             _ => ""
+                                         });">
+                            <td>@Html.Raw(item.CreatedOn.Value.ToLocalTime())</td>
+                            <td>
+                                @Html.Raw(users.FirstOrDefault(x => x.Id == item.ReportedUserId)?.Name ?? "Deleted User")
+                            </td>
+                            <td>@Html.Raw(users.FirstOrDefault(x => x.Id == item.ReporterUserId)?.Name ?? "Deleted User")</td>
+                            <td>@Html.Raw(item.Reason)</td>
+                            <td>@Html.Raw(item.Status.ToString())</td>
+                            <td>
+                                <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

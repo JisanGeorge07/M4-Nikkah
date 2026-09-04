@@ -1,0 +1,30 @@
+﻿@model Application.Models.Transactions.PaymentGatewayRequest
+
+<div class="container mt-5">
+    <form action="/Transaction/MakePayment" method="post" class="p-4 border rounded">
+        <input type="hidden" name="key" value="" />
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount" />
+        </div>
+        <div class="form-group">
+            <label for="productinfo">Product Info</label>
+            <input type="text" class="form-control" id="productinfo" name="productinfo" placeholder="Product Info" />
+        </div>
+        <div class="form-group">
+            <label for="firstname">First Name</label>
+            <input type="text" class="form-control" id="firstname" name="firstname" placeholder="First Name" />
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email" />
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone" />
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary">Pay Now</button>
+    </form>
+    <br /><br />
+</div>

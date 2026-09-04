@@ -1,0 +1,48 @@
+﻿@model List<Application.Models.MaritalStatusDto>
+@{
+    ViewBag.Title = "MaritalStatus";
+}
+
+@section Title
+    {
+    Marital Status management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <a asp-action="Get" asp-route-id="0" class="btn btn-primary btn-xs">New</a>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                        <tr>
+                            <th width="40%">Title</th>
+                            <th width="20%">Status</th>
+                            <th width="20%">Display Order</th>
+                            <th width="20%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.Raw(item.Title)</td>
+                                <td>
+                                    @Html.Raw(item.IsActive ? "Enabled" : "Disabled")
+                                </td>
+                                <td>@Html.Raw(item.DisplayOrder)</td>
+                                <td>
+                                    <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

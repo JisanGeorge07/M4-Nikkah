@@ -1,0 +1,90 @@
+@model dynamic
+@{
+    ViewBag.Title = "Add Subscription";
+}
+
+@section Title
+{
+   Add Manual Subscription
+}
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Add Manual Subscription</h4>
+                <p class="card-title-desc">Enter the user details and payment information to manually upgrade a member.</p>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddManualSubscription" method="post">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="regId">Registration ID</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="regId" name="regId" placeholder="Enter Registration ID (e.g. M4N...)" required>
+                            <button class="btn btn-outline-secondary" type="button" id="btnFetchUser">Fetch Details</button>
+                        </div>
+                    </div>
+
+                    <div id="userDetails" style="display:none;" class="alert alert-secondary mb-3">
+                        <p class="mb-1"><strong>Name:</strong> <span id="lblUserName"></span></p>
+                        <p class="mb-1"><strong>Phone:</strong> <span id="lblUserPhone"></span></p>
+                        <p class="mb-0"><strong>Email:</strong> <span id="lblUserEmail"></span></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="manualTxnId">Transaction ID / Reference</label>
+                        <input type="text" class="form-control" id="manualTxnId" name="txnId" placeholder="Enter Transaction Reference" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="offlinePaymentType">Offline Payment Type</label>
+                        <select class="form-control" id="offlinePaymentType" name="offlinePaymentType" required>
+                            <option value="">-- Select Offline Payment Type --</option>
+                            <option value="0">UPI Payment</option>
+                            <option value="1">Bank Payment</option>
+                            <option value="2">Cash Payment</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="manualAmount">Amount Paid</label>
+                        <input type="number" class="form-control" id="manualAmount" name="amount" placeholder="Enter Amount" required>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-md">Save Subscription</button>
+                        <a asp-action="GetAllTransaction" class="btn btn-secondary w-md ms-2">Back to List</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#btnFetchUser').click(function () {
+                var regId = $('#regId').val();
+                if (!regId) {
+                    alert('Please enter Registration ID');
+                    return;
+                }
+
+                $.get('/admin/enquiry/get-user-by-regid/' + regId, function (data) {
+                    if (data) {
+                        $('#lblUserName').text(data.name);
+                        $('#lblUserPhone').text(data.phone);
+                        $('#lblUserEmail').text(data.email);
+                        $('#userDetails').show();
+                    } else {
+                        alert('User not found with this Registration ID');
+                        $('#userDetails').hide();
+                    }
+                });
+            });
+        });
+    </script>
+}

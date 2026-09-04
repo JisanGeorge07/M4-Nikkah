@@ -1,0 +1,614 @@
+@model Application.ViewModels.NotificationViewModel
+
+@functions {
+    public string GetTimeAgo(DateTime dateTime)
+    {
+        var now = DateTime.Now;
+        // If the database stores in UTC, or the database date is closer to UtcNow than local Now, compare with UtcNow
+        if (dateTime.Kind == DateTimeKind.Utc || Math.Abs((DateTime.UtcNow - dateTime).TotalHours) < Math.Abs((DateTime.Now - dateTime).TotalHours))
+        {
+            now = DateTime.UtcNow;
+        }
+        var timeSpan = now - dateTime;
+        if (timeSpan.TotalSeconds < 0)
+        {
+            timeSpan = TimeSpan.Zero;
+        }
+
+        if (timeSpan.TotalMinutes < 1)
+            return "Just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{timeSpan.Minutes} min ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{timeSpan.Hours} hours ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{timeSpan.Days} days ago";
+        if (timeSpan.TotalDays < 365)
+            return $"{timeSpan.Days / 30} months ago";
+        return $"{timeSpan.Days / 365} years ago";
+    }
+}
+
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    var notificationList = Model.notificationDto;
+    var loggedInUser = Model.Registration;
+    var allRegistrations = Model.AllRegistrations;
+}
+
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+            <!-- Notifications Section -->
+            <h4 class="section-title">Notifications</h4>
+            <div class="notification-container">
+                @foreach (var notification in notificationList)
+                {
+                    var user = allRegistrations?.FirstOrDefault(x => x.Id == notification.UserId);
+                    <div class="notification-card">
+                        <div class="notification-avatar">
+                            @if (!string.IsNullOrEmpty(notification.profileImageUrl))
+                            {
+                                <img src="@Html.Raw("/" + notification.profileImageUrl)" alt="@Html.Raw(user?.Name)">
+                            }
+                            else
+                            {
+                                <img src="@Url.Content(string.Equals(notification.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                     alt="@Html.Raw(user?.Name)">
+                            }
+                        </div>
+                        <div class="notification-content">
+                            <a asp-action="Profile" asp-controller="User" asp-route-url="@user?.RegisterNumber">
+                                <h6 class="notification-name">@Html.Raw(user?.Name)</h6>
+                            </a>
+                            
+                            <p class="notification-text">@notification.Notify_Message</p>
+                            
+                            @if (notification.IsStatusUpdatePrompt)
+                            {
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    @if (notification.HasSubmittedSuccessStory)
+                                    {
+                                        <span class="badge bg-soft-success text-success rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(40, 167, 69, 0.15); color: #28a745;">
+                                            <i class="uil uil-check-circle me-1"></i>Story Submitted
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold text-white fs-12 shadow-sm"
+                                                style="background-color: #ff3a6f;"
+                                                onclick="openStatusUpdateFromNotification(@(notification.StatusUpdateFavId ?? 0), @(notification.StatusUpdatePartnerId ?? 0), '@Html.Raw(user?.Name?.Replace("'", "\\'"))', @(notification.CurrentMatchStatus?.ToString() ?? "null"))">
+                                            ❤️ Update Status
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            
+                            @if (notification.InterestStatus != null && !notification.IsStatusUpdatePrompt)
+                            {
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                     @if (notification.Notify_Message.Contains("Interest request from"))
+                                     {
+                                         @if (notification.InterestStatus == "Pending")
+                                         {
+                                             <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-semibold text-white fs-12 shadow-sm" onclick="respondToInterestFromList(@user?.Id, 'Accept', this)">
+                                                 Accept
+                                             </button>
+                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold fs-12" onclick="respondToInterestFromList(@user?.Id, 'Decline', this)">
+                                                 Decline
+                                             </button>
+                                         }
+                                         else if (notification.InterestStatus == "Accepted")
+                                         {
+                                             <span class="badge bg-soft-success text-success rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(40, 167, 69, 0.15); color: #28a745;">Accepted</span>
+                                         }
+                                         else if (notification.InterestStatus == "Declined")
+                                         {
+                                             <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(108, 117, 125, 0.15); color: #6c757d;">Declined</span>
+                                         }
+                                     }
+                                     else if (notification.Notify_Message.Contains("Photo unlock request from"))
+                                     {
+                                         @if (notification.InterestStatus == "Pending")
+                                         {
+                                             <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-semibold text-white fs-12 shadow-sm" onclick="respondToPhotoUnlockFromList(@user?.Id, 'Approve', this)">
+                                                 Approve
+                                             </button>
+                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold fs-12" onclick="respondToPhotoUnlockFromList(@user?.Id, 'Reject', this)">
+                                                 Reject
+                                             </button>
+                                         }
+                                         else if (notification.InterestStatus == "Accepted")
+                                         {
+                                             <span class="badge bg-soft-success text-success rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(40, 167, 69, 0.15); color: #28a745;">Approved</span>
+                                         }
+                                         else if (notification.InterestStatus == "Declined")
+                                         {
+                                             <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(108, 117, 125, 0.15); color: #6c757d;">Rejected</span>
+                                         }
+                                     }
+                                     else
+                                     {
+                                         // Sender side status badge
+                                         @if (notification.InterestStatus == "Pending")
+                                         {
+                                             <span class="badge bg-soft-warning text-warning rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(255, 193, 7, 0.15); color: #ffc107;">Pending...</span>
+                                         }
+                                         else if (notification.InterestStatus == "Accepted")
+                                         {
+                                             <span class="badge bg-soft-success text-success rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(40, 167, 69, 0.15); color: #28a745;">@(notification.Notify_Message.Contains("photo unlock") || notification.Notify_Message.Contains("Photo unlock") ? "Approved" : "Accepted")</span>
+                                         }
+                                         else if (notification.InterestStatus == "Declined")
+                                         {
+                                             <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 py-1.5 fw-semibold fs-12" style="background: rgba(108, 117, 125, 0.15); color: #6c757d;">@(notification.Notify_Message.Contains("photo unlock") || notification.Notify_Message.Contains("Photo unlock") ? "Rejected" : "Declined")</span>
+                                         }
+                                     }
+                                </div>
+                            }
+                            
+                            <div class="notification-footer">
+                                <span class="notification-time">@GetTimeAgo(notification.CreatedOn)</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Relationship Status Update Prompt Modal (from Notification Page) -->
+<div id="statusUpdatePromptModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideStatusUpdatePromptModal()">
+    <div class="upgrade-modal-card" style="max-width: 480px; border-radius: 16px;">
+        <div class="modal-close-btn" onclick="hideStatusUpdatePromptModal()">
+            <i class="uil uil-times"></i>
+        </div>
+        <div class="modal-body-scroll" style="padding: 30px 20px;">
+            <div class="text-center mb-4">
+                <div style="font-size: 3rem; color: #ff3a6f; animation: pulse 2s infinite;">❤️</div>
+                <h4 class="fw-semibold mt-2" style="color: #111;">Update Your Relationship Status</h4>
+                <p class="text-muted fs-14">We noticed that you accepted the interest from <span id="promptPartnerName" class="fw-bold text-dark"></span> some time ago. How are things proceeding?</p>
+            </div>
+            <form id="statusUpdateForm" onsubmit="event.preventDefault(); submitStatusUpdate();">
+                <input type="hidden" id="statusUpdateFavId" name="userFavouriteProfileId" />
+                <input type="hidden" id="statusUpdatePartnerId" name="partnerId" />
+                
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-dark mb-2">Current Status</label>
+                    <select class="form-select border rounded-3 p-2 w-100" id="statusSelect" required style="font-size: 14px; outline: none; border-color: #ddd;">
+                        <option value="3">Still Communicating</option>
+                        <option value="0">Engaged</option>
+                        <option value="1">Married</option>
+                        <option value="2">Rejected / Not Proceeding</option>
+                        <option value="4">Prefer Not to Say</option>
+                    </select>
+                </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #00662d !important; border-radius: 8px;">Save Status</button>
+                    <button type="button" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #777 !important; border-radius: 8px;" onclick="hideStatusUpdatePromptModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Story Submission Modal (from Notification Page) -->
+<div id="successStoryModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideSuccessStoryModal()">
+    <div class="upgrade-modal-card" style="max-width: 550px; border-radius: 16px;">
+        <div class="modal-close-btn" onclick="hideSuccessStoryModal()">
+            <i class="uil uil-times"></i>
+        </div>
+        <div class="modal-body-scroll" style="padding: 25px 20px; max-height: 85vh; overflow-y: auto;">
+            <div class="text-center mb-4">
+                <div style="font-size: 2.5rem; color: #ffb400;">💖</div>
+                <h4 class="fw-semibold mt-2" style="color: #111;">Share Your Happy Journey!</h4>
+                <p class="text-muted fs-13">Alhamdulillah! We are thrilled to hear you got married through M4Nikkah. Share your story to inspire others!</p>
+            </div>
+            
+            <form id="successStoryForm" onsubmit="event.preventDefault(); submitSuccessStory();" enctype="multipart/form-data">
+                <input type="hidden" id="storyMatchStatusId" name="MatchStatusUpdateId" />
+                <input type="hidden" id="storyPartnerUserId" name="PartnerUserId" />
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Groom's Display Name *</label>
+                        <input type="text" class="form-control rounded-3" id="groomNameInput" name="GroomDisplayName" required placeholder="e.g. Ibrahim" style="font-size: 13px; padding: 10px;" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Bride's Display Name *</label>
+                        <input type="text" class="form-control rounded-3" id="brideNameInput" name="BrideDisplayName" required placeholder="e.g. Mariam" style="font-size: 13px; padding: 10px;" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Marriage Date *</label>
+                        <input type="date" class="form-control rounded-3" id="marriageDateInput" name="MarriageDate" required style="font-size: 13px; padding: 8px 10px;" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Rate Your Experience *</label>
+                        <div class="d-flex align-items-center gap-1 mt-1" id="starRatingContainer" style="font-size: 1.5rem; color: #ccc; cursor: pointer;">
+                            <span class="star-item active" data-rating="1" onclick="setRating(1)" onmouseover="hoverRating(1)" onmouseout="resetRating()">★</span>
+                            <span class="star-item active" data-rating="2" onclick="setRating(2)" onmouseover="hoverRating(2)" onmouseout="resetRating()">★</span>
+                            <span class="star-item active" data-rating="3" onclick="setRating(3)" onmouseover="hoverRating(3)" onmouseout="resetRating()">★</span>
+                            <span class="star-item active" data-rating="4" onclick="setRating(4)" onmouseover="hoverRating(4)" onmouseout="resetRating()">★</span>
+                            <span class="star-item active" data-rating="5" onclick="setRating(5)" onmouseover="hoverRating(5)" onmouseout="resetRating()">★</span>
+                        </div>
+                        <input type="hidden" id="ratingInput" name="Rating" value="5" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Your Success Story / Feedback *</label>
+                    <textarea class="form-control rounded-3" id="storyTextInput" name="Story" rows="4" required placeholder="Tell us how you connected, your experience on M4Nikkah, and your blessings..." style="font-size: 13px; padding: 10px; resize: none;"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium text-dark mb-1" style="font-size: 13px;">Upload Couple Photo (Optional)</label>
+                    <input type="file" class="form-control rounded-3" id="couplePhotoInput" name="CouplePhoto" accept="image/*" onchange="validateCouplePhoto(this)" style="font-size: 13px; padding: 8px;" />
+                    <div class="form-text text-muted" style="font-size: 11px;">Recommended dimensions: 630×800px. Max size: 2MB.</div>
+                    <div id="photoErrorMsg" class="text-danger mt-1 d-none" style="font-size: 12px;"></div>
+                </div>
+
+                <div class="mb-3 form-check text-start">
+                    <input type="checkbox" class="form-check-input" id="consentCheck" name="ConsentToPublish" required checked style="cursor: pointer;" />
+                    <label class="form-check-label fs-12 text-muted" for="consentCheck" style="cursor: pointer;">I agree to publish our success story on M4Nikkah website.</label>
+                </div>
+
+                <div class="mb-4 form-check text-start">
+                    <input type="checkbox" class="form-check-input" id="privacyCheck" name="HideFullName" style="cursor: pointer;" />
+                    <label class="form-check-label fs-12 text-muted" for="privacyCheck" style="cursor: pointer;">Privacy option: Hide full names (show only initials, e.g. I. &amp; M.)</label>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button type="submit" id="btnSubmitStory" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #00662d !important; border-radius: 8px;">Submit Story</button>
+                    <button type="button" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #777 !important; border-radius: 8px;" onclick="hideSuccessStoryModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-item {
+        transition: color 0.15s ease, transform 0.15s ease;
+    }
+    .star-item:hover {
+        transform: scale(1.25);
+    }
+    .star-item.active {
+        color: #ffb400;
+    }
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const loggedInUserId = @Model.Registration.Id;
+
+    // --- Status Update Prompt Modal ---
+    function openStatusUpdateFromNotification(favId, partnerId, partnerName, currentStatus) {
+        document.getElementById('statusUpdateFavId').value = favId;
+        document.getElementById('statusUpdatePartnerId').value = partnerId;
+        document.getElementById('promptPartnerName').innerText = partnerName;
+        
+        var statusSelect = document.getElementById('statusSelect');
+        if (currentStatus !== undefined && currentStatus !== null) {
+            statusSelect.value = currentStatus.toString();
+        } else {
+            statusSelect.value = "3"; // Default to Still Communicating
+        }
+        
+        document.getElementById('statusUpdatePromptModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideStatusUpdatePromptModal() {
+        document.getElementById('statusUpdatePromptModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function submitStatusUpdate() {
+        var favId = document.getElementById('statusUpdateFavId').value;
+        var partnerId = document.getElementById('statusUpdatePartnerId').value;
+        var partnerName = document.getElementById('promptPartnerName').innerText;
+        var status = document.getElementById('statusSelect').value;
+
+        var formData = new FormData();
+        formData.append('userId', loggedInUserId);
+        formData.append('partnerId', partnerId);
+        formData.append('userFavouriteProfileId', favId);
+        formData.append('status', status);
+
+        fetch('/api/testimonial/update-status', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            hideStatusUpdatePromptModal();
+            if (data.success) {
+                if (data.showStoryForm) {
+                    // User selected Married! Show success story modal
+                    fetch('/api/testimonial/can-submit-story?userId=' + loggedInUserId + '&partnerId=' + partnerId)
+                    .then(function(r) { return r.json(); })
+                    .then(function(storyData) {
+                        if (storyData.success && storyData.canSubmit) {
+                            showSuccessStoryModal(
+                                partnerId, 
+                                partnerName, 
+                                storyData.matchStatusUpdateId,
+                                storyData.userName,
+                                storyData.partnerName,
+                                storyData.userGender
+                            );
+                        } else {
+                            Swal.fire({
+                                title: 'Status Saved!',
+                                text: 'Your relationship status has been updated to Married. Thank you!',
+                                icon: 'success',
+                                confirmButtonColor: '#00662d',
+                                width: '320px'
+                            }).then(function() { window.location.reload(); });
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Status Updated!',
+                        text: 'Thank you for updating your relationship status.',
+                        icon: 'success',
+                        confirmButtonColor: '#00662d',
+                        width: '320px'
+                    }).then(function() { window.location.reload(); });
+                }
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message || 'Could not update status.',
+                    icon: 'error',
+                    width: '320px'
+                });
+            }
+        })
+        .catch(function(err) {
+            console.error('Error:', err);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                icon: 'error',
+                width: '320px'
+            });
+        });
+    }
+
+    // --- Success Story Modal ---
+    function showSuccessStoryModal(partnerId, partnerName, matchStatusId, currentUserName, partnerFullName, currentUserGender) {
+        document.getElementById('storyMatchStatusId').value = matchStatusId || 0;
+        document.getElementById('storyPartnerUserId').value = partnerId || 0;
+        
+        var groomInput = document.getElementById('groomNameInput');
+        var brideInput = document.getElementById('brideNameInput');
+        
+        if (currentUserGender === 'Male') {
+            groomInput.value = currentUserName || '';
+            brideInput.value = partnerFullName || '';
+        } else if (currentUserGender === 'Female') {
+            groomInput.value = partnerFullName || '';
+            brideInput.value = currentUserName || '';
+        } else {
+            groomInput.value = partnerFullName || '';
+            brideInput.value = '';
+        }
+
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('marriageDateInput').value = today;
+        document.getElementById('storyTextInput').value = '';
+        document.getElementById('couplePhotoInput').value = '';
+        document.getElementById('photoErrorMsg').classList.add('d-none');
+        setRating(5);
+
+        document.getElementById('successStoryModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideSuccessStoryModal() {
+        document.getElementById('successStoryModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // --- Star Rating ---
+    var activeRating = 5;
+    function setRating(rating) {
+        activeRating = rating;
+        document.getElementById('ratingInput').value = rating;
+        var stars = document.querySelectorAll('.star-item');
+        stars.forEach(function(s) {
+            var r = parseInt(s.getAttribute('data-rating'));
+            s.classList.toggle('active', r <= rating);
+        });
+    }
+
+    function hoverRating(rating) {
+        var stars = document.querySelectorAll('.star-item');
+        stars.forEach(function(s) {
+            var r = parseInt(s.getAttribute('data-rating'));
+            s.style.color = r <= rating ? '#ffb400' : '#ccc';
+        });
+    }
+
+    function resetRating() {
+        var stars = document.querySelectorAll('.star-item');
+        stars.forEach(function(s) {
+            var r = parseInt(s.getAttribute('data-rating'));
+            s.style.color = r <= activeRating ? '#ffb400' : '#ccc';
+        });
+    }
+
+    // --- Photo Validation ---
+    function validateCouplePhoto(input) {
+        var file = input.files[0];
+        var errorDiv = document.getElementById('photoErrorMsg');
+        errorDiv.classList.add('d-none');
+        errorDiv.innerText = '';
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            errorDiv.innerText = 'Photo size exceeds 2MB limit.';
+            errorDiv.classList.remove('d-none');
+            input.value = '';
+            return;
+        }
+    }
+
+    // --- Submit Success Story ---
+    function submitSuccessStory() {
+        var form = document.getElementById('successStoryForm');
+        var btn = document.getElementById('btnSubmitStory');
+        var errorDiv = document.getElementById('photoErrorMsg');
+        if (!errorDiv.classList.contains('d-none') && errorDiv.innerText.includes('exceeds')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Submitting...';
+
+        var formData = new FormData(form);
+        formData.append('SubmittedByUserId', loggedInUserId);
+        formData.set('ConsentToPublish', document.getElementById('consentCheck').checked ? 'true' : 'false');
+        formData.set('HideFullName', document.getElementById('privacyCheck').checked ? 'true' : 'false');
+
+        fetch('/api/testimonial/submit-story', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.innerText = 'Submit Story';
+            if (data.success) {
+                hideSuccessStoryModal();
+                Swal.fire({
+                    title: 'Congratulations! 🎉',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#00662d',
+                    width: '350px'
+                }).then(function() { window.location.reload(); });
+            } else {
+                var errMsg = data.message || 'Could not submit story.';
+                if (data.errors) {
+                    var errList = [];
+                    for (var key in data.errors) {
+                        if (data.errors.hasOwnProperty(key)) {
+                            errList.push('• <b>' + key + '</b>: ' + data.errors[key].join(', '));
+                        }
+                    }
+                    if (errList.length > 0) {
+                        errMsg = '<div style="text-align: left; font-size: 13px;">One or more validation errors occurred:<br/><br/>' + errList.join('<br/>') + '</div>';
+                    }
+                }
+                Swal.fire({
+                    title: 'Submission Failed',
+                    html: errMsg,
+                    icon: 'error',
+                    width: '350px'
+                });
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerText = 'Submit Story';
+            console.error('Error:', err);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                icon: 'error',
+                width: '320px'
+            });
+        });
+    }
+
+    // --- Existing Interest/Photo Unlock response functions ---
+    function respondToInterestFromList(likedId, action, buttonEl) {
+        if (!likedId) return;
+        var url = action === 'Accept' ? '/AcceptInterest' : '/DeclineInterest';
+        var formData = new FormData();
+        formData.append('LikedId', likedId);
+
+        buttonEl.disabled = true;
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            buttonEl.disabled = false;
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Interest request has been ' + action.toLowerCase() + 'ed.',
+                    icon: 'success',
+                    width: '350px',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(function() {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+            }
+        })
+        .catch(function(error) {
+            buttonEl.disabled = false;
+            console.error('Error:', error);
+            Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+        });
+    }
+    function respondToPhotoUnlockFromList(requesterId, action, buttonEl) {
+        if (!requesterId) return;
+        var url = action === 'Approve' ? '/ApprovePhotoUnlock' : '/RejectPhotoUnlock';
+        var formData = new FormData();
+        formData.append('requesterId', requesterId);
+
+        buttonEl.disabled = true;
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            buttonEl.disabled = false;
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Photo unlock request has been ' + action.toLowerCase() + 'd.',
+                    icon: 'success',
+                    width: '350px',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(function() {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+            }
+        })
+        .catch(function(error) {
+            buttonEl.disabled = false;
+            console.error('Error:', error);
+            Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+        });
+    }
+</script>

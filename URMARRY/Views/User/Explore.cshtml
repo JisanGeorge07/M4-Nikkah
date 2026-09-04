@@ -1,0 +1,1318 @@
+@using Application.Models
+@model UserExploreViewModel
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    <link href="/assets/account/assets/css/style.min.css" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+}
+
+@*
+
+<div class="d-md-flex justify-content-between align-items-center">
+    <!--<h5 class="mb-0">Profile</h5>-->
+    <nav aria-label="breadcrumb" class="d-inline-block twomenu">
+        <ul class="breadcrumb bg-transparent rounded mb-0 p-0">
+            <li class="breadcrumb-item text-capitalize active"><a href="javascript:void(0)" data-type="favorited" class="explore-tab">Favorited Profiles</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="liked" class="explore-tab">Liked Profiles</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="contactviewed" class="explore-tab">Contact Viewed</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="reported" class="explore-tab">Reported Profiles</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="closeprofiles" class="explore-tab">Closed Profiles</a></li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Reported Sub-Tabs -->
+<div id="reported-sub-tabs" class="mt-2 text-center" style="display:none;">
+    <nav aria-label="breadcrumb" class="d-inline-block twomenu">
+        <ul class="breadcrumb bg-transparent rounded mb-0 p-0">
+            <li class="breadcrumb-item text-capitalize active"><a href="javascript:void(0)" data-status="1" class="explore-status-tab">Actioned</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-status="2" class="explore-status-tab">Dismissed</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-status="0" class="explore-status-tab">Pending</a></li>
+        </ul>
+    </nav>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12 mt-4 order-md-2 order-lg-2 order-2">
+        <div class="card border-0 shadow rounded p-4 pt-0">
+
+            <div id="profile-grid" class="row matchprofile">
+                <!-- Profile cards will be loaded here -->
+            </div>
+
+            <!-- No results message -->
+            <div id="no-results" class="text-center py-5" style="display:none;">
+                <h6 class="text-muted">No profiles found in this category.</h6>
+            </div>
+
+            <!-- Loader spinner -->
+            <div id="scroll-loader" class="mt-4 text-center" style="display:none;">
+                <span class="h6 mb-0">Loading.. <i class="mdi mdi-loading mdi-spin h4 mb-0 align-middle"></i></span>
+            </div>
+
+            <!-- Invisible trigger for Infinite Scroll -->
+            <div id="scroll-sentinel" style="height:1px; display:none;"></div>
+
+        </div><!--end card-->
+    </div><!--end col-->
+</div><!--end row-->
+
+@section Scripts
+{
+    <script>
+    (function () {
+        // --- State ---
+        const userId = @Model.Registration.Id;
+        const isPremiumMember = @Model.Registration.IsPremiumMember.ToString().ToLower();
+        let currentType = 'favorited';
+        let currentStatus = 1; // Default to Actioned
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMore = true;
+
+        // --- DOM refs ---
+        const grid = document.getElementById('profile-grid');
+        const sentinel = document.getElementById('scroll-sentinel');
+        const loader = document.getElementById('scroll-loader');
+        const noResults = document.getElementById('no-results');
+        const tabs = document.querySelectorAll('.explore-tab');
+        const subTabContainer = document.getElementById('reported-sub-tabs');
+        const statusTabs = document.querySelectorAll('.explore-status-tab');
+
+        // --- Tab Switching ---
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                const type = this.getAttribute('data-type');
+                if (type === currentType && currentPage > 0) return;
+
+                // Update active styling
+                tabs.forEach(t => {
+                    t.closest('li').classList.remove('active');
+                });
+                this.closest('li').classList.add('active');
+
+                // Show/Hide sub-tabs
+                if (type === 'reported') {
+                    subTabContainer.style.display = 'block';
+                    currentStatus = 1; // Default to Actioned when entering reported
+                    statusTabs.forEach(st => {
+                        st.closest('li').classList.remove('active');
+                        if (st.getAttribute('data-status') == "1") st.closest('li').classList.add('active');
+                    });
+                } else {
+                    subTabContainer.style.display = 'none';
+                }
+
+                // Reset and fetch
+                currentType = type;
+                currentPage = 0;
+                hasMore = true;
+                grid.innerHTML = '';
+                noResults.style.display = 'none';
+                loader.style.display = 'none';
+                sentinel.style.display = 'none';
+                fetchProfiles(false);
+            });
+        });
+
+        // --- Status Tab Switching ---
+        statusTabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                const status = parseInt(this.getAttribute('data-status'));
+                if (status === currentStatus && currentPage > 0) return;
+
+                // Update active styling
+                statusTabs.forEach(t => t.closest('li').classList.remove('active'));
+                this.closest('li').classList.add('active');
+
+                // Reset and fetch
+                currentStatus = status;
+                currentPage = 0;
+                hasMore = true;
+                grid.innerHTML = '';
+                noResults.style.display = 'none';
+                loader.style.display = 'none';
+                sentinel.style.display = 'none';
+                fetchProfiles(false);
+            });
+        });
+
+        // --- Fetch Profiles ---
+        async function fetchProfiles(showLoader) {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            currentPage++;
+
+            if (showLoader) {
+                loader.style.display = 'block';
+            }
+
+            try {
+                let url = `/api/profile/exploreprofiles?userId=${userId}&type=${currentType}&page=${currentPage}&pageSize=30`;
+                if (currentType === 'reported') {
+                    url += `&status=${currentStatus}`;
+                }
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error('API error:', result);
+                    isLoading = false;
+                    return;
+                }
+
+                hasMore = result.hasMore;
+                const profiles = result.data;
+
+                if (profiles.length === 0 && currentPage === 1) {
+                    noResults.style.display = 'block';
+                    loader.style.display = 'none';
+                    sentinel.style.display = 'none';
+                    isLoading = false;
+                    return;
+                }
+
+                if (showLoader) {
+                    // Standard delay for a premium feel
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+
+                profiles.forEach(p => renderProfileCard(p));
+                loader.style.display = 'none';
+
+                if (!hasMore) {
+                    sentinel.style.display = 'none';
+                } else {
+                    sentinel.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // --- Render Profile Card ---
+        function renderProfileCard(profile) {
+            const imagePath = profile.imagePath
+                ? '/' + profile.imagePath
+                : (profile.gender === 'Female' ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png');
+
+            const profileUrl = '/profile/' +
+                (profile.registerNumber ? profile.registerNumber : profile.id);
+
+            const detailParts = [
+                profile.age ? profile.age + ' Yrs' : null,
+                profile.height ? profile.height.replace(/\s*(feet|ft|\([^)]*\))/gi, '') : null,
+                profile.maritalStatus,
+                profile.educationType,
+                // profile.profession,
+                profile.community,
+                // profile.religion,
+                profile.village,
+                profile.district
+            ].filter(Boolean);
+            const profileDetails = detailParts.join(', ');
+
+            const starStyle = profile.isStarred
+                ? 'text-shadow: 0px 0px 6px white, 0px 0px 6px yellow,0px 0px 6px yellow;'
+                : '';
+            
+            let likeStyle = '';
+            let likeClass = 'uil uil-heart-sign align-middle';
+            let likeAction = 'Add';
+
+            if (profile.interestStatus === 'Pending') {
+                likeStyle = 'text-shadow: 0px 0px 6px white, 0px 0px 6px #ffc107, 0px 0px 6px #ffc107; color: #ffc107 !important;';
+                likeClass += ' glow-heart-pending';
+                likeAction = 'Remove';
+            } else if (profile.interestStatus === 'Accepted') {
+                likeStyle = 'text-shadow: 0px 0px 6px white, 0px 0px 6px #28a745, 0px 0px 6px #28a745; color: #28a745 !important;';
+                likeClass += ' glow-heart-accepted';
+                likeAction = 'Remove';
+            } else if (profile.interestStatus === 'Declined') {
+                likeStyle = 'color: #6c757d !important;';
+                likeClass += ' glow-heart-declined';
+                likeAction = 'Add';
+            } else if (profile.isLiked) {
+                likeStyle = 'text-shadow: 0px 0px 6px white, 0px 0px 6px red, 0px 0px 6px red; color: red !important;';
+                likeClass += ' glow-heart';
+                likeAction = 'Remove';
+            }
+
+            const starAction = profile.isStarred ? 'Remove' : 'Add';
+
+            const cardHtml = `
+                <div class="col-lg-4 col-md-6 mt-4 pt-2" id="profile-${profile.id}">
+                    <div class="card team team-primary text-center nnewone1">
+                        <div class="imagenew position-relative">
+                            <a href="${profileUrl}">
+                                <img src="${imagePath}" class="img-fluid" alt="${profile.name}">
+                                ${imagePath.includes('_wm') ? '' : `<img src="/assets/images/card-watermark.png" class="card-watermark position-absolute" alt="Watermark">`}
+                            </a>
+                        </div>
+                        <div class="card-body py-3 px-0 pb-0 content newdiv">
+                            <h5><a href="${profileUrl}">${profile.name || ''}</a></h5>
+                            <div class="row mt-2">
+                                <div class="col-12 text-center addtxt02">
+                                    <h5 class="mb-0">${profileDetails}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 text-center newadd_div1 newdiv2">
+                            <ul class="list-unstyled social-icon social mb-4 mt-0 newicon">
+                                <li class="list-inline-item">
+                                    <form id="starform-${profile.id}" method="post" action="/User/StarredIcon">
+                                        <input type="hidden" name="StarId" value="${profile.id}"/>
+                                        <input type="hidden" name="StarredId" value="${profile.id}"/>
+                                        <input type="hidden" id="action-star-${profile.id}" name="Action" value="${starAction}"/>
+                                        <a href="javascript:void(0)" id="starbutton-${profile.id}" class="rounded" title="Shortlist">
+                                            <i class="uil uil-star align-middle" id="staricon-${profile.id}" style="${starStyle}"></i>
+                                        </a>
+                                    </form>
+                                </li>
+                                <li class="list-inline-item">
+                                    <form id="likeform-${profile.id}" method="post" action="/User/UserFavouriteProfile">
+                                        <input type="hidden" name="LikedId" value="${profile.id}"/>
+                                        <input type="hidden" id="action-like-${profile.id}" name="Action" value="${likeAction}"/>
+                                        <a id="likebutton-${profile.id}" href="javascript:void(0)" class="rounded" title="Express Interest">
+                                            <i class="${likeClass}" id="likeicon-${profile.id}" style="${likeStyle}"></i>
+                                        </a>
+                                    </form>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="javascript:void(0)" id="notlikebutton-${profile.id}" class="rounded" title="Not Like" data-notliked-id="${profile.id}">
+                                        <i class="uil uil-times align-middle"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
+
+            grid.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        // --- Infinite Scroll ---
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !isLoading && hasMore) {
+                    fetchProfiles(true);
+                }
+            });
+        }, { rootMargin: '100px' });
+
+        observer.observe(sentinel);
+
+        // --- Event Delegation (Star/Like/NotLike) ---
+        grid.addEventListener('click', function (e) {
+            const starButton = e.target.closest('a[id^="starbutton-"]');
+            const likeButton = e.target.closest('a[id^="likebutton-"]');
+            const notLikeButton = e.target.closest('a[id^="notlikebutton-"]');
+
+            if (starButton || likeButton) {
+                e.preventDefault();
+                const btn = starButton || likeButton;
+                const type = btn.id.includes('star') ? 'star' : 'like';
+                const itemId = btn.id.split('-')[1];
+                const form = document.getElementById(`${type}form-${itemId}`);
+                const actionInput = document.getElementById(`action-${type}-${itemId}`);
+                const icon = document.getElementById(`${type}icon-${itemId}`);
+
+                if (!form) return;
+
+                const isAdding = actionInput.value === 'Add';
+                const actionText = type === 'star' 
+                    ? (isAdding ? 'Shortlist' : 'Remove Shortlist') 
+                    : (isAdding ? 'Express Interest' : 'Remove Interest');
+                
+                const confirmButtonColor = type === 'star' ? '#A5BE25' : '#e43f52';
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `Do you want to ${actionText.toLowerCase()} this profile?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: confirmButtonColor,
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (type === 'star') {
+                                    icon.style.textShadow = isAdding ? '0px 0px 6px white, 0px 0px 6px yellow, 0px 0px 6px yellow' : '';
+                                    actionInput.value = isAdding ? 'Remove' : 'Add';
+                                    
+                                    // If we are on the Favorited tab and removing, hide the card
+                                    if (currentType === 'favorited' && !isAdding) {
+                                        const card = document.getElementById(`profile-${itemId}`);
+                                        if (card) {
+                                            card.style.transition = 'opacity 0.4s ease';
+                                            card.style.opacity = '0';
+                                            setTimeout(() => card.remove(), 400);
+                                        }
+                                    }
+                                } else {
+                                    icon.style.textShadow = isAdding ? '0px 0px 6px white, 0px 0px 6px red, 0px 0px 6px red' : '';
+                                    actionInput.value = isAdding ? 'Remove' : 'Add';
+
+                                    // If we are on the Liked tab and removing, hide the card
+                                    if (currentType === 'liked' && !isAdding) {
+                                        const card = document.getElementById(`profile-${itemId}`);
+                                        if (card) {
+                                            card.style.transition = 'opacity 0.4s ease';
+                                            card.style.opacity = '0';
+                                            setTimeout(() => card.remove(), 400);
+                                        }
+                                    }
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        });
+                    }
+                });
+            }
+
+            if (notLikeButton) {
+                e.preventDefault();
+                const profileId = notLikeButton.getAttribute('data-notliked-id');
+
+                const isClosedTab = currentType === 'closeprofiles';
+                const swalTitle = isClosedTab ? 'Restore Profile?' : 'Dismiss Profile?';
+                const swalText = isClosedTab 
+                    ? "Are you sure you want to restore this profile? It will be removed from your Closed list." 
+                    : "Are you sure you want to dismiss this profile? It will be moved to your Closed list.";
+                const swalConfirmText = isClosedTab ? 'Yes, Restore' : 'Yes, Dismiss';
+
+                Swal.fire({
+                    title: swalTitle,
+                    text: swalText,
+                    icon: isClosedTab ? 'question' : 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e43f52',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: swalConfirmText,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData();
+                        formData.append('NotLikedId', profileId);
+
+                        fetch('/User/NotLikeProfile', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                const card = document.getElementById(`profile-${profileId}`);
+                                if (card) {
+                                    card.style.opacity = '0';
+                                    setTimeout(() => card.remove(), 400);
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        // Initial Load
+        fetchProfiles(false);
+    })();
+    </script>
+}
+*@
+
+<main class="flex-fill p-4" style="min-width: 0;">
+                <div class="container" style="max-width: 960px;">
+                    <div>
+
+                        <div class="mb-4 main-tab-container-wrapper">
+                            <div
+                                class="d-flex flex-nowrap overflow-auto justify-content-start justify-content-md-evenly gap-2 main-tab-container">
+                                <!-- Main Tabs Section -->
+                                <button type="button" class="btn main-tab active" onclick="showMainTab('favorite')">
+                                    Favorited Profiles
+                                </button>
+                                <button type="button" class="btn main-tab" onclick="showMainTab('liked')">
+                                    Liked Profiles
+                                </button>
+                                <button type="button" class="btn main-tab" onclick="showMainTab('contacted')">
+                                    Contact Viewed
+                                </button>
+                                <button type="button" class="btn main-tab" onclick="showMainTab('reported')">
+                                    Reported Profiles
+                                </button>
+                                <button type="button" class="btn main-tab" onclick="showMainTab('close')">
+                                    Close Profiles
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Reported Sub-Tabs (only visible when Reported tab is active) -->
+                        <div id="reported-sub-tabs" class="d-flex justify-content-center mb-4" style="display: none !important;">
+                            <div class="d-flex flex-nowrap overflow-auto justify-content-start justify-content-md-center gap-2 bottom-tabs-container">
+                                <button class="btn bottom-tabs active" data-status="1" onclick="switchReportedStatus(this, 1)">
+                                    Actioned
+                                </button>
+                                <button class="btn bottom-tabs" data-status="2" onclick="switchReportedStatus(this, 2)">
+                                    Dismissed
+                                </button>
+                                <button class="btn bottom-tabs" data-status="0" onclick="switchReportedStatus(this, 0)">
+                                    Pending
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Liked Middle Tabs (only visible when Liked tab is active) -->
+                        <div id="liked-middle-tabs" class="d-flex justify-content-center mb-3" style="display: none !important;">
+                            <div class="d-flex flex-nowrap overflow-auto justify-content-start justify-content-md-center gap-2 bottom-tabs-container" style="background: #eff8f3;">
+                                <button class="btn bottom-tabs active" id="btn-i-liked" onclick="switchLikedMiddleTab(this, 'sent')">
+                                    I Liked Profiles
+                                </button>
+                                <button class="btn bottom-tabs" id="btn-liked-me" onclick="switchLikedMiddleTab(this, 'received')">
+                                    My Profile Likes
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Liked Sub-Tabs (only visible when Liked tab is active) -->
+                        <div id="liked-sub-tabs" class="d-flex justify-content-center mb-4" style="display: none !important;">
+                            <div class="d-flex flex-nowrap overflow-auto justify-content-start justify-content-md-center gap-2 bottom-tabs-container">
+                                <button class="btn bottom-tabs active" data-interest-status="0" onclick="switchLikedStatus(this, 0)">
+                                    Pending
+                                </button>
+                                <button class="btn bottom-tabs" data-interest-status="1" onclick="switchLikedStatus(this, 1)">
+                                    Accepted
+                                </button>
+                                <button class="btn bottom-tabs" data-interest-status="2" onclick="switchLikedStatus(this, 2)">
+                                    Declined
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Profiles Grid -->
+                        <div class="main-tab-content active" id="profileGridContainer">
+                            <div class="row g-4 matchprofile" id="profile-grid">
+                                <!-- Profile cards will be dynamically rendered here -->
+                            </div>
+
+                            <!-- No results message -->
+                            <div id="no-results" class="text-center py-5" style="display:none;">
+                                <img src="/assets/images/icon/no-match.png" alt="no-match" height="200px">
+                                <h4 class="text-black fw-semibold fs-5 lh-base align-middle mt-3 mb-1">
+                                    No Profiles Found
+                                </h4>
+                                <div class="col-lg-6 mx-auto">
+                                    <p class="fw-normal fs-13 lh-base text-center align-middle text-black"
+                                        style="font-size: 12px;">
+                                        No profiles found in this category.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Loader spinner -->
+                            <div id="scroll-loader" class="mt-4 text-center" style="display:none;">
+                                <span class="h6 mb-0 text-muted">Loading.. <i class="mdi mdi-loading mdi-spin h4 mb-0 align-middle"></i></span>
+                            </div>
+
+                            <!-- Invisible trigger for IntersectionObserver -->
+                            <div id="scroll-sentinel" style="height:1px; display:none;"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+
+    <!-- MODAL SECTIONS STARTS -->
+
+    <!-- Interaction Confirmation Modal -->
+    <div id="interactionModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideInteractionModal()">
+        <div class="upgrade-modal-card" style="max-width: 450px;">
+            <div class="modal-close-btn" onclick="hideInteractionModal()">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="modal-body-scroll" style="padding: 40px 20px;">
+                <h5 id="interactionModalTitle" class="fw-medium fs-18 mb-4 px-3 text-center"
+                    style="color: #000; line-height: 1.5;">Are you sure?</h5>
+                <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                    <button class="btn btn-upgrade-now shadow-none flex-fill"
+                        style="margin-top: 0; background-color: #00662d !important;"
+                        onclick="handleInteractionYes()">Yes</button>
+                    <button class="btn btn-upgrade-now shadow-none flex-fill"
+                        style="margin-top: 0; background-color: #E93B3B !important;"
+                        onclick="handleInteractionNo()">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Unlock Confirmation Modal -->
+    <div id="photoUnlockModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePhotoUnlockModal()">
+        <div class="upgrade-modal-card" style="max-width: 450px;">
+            <div class="modal-close-btn" onclick="hidePhotoUnlockModal()">
+                <i class="uil uil-times"></i>
+            </div>
+            <div class="modal-body-scroll" style="padding: 40px 20px;">
+                <h5 id="photoUnlockModalTitle" class="fw-medium fs-18 mb-4 px-3 text-center" style="color: #000; line-height: 1.5;">Request Photo Access?</h5>
+                <p class="text-muted text-center px-3 mb-4 fs-14">This will send a request to the profile owner to unlock their photos for you.</p>
+                <div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+                    <button id="btnConfirmPhotoUnlock" class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #00662d !important;">Yes, Send Request</button>
+                    <button class="btn btn-upgrade-now shadow-none flex-fill" style="margin-top: 0; background-color: #E93B3B !important;" onclick="hidePhotoUnlockModal()">No, Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <!-- MODAL SECTIONS ENDS -->
+
+@section Scripts
+{
+    <script>
+    (function () {
+        // --- State ---
+        const userId = @Model.Registration.Id;
+        const isPremiumMember = @Model.Registration.IsPremiumMember.ToString().ToLower();
+        let currentType = 'favorited';
+        let currentStatus = 1; // Default to Actioned for reported sub-tabs
+        let currentInterestStatus = 0; // Default to Pending for liked sub-tabs
+        let currentLikedSubMode = 'sent'; // 'sent' = I Liked Profiles, 'received' = My Profile Likes
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMore = true;
+        let currentActionBtn = null;
+        let currentActionType = null;
+        let isRemovingInteraction = false;
+
+        // --- DOM refs ---
+        const grid = document.getElementById('profile-grid');
+        const sentinel = document.getElementById('scroll-sentinel');
+        const loader = document.getElementById('scroll-loader');
+        const noResults = document.getElementById('no-results');
+        const reportedSubTabs = document.getElementById('reported-sub-tabs');
+        const likedMiddleTabs = document.getElementById('liked-middle-tabs');
+        const likedSubTabs = document.getElementById('liked-sub-tabs');
+
+        // --- Tab Type Map (new tab IDs → API type strings) ---
+        const tabTypeMap = {
+            'favorite': 'favorited',
+            'liked': 'liked',
+            'contacted': 'contactviewed',
+            'reported': 'reported',
+            'close': 'closeprofiles'
+        };
+
+        // --- Override showMainTab for Explore-specific behavior ---
+        window.showMainTab = function(tabId) {
+            // Update tab button styles
+            document.querySelectorAll(".main-tab").forEach((btn) => {
+                btn.classList.remove("active");
+            });
+
+            // Find tab button that matches tabId
+            const tabBtn = Array.from(document.querySelectorAll(".main-tab")).find(btn => {
+                const onclickAttr = btn.getAttribute("onclick");
+                return onclickAttr && onclickAttr.includes(tabId);
+            });
+            if (tabBtn) {
+                tabBtn.classList.add("active");
+            } else if (event && event.target && event.target.classList.contains("main-tab")) {
+                event.target.classList.add("active");
+            }
+
+            const type = tabTypeMap[tabId] || 'favorited';
+
+            // Show/Hide reported sub-tabs
+            if (type === 'reported') {
+                reportedSubTabs.style.display = '';
+                reportedSubTabs.style.cssText = ''; // Remove the !important inline override
+                reportedSubTabs.classList.remove('d-none');
+                currentStatus = 1; // Default to Actioned
+                // Reset sub-tab active state
+                reportedSubTabs.querySelectorAll('.bottom-tabs').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-status') === '1') btn.classList.add('active');
+                });
+                // Hide liked sub-tabs & middle tabs
+                likedSubTabs.style.display = 'none';
+                likedSubTabs.style.cssText = 'display: none !important;';
+                if (likedMiddleTabs) {
+                    likedMiddleTabs.style.display = 'none';
+                    likedMiddleTabs.style.cssText = 'display: none !important;';
+                }
+            } else if (type === 'liked' || type === 'likedby') {
+                // Show middle tabs
+                if (likedMiddleTabs) {
+                    likedMiddleTabs.style.display = '';
+                    likedMiddleTabs.style.cssText = '';
+                    likedMiddleTabs.classList.remove('d-none');
+                    // Reset middle tabs active state
+                    likedMiddleTabs.querySelectorAll('.bottom-tabs').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    const btnILiked = document.getElementById('btn-i-liked');
+                    if (btnILiked) btnILiked.classList.add('active');
+                }
+                currentLikedSubMode = 'sent';
+
+                // Show sub-tabs
+                likedSubTabs.style.display = '';
+                likedSubTabs.style.cssText = ''; // Remove the !important inline override
+                likedSubTabs.classList.remove('d-none');
+                currentInterestStatus = 0; // Default to Pending
+                // Reset sub-tab active state
+                likedSubTabs.querySelectorAll('.bottom-tabs').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-interest-status') === '0') btn.classList.add('active');
+                });
+                // Hide reported sub-tabs
+                reportedSubTabs.style.display = 'none';
+                reportedSubTabs.style.cssText = 'display: none !important;';
+            } else {
+                reportedSubTabs.style.display = 'none';
+                reportedSubTabs.style.cssText = 'display: none !important;';
+                likedSubTabs.style.display = 'none';
+                likedSubTabs.style.cssText = 'display: none !important;';
+                if (likedMiddleTabs) {
+                    likedMiddleTabs.style.display = 'none';
+                    likedMiddleTabs.style.cssText = 'display: none !important;';
+                }
+            }
+
+            if (type === currentType && currentPage > 0) return;
+
+            // Reset and fetch
+            currentType = type;
+            currentPage = 0;
+            hasMore = true;
+            grid.innerHTML = '';
+            noResults.style.display = 'none';
+            loader.style.display = 'none';
+            sentinel.style.display = 'none';
+            fetchProfiles(false);
+        };
+
+        // --- Reported Sub-Tab Switching ---
+        window.switchReportedStatus = function(btn, status) {
+            if (status === currentStatus && currentPage > 0) return;
+
+            // Update active styling
+            reportedSubTabs.querySelectorAll('.bottom-tabs').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Reset and fetch
+            currentStatus = status;
+            currentPage = 0;
+            hasMore = true;
+            grid.innerHTML = '';
+            noResults.style.display = 'none';
+            loader.style.display = 'none';
+            sentinel.style.display = 'none';
+            fetchProfiles(false);
+        };
+
+        // --- Liked Sub-Tab Switching ---
+        window.switchLikedStatus = function(btn, interestStatus) {
+            if (interestStatus === currentInterestStatus && currentPage > 0) return;
+
+            // Update active styling
+            likedSubTabs.querySelectorAll('.bottom-tabs').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Reset and fetch
+            currentInterestStatus = interestStatus;
+            currentPage = 0;
+            hasMore = true;
+            grid.innerHTML = '';
+            noResults.style.display = 'none';
+            loader.style.display = 'none';
+            sentinel.style.display = 'none';
+            fetchProfiles(false);
+        };
+
+        // --- Liked Middle Tab Switching ---
+        window.switchLikedMiddleTab = function(btn, mode) {
+            if (mode === currentLikedSubMode && currentPage > 0) return;
+
+            // Update active styling
+            if (likedMiddleTabs) {
+                likedMiddleTabs.querySelectorAll('.bottom-tabs').forEach(b => b.classList.remove('active'));
+            }
+            btn.classList.add('active');
+
+            currentLikedSubMode = mode;
+            currentType = (mode === 'received') ? 'likedby' : 'liked';
+            
+            // Reset to Pending subtab on change of middle tab
+            currentInterestStatus = 0;
+            likedSubTabs.querySelectorAll('.bottom-tabs').forEach(b => {
+                b.classList.remove('active');
+                if (b.getAttribute('data-interest-status') === '0') b.classList.add('active');
+            });
+
+            // Reset and fetch
+            currentPage = 0;
+            hasMore = true;
+            grid.innerHTML = '';
+            noResults.style.display = 'none';
+            loader.style.display = 'none';
+            sentinel.style.display = 'none';
+            fetchProfiles(false);
+        };
+
+        // --- Fetch Profiles ---
+        async function fetchProfiles(showLoader) {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            currentPage++;
+
+            if (showLoader) {
+                loader.style.display = 'block';
+            }
+
+            try {
+                let url = `/api/profile/exploreprofiles?userId=${userId}&type=${currentType}&page=${currentPage}&pageSize=30`;
+                if (currentType === 'reported') {
+                    url += `&status=${currentStatus}`;
+                }
+                if (currentType === 'liked' || currentType === 'likedby') {
+                    url += `&interestStatus=${currentInterestStatus}`;
+                }
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error('API error:', result);
+                    isLoading = false;
+                    return;
+                }
+
+                hasMore = result.hasMore;
+                const profiles = result.data;
+
+                if (profiles.length === 0 && currentPage === 1) {
+                    noResults.style.display = 'block';
+                    loader.style.display = 'none';
+                    sentinel.style.display = 'none';
+                    isLoading = false;
+                    return;
+                }
+
+                if (showLoader) {
+                    // Standard delay for a premium feel
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+
+                profiles.forEach(p => renderProfileCard(p));
+                loader.style.display = 'none';
+
+                if (!hasMore) {
+                    sentinel.style.display = 'none';
+                } else {
+                    sentinel.style.display = 'block';
+                }
+
+                // Re-initialize Lucide Icons for the newly created elements
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // --- Render Profile Card (using new UI Profile Card 1 template) ---
+        function renderProfileCard(profile) {
+            const imagePath = profile.imagePath
+                ? '/' + profile.imagePath
+                : (profile.gender === 'Female' ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png');
+
+            const detailParts = [
+                profile.age ? profile.age + ' Yrs' : null,
+                profile.height ? profile.height.replace(/\s*(feet|ft|\([^)]*\))/gi, '') : null,
+                // profile.weight ? profile.weight + ' kg' : null,
+                profile.maritalStatus,
+                profile.community,
+                profile.higherEducation,
+                profile.village,
+                profile.district,
+                profile.state
+            ].filter(Boolean);
+            const profileDetails = detailParts.join(', ');
+            const cleanName = (profile.name || '').replace(/'/g, "\\'");
+
+            // Define dynamic link action pointing directly to the profile details page
+            const profileUrl = '/profile/' + (profile.registerNumber ? profile.registerNumber : profile.id);
+            const cardClickAction = `onclick="location.href='${profileUrl}'"`;
+
+            const starClass = profile.isStarred ? 'glow-star' : '';
+            let heartClass = '';
+            if (profile.interestStatus === 'Pending') {
+                heartClass = 'glow-heart-pending';
+            } else if (profile.interestStatus === 'Accepted') {
+                heartClass = 'glow-heart-accepted';
+            } else if (profile.interestStatus === 'Declined') {
+                heartClass = 'glow-heart-declined';
+            } else if (profile.isLiked) {
+                heartClass = 'glow-heart';
+            }
+            const isLockedClass = (profile.photosUnlocked || !profile.imagePath) ? '' : 'premium-card';
+
+            let blurOverlayHtml = '';
+            if (!profile.photosUnlocked && profile.imagePath) {
+                const reqStatus = profile.photoUnlockRequestStatus;
+                const isPending = reqStatus === 0;
+                const isRejected = reqStatus === 2;
+                
+                let buttonText = 'Unlock Images';
+                let iconClass = 'lock';
+                if (isPending) {
+                    buttonText = 'Request Pending...';
+                    iconClass = 'clock';
+                } else if (isRejected) {
+                    buttonText = 'Request Rejected - Retry?';
+                }
+
+                blurOverlayHtml = `
+                    <div class="premium-blur position-absolute top-0 start-0 w-100 h-100" style="z-index: 2;"></div>
+                    <div class="premium-lock" style="z-index: 3; cursor: ${isPending ? 'default' : 'pointer'};" 
+                         onclick="${isPending ? '' : `event.stopPropagation(); showPhotoUnlockModal(${profile.id}, '${cleanName}')`}">
+                        <i class="uil uil-${iconClass}"></i>
+                        <span class="premium-text">${buttonText}</span>
+                    </div>
+                `;
+            }
+
+            let buttonsHtml = '';
+            if (currentType === 'likedby' && currentInterestStatus === 0) {
+                buttonsHtml = `
+                    <button class="btn btn-sm px-3 py-2 text-white border-0 fw-semibold rounded-pill d-flex align-items-center gap-1 shadow-sm" style="background-color: #00662D; font-size: 13px; z-index: 999; position: relative;" id="acceptbutton-${profile.id}" onclick="event.stopPropagation(); showInteractionModal(this, 'accept')">
+                        <i data-lucide="check" style="width: 16px; height: 16px;"></i> Accept
+                    </button>
+                    <button class="btn btn-sm px-3 py-2 text-white border-0 fw-semibold rounded-pill d-flex align-items-center gap-1 shadow-sm" style="background-color: #e43f52; font-size: 13px; z-index: 999; position: relative;" id="declinebutton-${profile.id}" onclick="event.stopPropagation(); showInteractionModal(this, 'decline')">
+                        <i data-lucide="x" style="width: 16px; height: 16px;"></i> Decline
+                    </button>
+                `;
+            } else {
+                buttonsHtml = `
+                    <button class="action-btn" style="background-color: #A5BE25;" id="starbutton-${profile.id}" onclick="event.stopPropagation(); showInteractionModal(this, 'favourite')">
+                        <i data-lucide="star" class="${starClass}" fill="white" style="color: white; width: 18px; height: 18px; border-radius: 50%;"></i>
+                    </button>
+
+                    <button class="action-btn" style="background-color: #00662D;" id="likebutton-${profile.id}" onclick="event.stopPropagation(); showInteractionModal(this, 'interest')">
+                        <i data-lucide="heart" class="${heartClass}" fill="white" style="color: white; width: 18px; height: 18px; border-radius: 50%;"></i>
+                    </button>
+
+                    <button class="action-btn" style="background-color: #648472;" id="notlikebutton-${profile.id}" onclick="event.stopPropagation(); showInteractionModal(this, 'reject')">
+                        <i data-lucide="circle-x" style="color: white; width: 18px; height: 18px;"></i>
+                    </button>
+                `;
+            }
+
+            const cardHtml = `
+                <div class="col-12 col-md-6 col-lg-4" id="profile-${profile.id}">
+                    <div class="profile-card position-relative overflow-hidden rounded ${isLockedClass}" ${cardClickAction}>
+
+                        <!-- Background Image -->
+                        <div class="profile-bg position-absolute top-0 start-0 w-100 h-100"
+                            style="background-image: url('${imagePath}');">
+                        </div>
+
+                         <!-- Watermark Image -->
+                         ${imagePath.includes('_wm') ? '' : `<img src="/assets/images/card-watermark.png" class="card-watermark position-absolute" alt="Watermark">`}
+
+                         <div class="single-chart">
+										<svg viewBox="0 0 36 36" class="circular-chart green">
+										  <path class="circle-bg"
+											d="M18 2.0845
+											  a 15.9155 15.9155 0 0 1 0 31.831
+											  a 15.9155 15.9155 0 0 1 0 -31.831"
+										  />
+										  <path class="circle"
+											stroke-dasharray="${profile.totalMatchingScore || 0}, 100"
+											d="M18 2.0845
+											  a 15.9155 15.9155 0 0 1 0 31.831
+											  a 15.9155 15.9155 0 0 1 0 -31.831"
+										  />
+										  <text x="18" y="20.35" class="percentage">${profile.totalMatchingScore || 0}%</text>
+										</svg>
+						</div>
+
+                        <!-- Overlay -->
+                        <div class="profile-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+
+                        ${blurOverlayHtml}
+
+                        <!-- Content -->
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3 text-center text-white" style="z-index: 3;">
+
+                            <h5 class="fw-semibold mb-1">
+                                ${profile.name || ''}${(profile.documentVerificationComplete && profile.documentVerificationFollowupApproved) ? ' <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip"><path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/></svg>' : ''}
+                            </h5>
+
+                            <p class="small mb-2 text-white">
+                                ${profileDetails}
+                            </p>
+
+                            <!-- Buttons -->
+                            <div class="d-flex justify-content-center gap-2 mt-2 position-relative">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>`;
+
+            grid.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        // --- Override showInteractionModal for Explore-specific modal text ---
+        window.showInteractionModal = function(btn, type) {
+            if (event) event.stopPropagation();
+            currentActionBtn = btn;
+            currentActionType = type;
+
+            const iconEl = btn.querySelector('i, svg');
+            isRemovingInteraction = false;
+
+            if (iconEl) {
+                if (type === 'favourite' && iconEl.classList.contains('glow-star')) {
+                    isRemovingInteraction = true;
+                } else if (type === 'interest') {
+                    if (iconEl.classList.contains('glow-heart-accepted')) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Interest Accepted!',
+                                text: 'You already have an accepted/mutual interest with this profile.',
+                                icon: 'success',
+                                confirmButtonColor: '#0d6b38'
+                            });
+                        } else {
+                            alert('Interest already accepted!');
+                        }
+                        return;
+                    } else if (iconEl.classList.contains('glow-heart-pending')) {
+                        isRemovingInteraction = true;
+                    } else if (iconEl.classList.contains('glow-heart')) {
+                        isRemovingInteraction = true;
+                    }
+                }
+            }
+
+
+            const modal = document.getElementById('interactionModal');
+            const title = document.getElementById('interactionModalTitle');
+
+            if (type === 'favourite') {
+                if (isRemovingInteraction) {
+                    title.innerText = 'Are you sure you want to remove the person from favourite?';
+                } else {
+                    title.innerText = 'Are you sure you want to make this person as favourite?';
+                }
+            } else if (type === 'interest') {
+                if (isRemovingInteraction) {
+                    title.innerText = 'Are you sure you want to remove the person from interested?';
+                } else {
+                    title.innerText = 'Are you sure you want to make this person as interested?';
+                }
+            } else if (type === 'reject') {
+                if (currentType === 'closeprofiles') {
+                    title.innerText = 'Are you sure you want to restore this profile? It will be removed from your Closed list.';
+                } else {
+                    title.innerText = 'Are you sure you want to dismiss this profile? It will be moved to your Closed list.';
+                }
+            } else if (type === 'accept') {
+                title.innerText = 'Are you sure you want to accept this person\'s interest?';
+            } else if (type === 'decline') {
+                title.innerText = 'Are you sure you want to decline this person\'s interest?';
+            }
+
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        // --- Override handleInteractionYes for Explore-specific actions ---
+        window.handleInteractionYes = function() {
+            if (currentActionBtn) {
+                const idParts = currentActionBtn.id.split('-');
+                const itemId = idParts[1];
+                if (!itemId) {
+                    console.error("No profile item ID found on button: ", currentActionBtn.id);
+                    hideInteractionModal();
+                    return;
+                }
+
+                const iconEl = currentActionBtn.querySelector('i, svg');
+                const cardColumn = document.getElementById('profile-' + itemId) || currentActionBtn.closest('.col-12');
+
+                const fadeAndRemoveCard = () => {
+                    if (cardColumn) {
+                        cardColumn.style.transition = 'opacity 0.4s ease';
+                        cardColumn.style.opacity = '0';
+                        setTimeout(() => cardColumn.remove(), 400);
+                    }
+                };
+
+                if (currentActionType === 'reject') {
+                    // Close / Restore profile
+                    const formData = new FormData();
+                    formData.append('NotLikedId', itemId);
+
+                    const isRestoring = currentType === 'closeprofiles';
+
+                    fetch('/User/NotLikeProfile', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: isRestoring ? 'Restored!' : 'Dismissed!',
+                                text: isRestoring ? 'Profile has been restored successfully.' : 'Profile has been dismissed successfully.',
+                                icon: 'success',
+                                width: '320px',
+                                confirmButtonColor: '#00662d'
+                            });
+                            fadeAndRemoveCard();
+                        } else {
+                            Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Failed to process request.', 'error');
+                    });
+                } else if (currentActionType === 'accept' || currentActionType === 'decline') {
+                    const formData = new FormData();
+                    formData.append('LikedId', itemId);
+                    
+                    const endpoint = currentActionType === 'accept' ? '/AcceptInterest' : '/DeclineInterest';
+                    
+                    fetch(endpoint, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: currentActionType === 'accept' ? 'Accepted!' : 'Declined!',
+                                text: `Interest request has been successfully ${currentActionType === 'accept' ? 'accepted' : 'declined'}.`,
+                                icon: 'success',
+                                width: '320px',
+                                confirmButtonColor: '#00662d'
+                            });
+                            fadeAndRemoveCard();
+                        } else {
+                            Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Failed to process request.', 'error');
+                    });
+                } else {
+                    const isAdding = !isRemovingInteraction;
+                    const actionText = isAdding ? 'Add' : 'Remove';
+
+                    if (currentActionType === 'favourite') {
+                        const formData = new FormData();
+                        formData.append('StarId', itemId);
+                        formData.append('StarredId', itemId);
+                        formData.append('Action', actionText);
+
+                        fetch('/User/StarredIcon', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: isAdding ? 'Shortlisted!' : 'Removed!',
+                                    text: isAdding ? 'Profile has been added to your favorites.' : 'Profile has been removed from your favorites.',
+                                    icon: 'success',
+                                    width: '320px',
+                                    confirmButtonColor: '#00662d'
+                                });
+                                if (iconEl) {
+                                    if (isAdding) {
+                                        iconEl.classList.add('glow-star');
+                                    } else {
+                                        iconEl.classList.remove('glow-star');
+                                    }
+                                }
+                                // If on Favorited tab and removing, hide the card
+                                if (currentType === 'favorited' && !isAdding) {
+                                    fadeAndRemoveCard();
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire('Error', 'Failed to process request.', 'error');
+                        });
+                    } else if (currentActionType === 'interest') {
+                        const formData = new FormData();
+                        formData.append('LikedId', itemId);
+                        formData.append('Action', actionText);
+
+                        fetch('/User/UserFavouriteProfile', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: isAdding ? 'Interest Sent!' : 'Interest Removed!',
+                                    text: isAdding ? 'Interest has been expressed successfully.' : 'Interest has been removed successfully.',
+                                    icon: 'success',
+                                    width: '320px',
+                                    confirmButtonColor: '#00662d'
+                                });
+                                if (iconEl) {
+                                    if (isAdding) {
+                                        iconEl.classList.add('glow-heart-pending');
+                                        iconEl.classList.remove('glow-heart');
+                                        iconEl.classList.remove('glow-heart-accepted');
+                                    } else {
+                                        iconEl.classList.remove('glow-heart-pending');
+                                        iconEl.classList.remove('glow-heart-accepted');
+                                        iconEl.classList.remove('glow-heart');
+                                    }
+                                }
+                                // If on Liked tab and removing, hide the card
+                                if (currentType === 'liked' && !isAdding) {
+                                    fadeAndRemoveCard();
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'An error occurred.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire('Error', 'Failed to process request.', 'error');
+                        });
+                    }
+                }
+            }
+            hideInteractionModal();
+        };
+
+        // --- Infinite Scroll Observer ---
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !isLoading && hasMore) {
+                    fetchProfiles(true);
+                }
+            });
+        }, { rootMargin: '100px' });
+
+        observer.observe(sentinel);
+
+        // --- Initial Load ---
+        fetchProfiles(false);
+
+        // Photo Unlock Modal script integration
+        let selectedPhotoOwnerId = null;
+        window.showPhotoUnlockModal = function(ownerId, ownerName) {
+            if (typeof event !== 'undefined' && event) event.stopPropagation();
+            if (typeof window.isPremiumMember !== 'undefined' && !window.isPremiumMember) {
+                if (typeof showPackagesLayoutModal === 'function') {
+                    showPackagesLayoutModal('photo');
+                } else {
+                    alert('Please upgrade to premium membership to request photo unlock.');
+                }
+                return;
+            }
+            selectedPhotoOwnerId = ownerId;
+
+            const title = document.getElementById('photoUnlockModalTitle');
+            if (title) {
+                title.innerText = `Request Photo Access from ${ownerName || 'User'}?`;
+            }
+            document.getElementById('photoUnlockModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.hidePhotoUnlockModal = function() {
+            document.getElementById('photoUnlockModal').classList.remove('active');
+            document.body.style.overflow = '';
+            selectedPhotoOwnerId = null;
+        };
+
+        document.getElementById('btnConfirmPhotoUnlock').addEventListener('click', function() {
+            if (!selectedPhotoOwnerId) return;
+            
+            const formData = new FormData();
+            formData.append('ownerId', selectedPhotoOwnerId);
+
+            fetch('/RequestPhotoUnlock', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.hidePhotoUnlockModal();
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Request Sent!',
+                        text: data.message || 'Unlock request is pending owner approval.',
+                        icon: 'success',
+                        width: '320px',
+                        confirmButtonColor: '#00662d'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Could not send request.',
+                        icon: 'error',
+                        width: '320px'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.hidePhotoUnlockModal();
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    icon: 'error',
+                    width: '320px'
+                });
+            });
+        });
+
+    })();
+    </script>
+}

@@ -1,0 +1,139 @@
+﻿@model Application.Models.AboutDto
+@{
+    ViewBag.Title = "Home Content";
+}
+
+@section Title
+    {
+    About Management
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+
+            <div class="card-body" id="ModalUser">
+                @using (Html.BeginForm("PostAbout", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="modal-body row">
+                        <input type="hidden" asp-for="@Model.Id">
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.BannerTitle">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Body</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.BannerBody"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Banner Image (1920 x 700)</label>
+                            @if (!string.IsNullOrEmpty(Model.BannerImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.BannerImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.BannerImagePath">
+                            <input type="file" class="form-control" id="BannerImage" name="BannerImage">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.Title">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Body</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.Body"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Button Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.ButtonTitle">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Button Url</label>
+                            <input type="text" class="form-control" asp-for="@Model.ButtonUrl">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Home Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.HomeTitle">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Home Body</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.HomeBody"></textarea>
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Home Button Title</label>
+                            <input type="text" class="form-control" asp-for="@Model.HomeButtonTitle">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="col-form-label">Home Button Url</label>
+                            <input type="text" class="form-control" asp-for="@Model.HomeButtonUrl">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Home Image 1 (400 x 542)</label>
+                            @if (!string.IsNullOrEmpty(Model.Home1ImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.Home1ImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.Home1ImagePath">
+                            <input type="file" class="form-control" id="Home1Image" name="Home1Image">
+                            <label class="col-form-label">Home Image 1 Alt</label>
+                            <input type="text" class="form-control" asp-for="@Model.Home1ImageAlt">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Home Image 2 (400 x 542)</label>
+                            @if (!string.IsNullOrEmpty(Model.Home2ImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.Home2ImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.Home2ImagePath">
+                            <input type="file" class="form-control" id="Home2Image" name="Home2Image">
+                            <label class="col-form-label">Home Image 2 Alt</label>
+                            <input type="text" class="form-control" asp-for="@Model.Home2ImageAlt">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Home Image 3 (400 x 542)</label>
+                            @if (!string.IsNullOrEmpty(Model.Home3ImagePath))
+                            {
+                                <br />
+                                <img src="/@Model.Home3ImagePath" width="150" alt="image-preview" />
+                                <br />
+                            }
+                            <input type="hidden" asp-for="@Model.Home3ImagePath">
+                            <input type="file" class="form-control" id="Home3Image" name="Home3Image">
+                            <label class="col-form-label">Home Image 3 Alt</label>
+                            <input type="text" class="form-control" asp-for="@Model.Home3ImageAlt">
+                        </div>
+
+                        <div class="mb-3 col-md-12">
+                            <label class="col-form-label">Footer Body</label>
+                            <textarea class="mceDescrEng" asp-for="@Model.FooterBody"></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" id="formsubmit" class="btn btn-primary">Save changes</button>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

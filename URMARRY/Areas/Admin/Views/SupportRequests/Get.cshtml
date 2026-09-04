@@ -1,0 +1,110 @@
+@model Application.Models.SupportRequestDto
+@{
+    ViewBag.Title = "Support Appeal Detail";
+}
+
+@section Title
+{
+    Support Appeal Detail
+}
+
+<div class="row">
+    <div class="col-xl-8 mx-auto">
+        <div class="card border-top border-0 border-4 border-white">
+            <div class="card-body p-5">
+                <div class="float-lg-end">
+                    <a asp-action="GetAll" asp-controller="SupportRequests" class="btn btn-success btn-sm"><i class='bx bxs-arrow-to-left'></i> Back to List</a>
+                </div>
+                <div class="card-title d-flex align-items-center">
+                    <h5 class="mb-0 text-white">Appeal Details</h5>
+                </div>
+                <hr>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">User Name</label>
+                        <p class="form-control-plaintext">@Model.UserName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Profile ID</label>
+                        <p class="form-control-plaintext">@Model.UserRegisterNumber</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Email</label>
+                        <p class="form-control-plaintext">@Model.UserEmail</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Phone</label>
+                        <p class="form-control-plaintext">@Model.UserPhone</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Subject</label>
+                        <p class="form-control-plaintext">@Model.Subject</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Appeal Message</label>
+                        <div class="p-3 bg-light rounded text-dark" style="white-space: pre-wrap;">@Model.Message</div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                    {
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Attachment</label>
+                            <div>
+                                <a href="/@Model.AttachmentPath" target="_blank" class="btn btn-link">
+                                    <i class="fas fa-paperclip"></i> View Attached File
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Ticket Status</label>
+                        <p>
+                            @if (Model.Status == "Pending")
+                            {
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            }
+                            else if (Model.Status == "Resolved")
+                            {
+                                <span class="badge bg-success">Resolved (Reactivated)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Rejected</span>
+                            }
+                        </p>
+                    </div>
+
+                    @if (Model.Status == "Pending")
+                    {
+                        <form method="post" class="row g-3">
+                            <div class="col-12">
+                                <label for="adminNotes" class="form-label fw-bold text-white">Admin Resolution Notes</label>
+                                <textarea class="form-control text-dark" name="adminNotes" id="adminNotes" placeholder="Write reason for reactivating or rejecting..."></textarea>
+                            </div>
+                            
+                            <div class="col-12 d-flex gap-2 mt-3">
+                                <button type="submit" asp-action="Reactivate" asp-controller="SupportRequests" asp-route-id="@Model.Id" class="btn btn-success flex-fill">
+                                    <i class="fas fa-check"></i> Approve & Reactivate User
+                                </button>
+                                <button type="submit" asp-action="Reject" asp-controller="SupportRequests" asp-route-id="@Model.Id" class="btn btn-danger flex-fill">
+                                    <i class="fas fa-times"></i> Reject Appeal
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Resolution Notes</label>
+                            <p class="form-control-plaintext bg-light p-3 rounded text-dark">@(Model.AdminNotes ?? "No notes provided.")</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

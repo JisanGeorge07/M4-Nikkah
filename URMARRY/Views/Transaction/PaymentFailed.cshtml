@@ -1,0 +1,76 @@
+@model PaymentOutcomeViewModel
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<style>
+    .payment-container {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+        margin: 0;
+    }
+
+    .payment-box {
+        background-color: #fff;
+        padding: 2rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .icon-failure {
+        font-size: 3rem;
+        color: #f44336;
+        margin-bottom: 1rem;
+    }
+
+    .transaction-details {
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+        .transaction-details p {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+    .btn-payment-outcome {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.7rem 1.5rem;
+        background-color: #f44336;
+        color: #fff !important;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        border: none;
+    }
+
+        .btn-payment-outcome:hover {
+            background-color: #d32f2f;
+        }
+</style>
+
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+            <div class="payment-container">
+                <div class="payment-box border">
+                    <div class="icon-failure">❌</div>
+                    <h2 class="text-danger fw-semibold">Payment Failed</h2>
+                    <div class="transaction-details">
+                        <p><strong>Transaction ID:</strong> @Model.Response.TxnId</p>
+                        <p><strong>Amount:</strong> ₹@Model.Response.Amount</p>
+                        <p><strong>Status:</strong> @Model.Response.Status</p>
+                    </div>
+                    <a asp-action="Edit" asp-controller="User" class="btn-payment-outcome">Ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

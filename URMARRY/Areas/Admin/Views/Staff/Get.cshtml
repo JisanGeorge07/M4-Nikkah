@@ -1,0 +1,498 @@
+@model Application.Models.StaffFullRegistrationVm
+@{
+    ViewBag.Title = Model.BasicDetails.Id > 0 ? $"Staff: {Model.BasicDetails.StaffName}" : "New Staff Registration";
+    var isEditMode = Model.BasicDetails.Id > 0;
+    int currentMonthDays = DateTime.DaysInMonth(DateTime.UtcNow.Year, DateTime.UtcNow.Month);
+}
+
+@section Title {
+    <a asp-action="GetAll" class="btn btn-primary btn-xs me-2">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    @(isEditMode ? $"Edit Staff #{Model.BasicDetails.UserName}" : "New Staff Entry")
+}
+
+<style>
+    .wizard-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding: 0;
+        list-style: none;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow-x: auto;
+    }
+    .wizard-steps li {
+        flex: 1;
+        text-align: center;
+        padding: 12px 5px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #6c757d;
+        border-bottom: 3px solid transparent;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .wizard-steps li.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    .wizard-steps li.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .step-badge {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        border-radius: 50%;
+        background: #6c757d;
+        color: #fff;
+        font-size: 12px;
+        margin-right: 6px;
+    }
+    .wizard-steps li.active .step-badge {
+        background: #0d6efd;
+    }
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e9ecef;
+        color: #343a40;
+    }
+    .incentive-box {
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 18px;
+        background-color: #ffffff;
+        margin-bottom: 20px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.05);
+    }
+    .incentive-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #4e73df;
+        margin-bottom: 12px;
+    }
+</style>
+
+<form id="deleteForm" asp-action="Delete" asp-route-id="@Model.BasicDetails.Id" method="post" style="display:none;"></form>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Wizard Navigation Bar (3 STEPS) -->
+        <ul class="wizard-steps shadow-sm" id="wizardNav">
+            <li class="@(Model.ActiveStep == 1 ? "active" : "")" onclick="navigateToStep(1)">
+                <span class="step-badge">1</span> Basic & Salary Config
+            </li>
+            <li class="@(Model.ActiveStep == 2 ? "active" : "") @(!isEditMode ? "disabled" : "")" onclick="navigateToStep(2)">
+                <span class="step-badge">2</span> Incentive Setup
+            </li>
+            <li class="@(Model.ActiveStep == 3 ? "active" : "") @(!isEditMode ? "disabled" : "")" onclick="navigateToStep(3)">
+                <span class="step-badge">3</span> Target Setup
+            </li>
+        </ul>
+
+        <!-- STEP 1: Basic Details & Salary Configuration -->
+        <div class="card wizard-step-card @(Model.ActiveStep == 1 ? "" : "d-none")" id="stepCard1">
+            <div class="card-body">
+                <form asp-action="Post" method="post">
+                    <input type="hidden" name="BasicDetails.Id" value="@Model.BasicDetails.Id" />
+                    <input type="hidden" name="SalaryConfig.Id" value="@Model.SalaryConfig.Id" />
+                    <input type="hidden" name="SalaryConfig.StaffId" value="@Model.BasicDetails.Id" />
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <!-- Employment Details Section -->
+                    <div class="form-section-title"><i class="fas fa-user-tie me-1"></i> Employment Details</div>
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Staff Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="BasicDetails.StaffName" value="@Model.BasicDetails.StaffName" required placeholder="Enter full name" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Registration ID (Username)</label>
+                            @if (isEditMode)
+                            {
+                                <input type="text" class="form-control" name="BasicDetails.UserName" value="@Model.BasicDetails.UserName" readonly />
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control" value="Autogenerated (e.g. M4S000001)" disabled />
+                            }
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Email Address</label>
+                            <input type="email" class="form-control" name="BasicDetails.Email" value="@Model.BasicDetails.Email" placeholder="staff@m4nikah.com" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Mobile Number</label>
+                            <input type="text" class="form-control" name="BasicDetails.MobileNumber" value="@Model.BasicDetails.MobileNumber" placeholder="Enter mobile number" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Password</label>
+                            @if (isEditMode)
+                            {
+                                <input type="password" class="form-control" name="BasicDetails.PasswordHash" placeholder="Leave empty to keep existing password" />
+                            }
+                            else
+                            {
+                                <input type="password" class="form-control" name="BasicDetails.PasswordHash" placeholder="Enter login password" required />
+                            }
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Designation</label>
+                            <input type="text" class="form-control" name="BasicDetails.Designation" value="@Model.BasicDetails.Designation" placeholder="e.g. Senior CRM Executive" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Department</label>
+                            <input type="text" class="form-control" name="BasicDetails.Department" value="@Model.BasicDetails.Department" placeholder="e.g. Sales, Support, Operations" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Joining Date</label>
+                            <input type="date" class="form-control" name="BasicDetails.JoiningDate" value="@(Model.BasicDetails.JoiningDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Display Order</label>
+                            <input type="number" min="1" class="form-control" name="BasicDetails.DisplayOrder" value="@Model.BasicDetails.DisplayOrder" />
+                        </div>
+
+                        <div class="mb-3 col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch pt-4">
+                                <input name="BasicDetails.IsActive" value="true" type="checkbox" class="form-check-input" id="IsActiveCheck" @(Model.BasicDetails.IsActive ? "checked" : "") />
+                                <label class="form-check-label font-weight-bold" for="IsActiveCheck">Active Staff Account</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Salary Configuration Section -->
+                    <div class="form-section-title mt-4"><i class="fas fa-calculator me-1"></i> Salary Configuration</div>
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Basic Monthly Salary (₹) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="basicMonthlySalaryInput" name="SalaryConfig.BasicMonthlySalary" value="@(Model.SalaryConfig.BasicMonthlySalary > 0 ? Model.SalaryConfig.BasicMonthlySalary.ToString("G29") : "")" placeholder="e.g. 15000" required oninput="calculatePerDaySalary()" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Salary Effective Date</label>
+                            <input type="date" class="form-control" name="SalaryConfig.SalaryEffectiveDate" value="@(Model.SalaryConfig.SalaryEffectiveDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Incentive Effective Date</label>
+                            <input type="date" class="form-control" name="SalaryConfig.IncentiveEffectiveDate" value="@(Model.SalaryConfig.IncentiveEffectiveDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label font-weight-bold">Calculated Per-Day Salary (₹)</label>
+                            <input type="text" class="form-control bg-light" id="perDaySalaryDisplay" value="@(Model.SalaryConfig.PerDaySalary > 0 ? Model.SalaryConfig.PerDaySalary.ToString("N2") : "0.00")" readonly />
+                            <small class="text-muted">Calculated as: Basic Monthly Salary / @currentMonthDays Days (Current Month Calendar Days)</small>
+                        </div>
+
+                        <div class="mb-3 col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch pt-2">
+                                <input class="form-check-input" type="checkbox" name="SalaryConfig.IncentiveEligibility" value="true" id="incElig" @(Model.SalaryConfig.IncentiveEligibility ? "checked" : "") />
+                                <label class="form-check-label font-weight-bold" for="incElig">Incentive Eligible</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-3">
+                        @if (isEditMode)
+                        {
+                            <button type="button" onclick="if(confirm('Are you sure you want to delete this staff?')) document.getElementById('deleteForm').submit();" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Delete Staff
+                            </button>
+                        }
+                        else
+                        {
+                            <div></div>
+                        }
+                        <button type="submit" class="btn btn-primary px-4">
+                            Save Step 1 & Proceed <i class="fas fa-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- STEP 2: Incentive Setup -->
+        <div class="card wizard-step-card @(Model.ActiveStep == 2 ? "" : "d-none")" id="stepCard2">
+            <div class="card-body">
+                <div class="form-section-title">Step 2: Incentive Setup</div>
+                <form asp-action="PostStep2" method="post">
+                    <input type="hidden" name="StaffId" value="@Model.BasicDetails.Id" />
+                    <input type="hidden" name="Id" value="@Model.IncentiveConfig.Id" />
+
+                    <!-- 1. Male Profile Verification -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-user-check me-1"></i> 1. Male Profile Verification Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="MaleVerificationType" id="maleVerifTypeSelect" onchange="toggleIncentiveFields('maleVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.MaleVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.MaleVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="maleVerifTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="MaleVerificationTarget" value="@(Model.IncentiveConfig.MaleVerificationTarget ?? 0)" placeholder="e.g. 50" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="MaleVerificationAmount" value="@(Model.IncentiveConfig.MaleVerificationAmount > 0 ? Model.IncentiveConfig.MaleVerificationAmount.ToString("G29") : "")" placeholder="e.g. 500" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Female Profile Verification -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-user-check me-1"></i> 2. Female Profile Verification Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="FemaleVerificationType" id="femaleVerifTypeSelect" onchange="toggleIncentiveFields('femaleVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="femaleVerifTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="FemaleVerificationTarget" value="@(Model.IncentiveConfig.FemaleVerificationTarget ?? 0)" placeholder="e.g. 50" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleVerificationAmount" value="@(Model.IncentiveConfig.FemaleVerificationAmount > 0 ? Model.IncentiveConfig.FemaleVerificationAmount.ToString("G29") : "")" placeholder="e.g. 500" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Male Premium Conversion -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 3. Male Premium Conversion Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="MaleConversionType" id="maleConvTypeSelect" onchange="toggleIncentiveFields('maleConv')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.MaleConversionType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.MaleConversionType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="maleConvTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="MaleConversionTarget" value="@(Model.IncentiveConfig.MaleConversionTarget ?? 0)" placeholder="e.g. 10" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="MaleConversionAmount" value="@(Model.IncentiveConfig.MaleConversionAmount > 0 ? Model.IncentiveConfig.MaleConversionAmount.ToString("G29") : "")" placeholder="e.g. 1000" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Female Premium Conversion -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 4. Female Premium Conversion Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="FemaleConversionType" id="femaleConvTypeSelect" onchange="toggleIncentiveFields('femaleConv')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleConversionType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleConversionType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="femaleConvTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="FemaleConversionTarget" value="@(Model.IncentiveConfig.FemaleConversionTarget ?? 0)" placeholder="e.g. 10" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleConversionAmount" value="@(Model.IncentiveConfig.FemaleConversionAmount > 0 ? Model.IncentiveConfig.FemaleConversionAmount.ToString("G29") : "")" placeholder="e.g. 1000" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" onclick="navigateToStep(1)" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back</button>
+                        <button type="submit" class="btn btn-primary px-4">Save Step 2 & Proceed <i class="fas fa-arrow-right ms-1"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- STEP 3: Target Setup for Performance -->
+        <div class="card wizard-step-card @(Model.ActiveStep == 3 ? "" : "d-none")" id="stepCard3">
+            <div class="card-body">
+                <div class="form-section-title">Step 3: Target Setup for Performance</div>
+                <p class="text-muted">Set monthly and daily target values to analyze staff performance and identify top performers.</p>
+                <form asp-action="PostStep3" method="post">
+                    <input type="hidden" name="StaffId" value="@Model.BasicDetails.Id" />
+                    <input type="hidden" name="Id" value="@Model.PerformanceTargetConfig.Id" />
+
+                    <!-- 1. Male Profile Verification Targets -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-chart-line me-1"></i> 1. Male Profile Verification Targets</div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Monthly Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="MaleVerificationMonthlyTarget" value="@Model.PerformanceTargetConfig.MaleVerificationMonthlyTarget" placeholder="e.g. 100" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Daily Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="MaleVerificationDailyTarget" value="@Model.PerformanceTargetConfig.MaleVerificationDailyTarget" placeholder="e.g. 4" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Female Profile Verification Targets -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-chart-line me-1"></i> 2. Female Profile Verification Targets</div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Monthly Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="FemaleVerificationMonthlyTarget" value="@Model.PerformanceTargetConfig.FemaleVerificationMonthlyTarget" placeholder="e.g. 100" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Daily Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="FemaleVerificationDailyTarget" value="@Model.PerformanceTargetConfig.FemaleVerificationDailyTarget" placeholder="e.g. 4" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Male Premium Conversion Targets -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-chart-line me-1"></i> 3. Male Premium Conversion Targets</div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Monthly Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="MaleConversionMonthlyTarget" value="@Model.PerformanceTargetConfig.MaleConversionMonthlyTarget" placeholder="e.g. 20" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Daily Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="MaleConversionDailyTarget" value="@Model.PerformanceTargetConfig.MaleConversionDailyTarget" placeholder="e.g. 1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Female Premium Conversion Targets -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-chart-line me-1"></i> 4. Female Premium Conversion Targets</div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Monthly Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="FemaleConversionMonthlyTarget" value="@Model.PerformanceTargetConfig.FemaleConversionMonthlyTarget" placeholder="e.g. 20" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Daily Target (Count)</label>
+                                <input type="number" min="0" class="form-control" name="FemaleConversionDailyTarget" value="@Model.PerformanceTargetConfig.FemaleConversionDailyTarget" placeholder="e.g. 1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" onclick="navigateToStep(2)" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back</button>
+                        <button type="submit" class="btn btn-success px-4"><i class="fas fa-check me-1"></i> Complete Staff Registration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const isEditMode = @(isEditMode ? "true" : "false");
+        const currentMonthDays = @currentMonthDays;
+
+        function navigateToStep(stepNumber) {
+            if (!isEditMode && stepNumber > 1) {
+                alert("Please save Step 1 (Basic & Salary Config) first to generate the Staff ID.");
+                return;
+            }
+
+            // Update Wizard nav bar active state
+            document.querySelectorAll("#wizardNav li").forEach((li, idx) => {
+                if (idx + 1 === stepNumber) {
+                    li.classList.add("active");
+                } else {
+                    li.classList.remove("active");
+                }
+            });
+
+            // Show/Hide Step cards
+            document.querySelectorAll(".wizard-step-card").forEach((card, idx) => {
+                if (idx + 1 === stepNumber) {
+                    card.classList.remove("d-none");
+                } else {
+                    card.classList.add("d-none");
+                }
+            });
+        }
+
+        function calculatePerDaySalary() {
+            const salaryInput = document.getElementById("basicMonthlySalaryInput");
+            const displayInput = document.getElementById("perDaySalaryDisplay");
+            if (salaryInput && displayInput) {
+                const val = parseFloat(salaryInput.value);
+                if (!isNaN(val) && val > 0 && currentMonthDays > 0) {
+                    const perDay = val / currentMonthDays;
+                    displayInput.value = perDay.toFixed(2);
+                } else {
+                    displayInput.value = "0.00";
+                }
+            }
+        }
+
+        function toggleIncentiveFields(prefix) {
+            let selectId = "";
+            let targetColId = "";
+
+            if (prefix === "maleVerif") {
+                selectId = "maleVerifTypeSelect";
+                targetColId = "maleVerifTargetCol";
+            } else if (prefix === "femaleVerif") {
+                selectId = "femaleVerifTypeSelect";
+                targetColId = "femaleVerifTargetCol";
+            } else if (prefix === "maleConv") {
+                selectId = "maleConvTypeSelect";
+                targetColId = "maleConvTargetCol";
+            } else if (prefix === "femaleConv") {
+                selectId = "femaleConvTypeSelect";
+                targetColId = "femaleConvTargetCol";
+            }
+
+            const selectEl = document.getElementById(selectId);
+            const targetCol = document.getElementById(targetColId);
+
+            if (selectEl && targetCol) {
+                if (selectEl.value === "ProfileBasis") {
+                    targetCol.style.display = "none";
+                } else {
+                    targetCol.style.display = "block";
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            calculatePerDaySalary();
+            toggleIncentiveFields('maleVerif');
+            toggleIncentiveFields('femaleVerif');
+            toggleIncentiveFields('maleConv');
+            toggleIncentiveFields('femaleConv');
+        });
+    </script>
+}

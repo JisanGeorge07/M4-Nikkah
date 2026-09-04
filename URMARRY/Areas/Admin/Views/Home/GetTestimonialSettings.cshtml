@@ -1,0 +1,47 @@
+@model Application.Models.TestimonialSettingDto
+@{
+    ViewBag.Title = "Testimonial Settings";
+}
+
+@section Title
+{
+    Testimonial Prompt Settings
+}
+
+<div class="row">
+    <div class="col-12 col-md-8 offset-md-2">
+        <div class="card">
+            <!-- <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0 text-white">Configure Testimonial Prompts</h5>
+            </div> -->
+            <div class="card-body">
+                @using (Html.BeginForm("PostTestimonialSettings", "Home", FormMethod.Post))
+                {
+                    <input type="hidden" asp-for="@Model.Id">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">First Prompt Threshold (Days)</label>
+                        <input type="number" class="form-control" asp-for="@Model.FirstPromptDays" min="1" required>
+                        <div class="form-text text-muted">
+                            Number of days after interest acceptance before prompting users for their first relationship status update.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Follow-Up Prompt Interval (Days)</label>
+                        <input type="number" class="form-control" asp-for="@Model.FollowUpPromptDays" min="1" required>
+                        <div class="form-text text-muted">
+                            Interval (in days) after the last prompt for users whose relationship status is still 'Communicating' or 'Engaged' to prompt them again.
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-2 border-top">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

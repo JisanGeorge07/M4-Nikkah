@@ -1,0 +1,510 @@
+@using Domain
+@model InvoiceViewModel
+@{
+    Layout = null;
+    var addressParts = new List<string>();
+    if (!string.IsNullOrEmpty(Model.Registration.Village)) addressParts.Add(Model.Registration.Village);
+    if (!string.IsNullOrEmpty(Model.Registration.Post)) addressParts.Add(Model.Registration.Post);
+    if (!string.IsNullOrEmpty(Model.Registration.District)) addressParts.Add(Model.Registration.District);
+    if (!string.IsNullOrEmpty(Model.Registration.State)) addressParts.Add(Model.Registration.State);
+    var address = addressParts.Count > 0 ? string.Join(", ", addressParts) : "N/A";
+    
+    var purchaseDateStr = Model.Transaction.CreatedOn.ToString("dd-MM-yyyy");
+    var expiryDateStr = Model.Transaction.CreatedOn.AddDays(180).ToString("dd-MM-yyyy");
+    var invoiceNo = $"INV-{Model.Transaction.CreatedOn.Year}-{Model.Transaction.Id.ToString().PadLeft(4, '0')}";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" type="image/x-icon" href="/assets/images/favicon.png">
+<title>Invoice - @invoiceNo</title>
+
+<style>
+@@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');		
+	
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Poppins", sans-serif;
+}
+
+body{
+    background:#f2f4f7;
+    padding:10px;
+}
+
+.invoice-wrapper{
+    max-width:900px;
+    margin:auto;
+    background:#fff;
+    border-radius:12px;
+	padding: 15px;
+    overflow:hidden;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+/* Header */
+.invoice-header{
+    background: #128742;
+    background: linear-gradient(0deg,rgba(18, 135, 66, 1) 0%, rgba(98, 149, 62, 1) 100%);
+    color:#fff;
+    padding:20px 40px;
+	border-radius: 12px 12px 0px 0px;
+    position:relative;
+}
+
+.invoice-header h1{
+    font-size:40px;
+    letter-spacing:4px;
+    opacity:.08;
+    position:absolute;
+    right:30px;
+    top:28px;
+}
+
+.logo{
+    position:relative;
+    z-index:2;
+}
+
+.logo img{
+    height:70px;
+}
+
+.invoice-info{
+    background:#00662d;
+    color:#fff;
+    display:flex;
+    justify-content:space-between;
+    padding:12px 20px;
+    font-weight: 500;
+    font-size: 12px;
+}
+	.invoice-info div{
+		    font-weight: bold;
+    font-size: 14px;
+	}
+		.invoice-info div p{
+		 padding-left: 35px;
+	}
+	.invoice-info div img{
+		    width: 25px;
+		    position: absolute;
+	}
+	.invoice-info div span{
+		display: grid;
+		    font-size: 12px;
+    font-weight: normal;
+	}
+
+/* Billing Section */
+.billing{
+    padding:20px 20px;
+	padding-bottom: 10px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.billing-box{
+    width:48%;
+}
+
+.billing-box h4{
+    color:#00662d;
+    margin-bottom:10px;
+	font-size: 14px;
+}
+
+.billing-box h3{
+    color:#00662d;
+    margin-bottom:8px;
+	    font-size: 15px;
+}
+
+.billing-box p{
+    color:#2d2c2c;
+    line-height:24px;
+	    font-size: 14px;
+}
+
+/* Table */
+.invoice-table{
+    width:calc(100% - 40px);
+    margin:0 20px;
+    border-collapse:collapse;
+	margin-bottom:  15px;
+	border-bottom: 1px solid #222;
+}
+
+.invoice-table th{
+    text-align:left;
+    padding:15px 10px;
+    border-bottom:1px solid #222;
+    color:#00662d;
+	padding-left: 0px;
+	    font-size: 13px;
+}
+
+.invoice-table td{
+    padding:0px 10px;
+    border-bottom:0px solid #ddd;
+    color:#2d2c2c;
+	padding-left: 0px;
+	    font-size: 14px;
+}
+
+.invoice-table th:last-child,
+.invoice-table td:last-child{
+    text-align:left;
+}
+	.invoice-table td img{
+		width: 23px;
+    position: absolute;
+    top: 3px;
+	}
+	.invoice-tablecolor1{
+		background-color: #eaf8eb;
+		    width: fit-content;
+    padding:5px 10px;
+    border-radius: 15px;
+    border: 1px solid #a9bdaa;
+		    font-size: 13px;
+    font-weight: 500;
+		position: relative;
+		    margin-bottom: 15px;
+    margin-top: 10px;
+	}
+	.invoice-tablecolor1 span{
+	    padding-left: 30px;
+	}
+	
+	.invoice-table .class1 td{
+		padding-top: 10px;
+	}
+	
+	
+
+/* Summary */
+.summary-section{
+    padding:20px 20px;
+    display:flex;
+    justify-content:space-between;
+    gap:40px;
+	padding-top: 0px;
+}
+
+.terms{
+    width:55%;
+}
+
+.terms h4{
+    margin-bottom:10px;
+	    font-size: 13px;
+	color: #00662d;
+}
+
+.terms p{
+    color:#2d2c2c;
+    line-height:24px;
+	    font-size: 13px;
+    padding-right: 45px;
+}
+
+.summary{
+    width:40%;
+}
+
+.summary table{
+    width:100%;
+}
+
+.summary td{
+    padding:10px 0;
+    border-bottom:1px solid #ddd;
+	font-size: 14px;
+}
+
+.summary td:last-child{
+    text-align:right;
+}
+
+.grand-total{
+    font-size:16px !important;
+    font-weight:bold;
+    color:#00662d;
+	
+}
+
+/* Payment */
+.payment-box{
+    margin:0px;
+    width:450px;
+    border:1px solid #ddd;
+    padding:15px;
+	border-radius: 15px;
+	padding-top: 10px;
+}
+
+.payment-box table{
+    width:100%;
+}
+
+.payment-box td{
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+	font-size: 13px;
+	    line-height: 10px;
+}
+	.payment-box td img{
+    width: 30px;
+		    margin-right: 8px;
+}
+
+/* Signature */
+.signature{
+    text-align:center;
+    padding:0 25px 30px;
+}
+
+.signature h2{
+        font-size: 14px;
+    color: #797979;
+    padding-top: 25px;
+    font-weight: 500;
+}
+
+.signature p{
+    color:#258a41;
+	font-weight: bold;
+	font-size: 14px;
+	
+}
+
+/* Footer */
+.footer{
+    background: #128742;
+    background: linear-gradient(0deg, rgba(18, 135, 66, 1) 0%, rgba(98, 149, 62, 1) 100%);
+    color:#fff;
+    padding:25px 40px;
+	padding-bottom: 0px;
+	border-radius: 0px 0px 12px 12px;
+}
+
+.footer-top{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:15px;
+}
+.footer-top div{	
+	    line-height: 22px;
+	font-size: 16px;
+	}
+	.footer-top img{
+		width: 22px;
+		float: left;
+		margin-right: 10px;
+	}
+
+.footer-bottom{
+    text-align:center;
+    font-size:12px;
+    color: #3d3d3d;
+    background-color: #fff;
+    width: 85%;
+    margin: auto;
+    border-radius: 10px 10px 0px 0px;
+    padding: 8px 0px;
+}
+.patterndiv{
+	position: absolute;
+	top: 10px;
+	}
+
+@@media print{
+    body{
+        background:#fff;
+        padding:0;
+    }
+
+    .invoice-wrapper{
+        box-shadow:none;
+        border-radius:0;
+    }
+}
+</style>
+
+</head>
+<body>
+
+<div class="invoice-wrapper">
+
+    <!-- Header -->
+    <div class="invoice-header">
+		<div class="patterndiv"><img src="/assets/account/assets/images/invoice/lovepattern.png" alt=""></div>
+        <div class="logo">
+            <img src="/assets/account/assets/images/invoice/logo.png" alt="Logo">
+        </div>
+        <h1>M4 NIKAH</h1>
+    </div>
+
+    <div class="invoice-info">
+        <div><img src="/assets/account/assets/images/invoice/invoice.png" alt=""><p><span>Invoice No :</span> @invoiceNo</p></div>
+        <div><img src="/assets/account/assets/images/invoice/user.png" alt=""><p><span>Profile ID :</span> @Model.Registration.RegisterNumber</p></div>
+		<div><img src="/assets/account/assets/images/invoice/money.png" alt=""><p><span>Mode :</span> @(Model.Transaction.PaymentType == "Offline" ? 
+                    (Model.Transaction.OfflinePaymentType == OfflinePaymentMethod.UPIPayment ? "Offline (UPI Payment)" :
+                     Model.Transaction.OfflinePaymentType == OfflinePaymentMethod.BankPayment ? "Offline (Bank Payment)" :
+                     Model.Transaction.OfflinePaymentType == OfflinePaymentMethod.CashPayment ? "Offline (Cash Payment)" : "Offline") : 
+                    (Model.Transaction.PaymentType ?? "Online"))</p></div>
+		<div><img src="/assets/account/assets/images/invoice/calander.png" alt=""><p><span>Purchase Date :</span> @purchaseDateStr</p></div>
+		<div><img src="/assets/account/assets/images/invoice/calander.png" alt=""><p><span>Expiry Date :</span> @expiryDateStr</p></div>
+    </div>
+
+    <!-- Billing -->
+    <div class="billing">
+
+        <div class="billing-box">
+            <h4>Invoice To</h4>
+            <h3>@Model.Registration.Name</h3>
+            <p>
+                @address<br>
+                Phone: @Model.Registration.Phone
+            </p>
+        </div>
+
+        <div class="billing-box" style="text-align:right;">
+            <h4>Pay To</h4>
+            <h3>M4 Nikah Muslim Matrimony</h3>
+            <p>
+                Room No:31/299, NM Arcade<br>
+                Changuvettikund Main Road<br>
+                Kottakkal - 676503
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Items -->
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody class="class1">
+            <tr>
+                <td>Premium Package Activation Charge (6 Months)</td>
+                <td>1</td>
+                <td>₹@Model.Transaction.Amount</td>
+                <td>₹@Model.Transaction.Amount</td>
+            </tr>
+        </tbody>
+		<tbody>
+			<tr><td><p class="invoice-tablecolor1"><img src="/assets/account/assets/images/invoice/dates.png" alt=""><span>Validity:@purchaseDateStr to @(expiryDateStr)(6 Months)</span></p></td></tr>
+        </tbody>
+    </table>
+
+    <!-- Summary -->
+    <div class="summary-section">
+		
+		<!-- Payment -->
+    <div class="payment-box">
+        <table>
+            <tr>
+                <td><img src="/assets/account/assets/images/invoice/icon1.png" alt=""></td>
+				<td><b>Account Name:</b></td>
+                <td>M4 Nikah Muslim Matrimony</td>
+            </tr>
+
+            <tr>
+				<td><img src="/assets/account/assets/images/invoice/icon1.png" alt=""></td>
+                <td><b>Bank:</b></td>
+                <td>HDFC Bank - Kottakkal Branch</td>
+            </tr>
+
+            <tr>
+				<td><img src="/assets/account/assets/images/invoice/icon2.png" alt=""></td>
+                <td><b>Account No:</b></td>
+                <td>50200090982976</td>
+            </tr>
+
+            <tr>
+				<td><img src="/assets/account/assets/images/invoice/icon3.png" alt=""></td>
+                <td><b>IFSC:</b></td>
+                <td>HDFC0001594</td>
+            </tr>
+        </table>
+    </div>
+
+        <div class="summary">
+            <table>
+                <tr>
+                    <td>Sub Total</td>
+                    <td>₹@Model.Transaction.Amount</td>
+                </tr>
+
+                <tr>
+                    <td>Tax(0%)</td>
+                    <td>₹0</td>
+                </tr>
+
+                <tr>
+                    <td>Discount</td>
+                    <td>₹0</td>
+                </tr>
+
+                <tr>
+                    <td class="grand-total">Grand Total</td>
+                    <td class="grand-total">₹@Model.Transaction.Amount</td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+	
+	<!-- Summary -->
+    <div class="summary-section">
+
+        <div class="terms">
+            <h4>Terms & Conditions</h4>
+            <p>
+                M4 NIKAH Muslim Matrimony Package (6 Months):
+                Access to view up to 50 contacts.
+                This package is non-refundable and
+                non-transferable once activated.
+            </p>
+        </div>
+		
+		<!-- Signature -->
+    <div class="signature">
+        <h2>Authorized Signatory For</h2>
+        <p>M4 Nikah Muslim Matrimony</p>
+    </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+
+        <div class="footer-top">
+            <div><img src="/assets/account/assets/images/invoice/mobile.png" alt=""> 9847838325</div>
+            <div><img src="/assets/account/assets/images/invoice/domain.png" alt=""> www.m4nikah.com</div>
+			<div><img src="/assets/account/assets/images/invoice/email.png" alt=""> info@m4nikah.com</div>
+        </div>
+
+        <div class="footer-bottom">
+            This is a computer-generated invoice and does not require a physical signature.
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

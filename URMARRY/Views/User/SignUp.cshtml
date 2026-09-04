@@ -1,0 +1,1278 @@
+@model HomeViewModel
+@{
+    Layout = null;
+    var enquiry = Model.Registration!;
+}
+
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<title>M4NIKAH - We help you find your perfect life partner</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="M4NIKAH - We help you find your perfect life partner">
+
+	<!-- favicon -->
+	<link rel="shortcut icon" href="/assets/images/favicon.png">
+
+	<!-- Css -->
+	<link href="/assets/css/bootstrap.min.css" id="bootstrap-style" class="theme-opt" rel="stylesheet" type="text/css">
+	<!-- Icons Css -->
+	<link href="/assets/libs/%40mdi/font/css/materialdesignicons.min.css" rel="stylesheet" type="text/css">
+	<link href="/assets/libs/%40iconscout/unicons/css/line.css" type="text/css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" type="text/css" rel="stylesheet">
+	<!-- Style Css-->
+	<link href="/assets/css/style.min.css" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css" rel="stylesheet">
+	<!-- Cropper.js and Image Validator CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+	<link rel="stylesheet" href="/css/image-validator.css" />
+</head>
+
+<body>
+	
+
+	<div class="back-to-home">
+		<a href="~/" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+	</div>
+
+	<!-- Hero Start -->
+	<section class="position-relative" style="background: url('/assets/images/login_bg.jpg') center;">
+
+		<div class="bg-overlay bg-linear-gradient-2"></div>
+		<div class="container">
+			<div class="row">
+				<div class="col-12 p-0">
+					<div class="d-flex flex-column min-vh-100 p-4">
+						<!-- Start Logo -->
+						<div class="text-center mb-3">
+							<a href="~/"><img src="/assets/images/favicon.png" alt=""></a>
+						</div>
+						<!-- End Logo -->
+						<!-- Start Content -->
+						<div class="title-heading my-auto">
+							<div class="card px-4 rounded-md shadow-sm">
+
+								<div class="row">
+
+									<div class="col-12 col-lg-12 col-xl-12 text-center p-0 mt-3 mb-2 setpdiv">
+										<div class="card px-0 pt-4 pb-0 mt-3 mb-0 wpo-contact-section-wrapper">
+											<div class="wpo-section-title">
+												<!--<h2>Register Now - its free!</h2>-->
+												<p>Fill all form field to go to next step</p>
+											</div>
+
+											<form id="msform">
+												<!-- progressbar -->
+												<ul id="progressbar" class="donee">
+													<li class="active" id="personal"><strong>Step1</strong></li>
+													<li id="personal"><strong>Step2</strong></li>
+													<li id="personal"><strong>Step3</strong></li>
+													<li id="personal"><strong>Step4</strong></li>
+													<li id="personal"><strong>Step5</strong></li>
+													<li id="confirm"><strong>Finish</strong></li>
+												</ul>
+												
+												<fieldset id="s1">
+													<div class="form-card wpo-contact-form-area">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Account Information:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps">Step 1</h2>
+															</div>
+														</div>
+														<!--rowstart-->
+														<div class="row">
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" id="ProfileForId" name="ProfileForId">
+																		<option disabled="disabled" selected value="">Create Profile for *</option>
+																		@foreach (var item in Model.ProfileFor)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="user" class="fea icon-sm icons"></i>
+																		<input id="Name" name="Name" type="text" class="form-control ps-5" placeholder="Name :">
+																	</div>
+																</div>
+															</div><!--end col-->
+															
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-group">
+																		<input type="number" maxlength="10" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" id="Phone" class="form-control" placeholder="Phone Number" name="Phone">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3 malefemale">
+																	<div class="form flex-center">
+																		<div class="genderr">
+																			Gender:
+																		</div>
+																		<div class="form-row flex-center">
+																			<input type="radio" name="Gender" id="Male" value="Male" class="form-input" checked>
+																			<label for="Male" class="form-label">Male</label>
+																		</div>
+																		<div class="form-row flex-center">
+																			<input type="radio" name="Gender" id="Female" value="Female" class="form-input">
+																			<label for="Female" class="form-label">Female</label>
+																		</div>
+																	</div>
+																</div>
+															</div><!--end col-->
+
+
+															
+
+
+														</div>
+														<!--rowend-->
+
+
+													</div>
+													<input type="button" name="next" class="next action-button" value="Next" />
+												</fieldset>
+												<fieldset id="s2">
+													<div class="form-card wpo-contact-form-area">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Account Information:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps">Step 2</h2>
+															</div>
+														</div>
+
+														<!--rowstart-->
+														<div class="row">
+															<div><p class="mb-0">Date of Birth</p></div>
+															<div class="col-lg-12 mb-3 radio-buttons addpdd dateofbirth">
+																<select class="form-control form-select" name="Day" id="Day">
+																	<option disabled="disabled" selected="selected" value="">Day</option>
+																	@for (int i = 1; i <= 31; i++)
+																	{
+																		<option value="@i">@i</option>
+																	}
+																</select>
+																<select class="form-control form-select" name="Month" id="Month">
+																	<option disabled="disabled" selected="selected" value="">Month</option>
+																	<option value="01">January</option>
+																	<option value="02">February</option>
+																	<option value="03">March</option>
+																	<option value="04">April</option>
+																	<option value="05">May</option>
+																	<option value="06">June</option>
+																	<option value="07">July</option>
+																	<option value="08">August</option>
+																	<option value="09">September</option>
+																	<option value="10">October</option>
+																	<option value="11">November</option>
+																	<option value="12">December</option>
+																</select>
+																<select class="form-control form-select" name="Year" id="Year">
+																	<option disabled="disabled" selected="selected" value="">Year</option>
+																	@for (int i = 1960; i <= DateTime.UtcNow.Year - 17; i++)
+																	{
+																		<option value="@i">@i</option>
+																	}
+																</select>
+															</div>
+
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="ReligionId" id="ReligionId">
+																		<option selected="selected" value="">Your Religion*</option>
+																		@foreach (var item in Model.Religions)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="NationalityId" id="NationalityId">
+																		<option selected="selected" value="">Nationality *</option>
+																		@foreach (var item in Model.Nationalities)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="mail" class="fea icon-sm icons"></i>
+																		<input id="Email" name="Email" type="email" class="form-control ps-5" placeholder="Email :">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="key" class="fea icon-sm icons"></i>
+																		<input type="password" class="form-control ps-5" placeholder="Create Password" id="Password" name="Password">
+																		@*<input type="hidden" id="CPassword" name="CPassword">*@
+																	</div>
+																</div>
+															</div><!--end col-->
+														</div>
+														<!--rowend-->
+
+													</div>
+
+													<input type="button" name="next" class="next action-button" value="Next" />
+													<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+												</fieldset>
+												<fieldset id="s3">
+													<div class="form-card wpo-contact-form-area">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Account Information:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps">Step 3</h2>
+															</div>
+														</div>
+
+														<!--rowstart-->
+														<div class="row">
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" id="MaritalStatusId" name="MaritalStatusId">
+																		<option selected="selected" value="">Select Marital Status*</option>
+																		@foreach (var item in Model.MaritalStatuses)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="HeightId" id="HeightId">
+																		<option selected="selected" value="">Height *</option>
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Height))
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="WeightId" id="WeightId">
+																		<option selected="selected" value="">Weight *</option>
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Weight))
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="ComplexionId" id="ComplexionId">
+																		<option selected="selected" value="">Complexion *</option>
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Complexion))
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="BodyTypeId" id="BodyTypeId">
+																		<option selected="selected" value="">Body Type  *</option>
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.BodyType))
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+
+
+															<div class="col-lg-6 addradio2">
+																<div class="col-lg-12"><p class="mb-2">Physically Challenged ?*</p></div>
+																<div class="col-lg-12 radio-buttons">
+																	<p>
+																		<input type="radio" id="Yes" name="IsPhysicallyChallenged" value="Yes">
+																		<label for="Yes">Yes</label>
+																	</p>
+																	<p>
+																		<input type="radio" id="No" name="IsPhysicallyChallenged" value="No" checked>
+																		<label for="No">No</label>
+																	</p>
+																</div>
+															</div>
+
+
+
+
+														</div>
+														<!--rowend-->
+
+
+													</div>
+													<input type="button" name="next" class="next action-button" value="Next" />
+													<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+												</fieldset>
+												<fieldset id="s4">
+													<div class="form-card wpo-contact-form-area">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Account Information:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps">Step 4</h2>
+															</div>
+														</div>
+
+														<!--rowstart-->
+														<div class="row">
+															<div><p class="mb-0">Highest Education  *</p></div>
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="HighestEducation" id="HighestEducation">
+																		<option selected="selected" value="">Please Select</option>
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Education))
+																		{
+																			<option value="@item.Title">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div>
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-group">
+																		<input type="text" name="EducationType" id="EducationType" class="form-control" placeholder="Highest Education">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="ProfessionId" id="ProfessionId">
+																		<option selected="selected" value="">Profession *</option>
+																		@foreach (var item in Model.Professions)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-group">
+																		<input type="text" name="ProfessionType" id="ProfessionType" class="form-control" placeholder="Profession Type">
+																	</div>
+																</div>
+															</div><!--end col-->
+
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="MotherTongueId" id="MotherTongueId">
+																		<option selected="selected" value="">Mother Tongue*</option>
+																		@foreach (var item in Model.MotherTongues)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+
+
+
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="CommunityId" id="CommunityId">
+																		<option selected="selected" value="">Community*</option>
+																		@foreach (var item in Model.Communities)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="ReligiousnessId" id="ReligiousnessId">
+																		<option selected="selected" value="">Religiousness*</option>
+																		@foreach (var item in Model.Religiousnesses)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<select class="form-control form-select" name="FinancialStatusId" id="FinancialStatusId">
+																		<option selected="selected" value="">Financial Status*</option>
+																		@foreach (var item in Model.FinancialStatuses)
+																		{
+																			<option value="@item.Id">@Html.Raw(item.Title)</option>
+																		}
+																	</select>
+																</div>
+															</div><!--end col-->
+
+															
+
+														</div>
+														<!--rowend-->
+
+
+													</div>
+													<input type="button" name="next" class="next action-button" value="Next" />
+													<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+												</fieldset>
+												<fieldset id="s5">
+													<div class="form-card wpo-contact-form-area">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Account Information:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps">Step 5</h2>
+															</div>
+														</div>
+														<div class="row">
+															<div><p class="mb-0">Home Location</p></div>
+
+															<div class="col-lg-12">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="home" class="fea icon-sm icons"></i>
+																		<input name="FamilyName" id="FamilyName" type="text" class="form-control ps-5" placeholder="Family Name">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="user" class="fea icon-sm icons"></i>
+																		<input name="FatherName" id="FatherName" type="text" class="form-control ps-5" placeholder="Father Name">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map-pin" class="fea icon-sm icons"></i>
+																		<input name="Post" id="Post" type="text" class="form-control ps-5" placeholder="Post">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map" class="fea icon-sm icons"></i>
+																		<input name="PinCode" id="PinCode" type="text" class="form-control ps-5" placeholder="Pin Code">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map" class="fea icon-sm icons"></i>
+																		<input name="Village" id="Village" type="text" class="form-control ps-5" placeholder="City">
+																	</div>
+																</div>
+															</div><!--end col-->
+															
+															@*<div class="col-lg-6">
+															<div class="mb-3">
+															<div class="form-icon position-relative">
+															<i data-feather="map-pin" class="fea icon-sm icons"></i>
+															<input name="Country" id="Country" type="text" class="form-control ps-5" placeholder="Country">
+															</div>
+															</div>
+															</div>*@
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map-pin" class="fea icon-sm icons"></i>
+																		<input name="name" id="District" type="text" class="form-control ps-5" placeholder="District">
+																	</div>
+																</div>
+															</div>
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map-pin" class="fea icon-sm icons"></i>
+																		<input name="State" id="State" type="text" class="form-control ps-5" placeholder="State">
+																	</div>
+																</div>
+															</div><!--end col-->
+															
+															<!--end col-->
+
+															<div><p class="mb-0">Present Location</p></div>
+															<div class="col-lg-12">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map-pin" class="fea icon-sm icons"></i>
+																		<input name="PresentCountry" id="PresentCountry" type="text" class="form-control ps-5" placeholder="Country">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="map-pin" class="fea icon-sm icons"></i>
+																		<input name="PresentState" id="PresentState" type="text" class="form-control ps-5" placeholder="City">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div class="col-lg-6">
+																<div class="mb-3">
+																	<div class="form-group">
+																		<input type="number" maxlength="10" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" class="form-control" name="PresentDistrict" id="PresentDistrict" placeholder="Telephone Number *">
+																	</div>
+																</div>
+															</div><!--end col-->
+															<div><p class="mb-0">Brief About Yourself</p></div>
+															<div class="col-lg-12">
+																<div class="mb-3">
+																	<div class="form-icon position-relative">
+																		<i data-feather="user" class="fea icon-sm icons"></i>
+																		<textarea name="About" id="About" type="text" class="form-control ps-5" placeholder="Brief About Yourself..."></textarea>
+																	</div>
+																</div>
+															</div>
+														</div>
+														<!--rowstart-->
+														<div class="row">
+															<div class="col-lg-12">
+																<div class="mb-3">
+																	<div class="text-center pb-4 w-100 m-auto">
+																		<h4>Add Photo</h4>
+																		<p class="mb-0 wid_p1">Your profile will only be visible to other members when you add a photo.</p>
+																		<div class="signup-img-info-banner">
+																			<i class="fa fa-info-circle"></i>
+																			<span>Image must be exactly 630×800 pixels for the best display.</span>
+																		</div>
+																	</div>
+																	<div class="profile-photo-div" id="profile-photo-div">
+																		<!-- placeholder image -->
+																		<div class="profile-img-div" id="profile-img-div" style="height: 250px;">
+																			<div id="loader"></div><img id="profile-img" src="/assets/images/default-user-men.png">
+																			<input id="x-position" type="range" name="x-position" value="0" min="0">
+																			<input id="y-position" type="range" name="y-position" value="0" min="0">
+																		</div>
+																		<!-- uploaded image -->
+																		<div class="profile-img-div" id="file-uploaded" style="height: 250px; display: none">
+																			<div id="loader"></div>
+																			<img id="uploaded-photo" style="height: 250px;" src="">
+																		</div>
+																		<div class="signup-dimension-badge"></div>
+
+																		<div class="profile-buttons-div">
+																			<div class="profile-img-input" id="profile-img-input">
+																				<label class="button" id="change-photo-label" for="Image">UPLOAD YOUR PHOTO</label>
+																				<input type="file" name="Image" id="Image" style="display: none;" accept="image/*" onchange="handleFileUpload(this.files)">
+																			</div>
+																			<div class="profile-img-confirm" id="profile-img-confirm" style="display: none;">
+																				<div class="button half green" id="save-img"><i class="fa fa-check" aria-hidden="true"></i></div>
+																				<div class="button half red" id="cancel-img"><i class="fa fa-remove" aria-hidden="true"></i></div>
+																			</div>
+																		</div>
+																		@*<div class="skippbtn">
+																		<a>skip <i class="uil uil-angle-right-b align-middle"></i></a>
+																		</div>*@
+																	</div>
+
+																</div>
+															</div>
+
+														</div>
+														<!--rowend-->
+
+													</div>
+													<input type="button" name="next" style="float:none;" class="next action-button" value="Skip" />
+													<button type="button" id="btnSubmitRegistration" class="next action-button" style="float: right;">Submit</button>
+													<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+												</fieldset>
+												<fieldset id="s6">
+													<div class="form-card">
+														<div class="row">
+															<div class="col-7">
+																<h2 class="fs-title">Verification Code:</h2>
+															</div>
+															<div class="col-5">
+																<h2 class="steps"></h2>
+															</div>
+														</div>
+														<div class="otp-form">
+
+															<!-- Mobile OTP Form -->
+															<form class="mobile-otp">
+																<h5>OTP Verification</h5>
+																<p>Please type the verification code sent to your registered email address <span id="lblemail"></span></p>
+																<div class="otp-container">
+																	<!-- Six input fields for OTP digits -->
+																	<input type="text" class="otp-input" id="Pin1" pattern="\d" maxlength="1">
+																	<input type="text" class="otp-input" id="Pin2" pattern="\d" maxlength="1" disabled>
+																	<input type="text" class="otp-input" id="Pin3" pattern="\d" maxlength="1" disabled>
+																	<input type="text" class="otp-input" id="Pin4" pattern="\d" maxlength="1" disabled>
+																	<input type="text" class="otp-input" id="Pin5" pattern="\d" maxlength="1" disabled>
+																	<input type="text" class="otp-input" id="Pin6" pattern="\d" maxlength="1" disabled>
+																</div>
+
+																@*<input type="button" name="next" class="next action-button" value="VERIFY &amp; PROCEED" />*@
+																<button type="button" id="verifyMobileOTP" onclick="PinVerification()">VERIFY &amp; PROCEED</button>
+																
+																<div class="mt-3 text-center">
+																	<button type="button" id="resendOTPBtn" class="btn btn-link text-decoration-none p-0 text-primary fw-semibold" style="display: none; border: none; background: none; font-size: 15px; cursor: pointer;">Resend OTP</button>
+																	<div id="otpCountdownText" class="text-muted mt-2 small" style="font-size: 14px;">Resend OTP in <span id="otpTimer" class="fw-bold" style="color: #e91e63;">60</span>s</div>
+																	<span id="otpMessage" class="d-block mt-2 small" style="font-weight: 500; font-size: 14px; min-height: 20px;"></span>
+																</div>
+															</form>
+														</div>
+													</div>
+												</fieldset>
+
+											</form>
+										</div>
+									</div>
+
+								</div><!--end row-->
+
+							</div>
+						</div>
+						<!-- End Content -->
+						<!-- Start Footer -->
+						<div class="text-center text-white pt-3">
+							<p class="mb-0">© @DateTime.UtcNow.Year M4NIKAH. All Rights Reserved.</p>
+						</div>
+						<!-- End Footer -->
+					</div>
+				</div><!--end col-->
+			</div><!--end row-->
+		</div><!--end container-->
+	</section><!--end section-->
+	<!-- Hero End -->
+	<!-- Registration Submit Loader Overlay -->
+	<div id="submitLoaderOverlay" class="submit-loader-overlay">
+		<div class="submit-loader-spinner-container">
+			<div class="submit-loader-spinner"></div>
+		</div>
+	</div>
+	<!-- Javascript -->
+	<!-- JAVASCRIPT -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<!-- Main Js -->
+	<script src="/assets/libs/feather-icons/feather.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput-jquery.min.js"></script>
+	<script src="/assets/js/plugins.init.js"></script>
+	<script src="/assets/js/app.js"></script>
+
+	<script>
+		$(document).ready(function () {
+
+			var current_fs, next_fs, previous_fs; //fieldsets
+			var opacity;
+			var current = 1;
+			var steps = $("fieldset").length;
+			setProgressBar(current);
+
+			$(".next").click(function () {
+
+				current_fs = $(this).parent();
+				next_fs = $(this).parent().next();
+				var divId = current_fs[0].attributes.id.value
+				if (divId == "s1") {
+					$("#ProfileForId").css('border', '');
+					$("#Name").css('border', '');
+					$("#Phone").css('border', '');
+					if ($("#ProfileForId").val() == "" || $("#ProfileForId").val() == null) {
+						$("#ProfileForId").focus();
+						$("#ProfileForId").css('border', '3px solid red');
+						alert("Please provide profile for");
+					}
+					else if ($("#Name").val() == "" || $("#Name").val() == null) {
+						$("#Name").css('border', '3px solid red');
+						$("#Name").focus();
+						alert("Please provide name");
+					}
+					else if ($("#Phone").val() == "" || $("#Phone").val() == null) {
+						$("#Phone").focus();
+						$("#Phone").css('border', '3px solid red');
+						alert("Please provide phone");
+					}
+					else {
+						Save("Step-1");
+						$("#lblemail").html($("#Email").val());
+						goNext(current_fs, next_fs);
+						startOTPTimer();
+					}
+				}
+				else if (divId == "s2") {
+					$("#Year").css('border', '');
+					$("#ReligionId").css('border', '');
+					$("#NationalityId").css('border', '');
+					$("#Email").css('border', '');
+					$("#Password").css('border', '');
+					if ($("#Day").val() == "" || $("#Day").val() == null
+						|| $("#Month").val() == "" || $("#Month").val() == null
+						|| $("#Year").val() == "" || $("#Year").val() == null) {
+						$("#Year").css('border', '3px solid red');
+						$("#Year").focus();
+						alert("Please provide date of birth");
+					}
+					else if ($("#ReligionId").val() == "" || $("#ReligionId").val() == null) {
+						$("#ReligionId").css('border', '3px solid red');
+						$("#ReligionId").focus();
+						alert("Please provide religion");
+					}
+					else if ($("#NationalityId").val() == "" || $("#NationalityId").val() == null) {
+						$("#NationalityId").css('border', '3px solid red');
+						$("#NationalityId").focus();
+						alert("Please provide nationality");
+					}
+					else if ($("#Email").val() == "" || $("#Email").val() == null) {
+						$("#Email").css('border', '3px solid red');
+						$("#Email").focus();
+						alert("Please provide email");
+					}
+					else if ($("#Password").val() == "" || $("#Password").val() == null) {
+						$("#Password").css('border', '3px solid red');
+						$("#Password").focus();
+						alert("Please provide password");
+					}
+					else {
+						Save("Step-2");
+						goNext(current_fs, next_fs);
+					}
+				}
+				else if (divId == "s3") {
+					$("#MaritalStatusId").css('border', '');
+					$("#HeightId").css('border', '');
+					$("#WeightId").css('border', '');
+					$("#ComplexionId").css('border', '');
+					$("#BodyTypeId").css('border', '');
+					if ($("#MaritalStatusId").val() == "" || $("#MaritalStatusId").val() == null) {
+						$("#MaritalStatusId").css('border', '3px solid red');
+						$("#MaritalStatusId").focus();
+						alert("Please provide marital status");
+					}
+					else if ($("#HeightId").val() == "" || $("#HeightId").val() == null) {
+						$("#HeightId").css('border', '3px solid red');
+						$("#HeightId").focus();
+						alert("Please provide height");
+					}
+					else if ($("#WeightId").val() == "" || $("#WeightId").val() == null) {
+						$("#WeightId").css('border', '3px solid red');
+						$("#WeightId").focus();
+						alert("Please provide nationality");
+					}
+					else if ($("#ComplexionId").val() == "" || $("#ComplexionId").val() == null) {
+						$("#ComplexionId").css('border', '3px solid red');
+						$("#ComplexionId").focus();
+						alert("Please provide complexion");
+					}
+					else if ($("#BodyTypeId").val() == "" || $("#BodyTypeId").val() == null) {
+						$("#BodyTypeId").css('border', '3px solid red');
+						$("#BodyTypeId").focus();
+						alert("Please provide body type");
+					}
+					else {
+						Save("Step-3");
+						goNext(current_fs, next_fs);
+					}
+				}
+				else if (divId == "s4") {
+					$("#HighestEducation").css('border', '');
+					$("#EducationType").css('border', '');
+					$("#ProfessionId").css('border', '');
+					$("#MotherTongueId").css('border', '');
+					$("#CommunityId").css('border', '');
+					$("#ReligiousnessId").css('border', '');
+					$("#FinancialStatusId").css('border', '');
+					if ($("#HighestEducation").val() == "" || $("#HighestEducation").val() == null) {
+						$("#HighestEducation").css('border', '3px solid red');
+						$("#HighestEducation").focus();
+						alert("Please provide highest education");
+					}
+					else if ($("#EducationType").val() == "" || $("#EducationType").val() == null) {
+						$("#EducationType").css('border', '3px solid red');
+						$("#EducationType").focus();
+						alert("Please provide highest education");
+					}
+					else if ($("#ProfessionId").val() == "" || $("#ProfessionId").val() == null) {
+						$("#ProfessionId").css('border', '3px solid red');
+						$("#ProfessionId").focus();
+						alert("Please provide profession");
+					} else if ($("#ProfessionType").val() == "" || $("#ProfessionType").val() == null) {
+						$("#ProfessionType").css('border', '3px solid red');
+						$("#ProfessionType").focus();
+						alert("Please provide profession type");
+					}
+					else if ($("#MotherTongueId").val() == "" || $("#MotherTongueId").val() == null) {
+						$("#MotherTongueId").css('border', '3px solid red');
+						$("#MotherTongueId").focus();
+						alert("Please provide mother tongue");
+					}
+					else if ($("#CommunityId").val() == "" || $("#CommunityId").val() == null) {
+						$("#CommunityId").css('border', '3px solid red');
+						$("#CommunityId").focus();
+						alert("Please provide community");
+					}
+					else if ($("#ReligiousnessId").val() == "" || $("#ReligiousnessId").val() == null) {
+						$("#ReligiousnessId").css('border', '3px solid red');
+						$("#ReligiousnessId").focus();
+						alert("Please provide religiousness");
+					}
+					else if ($("#FinancialStatusId").val() == "" || $("#FinancialStatusId").val() == null) {
+						$("#FinancialStatusId").css('border', '3px solid red');
+						$("#FinancialStatusId").focus();
+						alert("Please provide financial status");
+					}
+					else {
+						Save("Step-4");
+						goNext(current_fs, next_fs);
+					}
+				}
+				else if (divId == "s5") {
+					var isSubmit = ($(this).attr('id') === 'btnSubmitRegistration');
+					Save("Step-5", isSubmit);
+					goNext(current_fs, next_fs);
+				}
+				//else if (divId == "s6" && $("#Pin1").val() != "" && $("#Pin1").val() != null
+				//	&& $("#Pin2").val() != "" && $("#Pin2").val() != null
+				//	&& $("#Pin3").val() != "" && $("#Pin3").val() != null
+				//	&& $("#Pin4").val() != "" && $("#Pin4").val() != null
+				//	&& $("#Pin5").val() != "" && $("#Pin5").val() != null
+				//	&& $("#Pin6").val() != "" && $("#Pin6").val() != null) {
+				//		var pin = $("#Pin1").val() + $("#Pin2").val()+ $("#Pin3").val() + $("#Pin4").val() + $("#Pin5").val() + $("#Pin6").val();
+				//		if(pin == $("#VerificationCode").val()){
+				//			Save("Step-6");
+				//			alert("Registration has been successfully completed");
+				//		}
+				//		else{
+				//		alert("Invalid Verification code");
+				//		}
+				//}
+				else {
+					alert("Please provide the mandatory fields");
+				}
+			});
+
+			$(".previous").click(function () {
+
+				current_fs = $(this).closest('fieldset');
+				previous_fs = current_fs.prev();
+
+				//Remove class active
+				$("#progressbar li").eq($("fieldset").index(current_fs)).removeClass("active");
+
+				//show the previous fieldset
+				previous_fs.show();
+
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now) {
+						// for making fielset appear animation
+						opacity = 1 - now;
+
+						current_fs.css({
+							'display': 'none',
+							'position': 'relative'
+						});
+						previous_fs.css({ 'opacity': opacity });
+					},
+					duration: 500
+				});
+				setProgressBar(--current);
+			});
+
+			function goNext(current_fs, next_fs) {
+				//Add Class Active
+				$("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active");
+
+				//show the next fieldset
+				next_fs.show();
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now) {
+						// for making fielset appear animation
+						opacity = 1 - now;
+
+						current_fs.css({
+							'display': 'none',
+							'position': 'relative'
+						});
+						next_fs.css({ 'opacity': opacity });
+					},
+					duration: 500
+				});
+				setProgressBar(++current);
+			}
+
+			function setProgressBar(curStep) {
+				var percent = parseFloat(100 / steps) * curStep;
+				percent = percent.toFixed();
+				$(".progress-bar")
+					.css("width", percent + "%")
+			}
+
+			$(".submit").click(function () {
+				return false;
+			});
+
+			$("#resendOTPBtn").click(function () {
+				var id = $("#Id").val();
+				if (!id || id <= 0) {
+					alert("Registration session not found. Please try again from Step 1.");
+					return;
+				}
+
+				$("#resendOTPBtn").hide();
+				$("#otpMessage").css("color", "gray").text("Resending OTP...");
+
+				$.ajax({
+					type: 'POST',
+					url: '/Home/ResendOtp',
+					data: { id: id },
+					dataType: 'json',
+					success: function (response) {
+						if (response.success) {
+							$("#otpMessage").css("color", "green").text("OTP resent successfully.");
+							startOTPTimer();
+						} else {
+							$("#otpMessage").css("color", "red").text(response.message);
+							if (response.message.indexOf("Limit exceeded") >= 0 || response.message.indexOf("Maximum") >= 0) {
+								$("#otpCountdownText").hide();
+								$("#resendOTPBtn").hide();
+							} else {
+								$("#resendOTPBtn").show();
+							}
+						}
+					},
+					error: function () {
+						$("#otpMessage").css("color", "red").text("Failed to resend OTP. Please try again.");
+						$("#resendOTPBtn").show();
+					}
+				});
+			});
+
+		});
+
+		var otpCountdownInterval;
+		function startOTPTimer() {
+			clearInterval(otpCountdownInterval);
+			var duration = 60;
+			$("#resendOTPBtn").hide();
+			$("#otpCountdownText").show();
+			$("#otpTimer").text(duration);
+			$("#otpMessage").text("");
+
+			otpCountdownInterval = setInterval(function () {
+				duration--;
+				$("#otpTimer").text(duration);
+
+				if (duration <= 0) {
+					clearInterval(otpCountdownInterval);
+					$("#otpCountdownText").hide();
+					$("#resendOTPBtn").show();
+				}
+			}, 1000);
+		}
+
+		function PinVerification() {
+			if ($("#Pin1").val() != "" && $("#Pin1").val() != null
+				&& $("#Pin2").val() != "" && $("#Pin2").val() != null
+				&& $("#Pin3").val() != "" && $("#Pin3").val() != null
+				&& $("#Pin4").val() != "" && $("#Pin4").val() != null
+				&& $("#Pin5").val() != "" && $("#Pin5").val() != null
+				&& $("#Pin6").val() != "" && $("#Pin6").val() != null) {
+				var pin = $("#Pin1").val() + $("#Pin2").val() + $("#Pin3").val() + $("#Pin4").val() + $("#Pin5").val() + $("#Pin6").val();
+				
+				$.ajax({
+					type: 'POST',
+					url: '/Home/VerifyOtp',
+					data: { id: $("#Id").val(), otp: pin },
+					dataType: 'json',
+					success: function(response) {
+						if (response.success) {
+							Save("Step-6");
+							alert("Registration has been successfully completed");
+							window.location.href = "/User/Login";
+						} else {
+							alert(response.message);
+						}
+					},
+					error: function() {
+						alert("An error occurred during verification. Please try again.");
+					}
+				});
+			}
+			else {
+				alert("Please provide verification code");
+			}
+		}
+
+		function Save(step, isSubmit = false) {
+			var formData = new FormData();
+			var totalFiles = document.getElementById("Image").files.length;
+
+			for (var i = 0; i < totalFiles; i++) {
+				var file = document.getElementById("Image").files[i];
+				formData.append("Image", file);
+			}
+			formData.append("Id", $("#Id").val());
+			formData.append("ProfileForId", $("#ProfileForId").val());
+			formData.append("Name", $("#Name").val());
+			formData.append("Email", $("#Email").val());
+			formData.append("Phone", $("#Phone").val());
+			formData.append("Gender", $('input[name="Gender"]:checked').val());
+			formData.append("Password", $("#Password").val());
+			formData.append("Day", $("#Day").val());
+			formData.append("Month", $("#Month").val());
+			formData.append("Year", $("#Year").val());
+			formData.append("ReligionId", $("#ReligionId").val());
+			formData.append("NationalityId", $("#NationalityId").val());
+			formData.append("MaritalStatusId", $("#MaritalStatusId").val());
+			formData.append("HeightId", $("#HeightId").val());
+			formData.append("WeightId", $("#WeightId").val());
+			formData.append("ComplexionId", $("#ComplexionId").val());
+			formData.append("BodyTypeId", $("#BodyTypeId").val());
+			formData.append("IsPhysicallyChallenged", $('input[name="IsPhysicallyChallenged"]:checked').val() === 'Yes');
+			formData.append("HighestEducation", $("#HighestEducation").val());
+			formData.append("EducationType", $("#EducationType").val());
+			formData.append("ProfessionId", $("#ProfessionId").val());
+			formData.append("ProfessionType", $("#ProfessionType").val());
+			formData.append("MotherTongueId", $("#MotherTongueId").val());
+			formData.append("CommunityId", $("#CommunityId").val());
+			formData.append("ReligiousnessId", $("#ReligiousnessId").val());
+			formData.append("FinancialStatusId", $("#FinancialStatusId").val());
+			formData.append("FamilyName", $("#FamilyName").val());
+			formData.append("FatherName", $("#FatherName").val());
+			formData.append("Post", $("#Post").val());
+			formData.append("Village", $("#Village").val());
+			formData.append("PinCode", $("#PinCode").val());
+			formData.append("Country", $("#Country").val());
+			formData.append("State", $("#State").val());
+			formData.append("District", $("#District").val());
+			formData.append("PresentCountry", $("#PresentCountry").val());
+			formData.append("PresentState", $("#PresentState").val());
+			formData.append("PresentDistrict", $("#PresentDistrict").val());
+			formData.append("CompletedStep", step);
+
+			if (step === "Step-5" && isSubmit) {
+				$("#submitLoaderOverlay").addClass("active");
+				$("#btnSubmitRegistration").prop("disabled", true);
+			}
+
+			$.ajax({
+				type: 'post',
+				url: '/Home/Save',
+				data: formData,
+				dataType: 'json',
+				contentType: false,
+				processData: false,
+				success: function (response) {
+					if (response.status == 1) {
+						$("#Id").val(response.id);
+						$("#VerificationCode").val(response.code);
+						if (step === "Step-5" && isSubmit) {
+							$("#submitLoaderOverlay").removeClass("active");
+							$("#btnSubmitRegistration").prop("disabled", false);
+						}
+					}
+					else {
+						if (step === "Step-5" && isSubmit) {
+							$("#submitLoaderOverlay").removeClass("active");
+							$("#btnSubmitRegistration").prop("disabled", false);
+						}
+						alert(response.message);
+					}
+				},
+				error: function (error) {
+					if (step === "Step-5" && isSubmit) {
+						$("#submitLoaderOverlay").removeClass("active");
+						$("#btnSubmitRegistration").prop("disabled", false);
+					}
+					alert("Something went wrong");
+				}
+			});
+		}
+
+		function isnumber(evt) {
+			var ikeycode = (evt.which) ? evt.which : evt.ikeycode
+			if (ikeycode != 46 && ikeycode > 37 && ikeycode > 47 && ikeycode > 57)
+				return false;
+			return true;
+		}
+
+		// -----Country Code Selection
+		$("#Phone").intlTelInput({
+			initialCountry: "in",
+			separateDialCode: true,
+			// utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/11.0.4/js/utils.js"
+		});
+
+		$(".next").click(function () {
+
+			$('html, body').animate({
+				scrollTop: $(".donee").offset().top
+			}, 1000);
+
+		});
+		$(".previous").click(function () {
+
+			$('html, body').animate({
+				scrollTop: $(".donee").offset().top
+			}, 1000);
+
+		});
+		
+		// Gender change listener for profile image preview
+		$('input[name="Gender"]').change(function() {
+			var gender = $(this).val();
+			var profileImg = $('#profile-img');
+			// Only change if it's currently showing a default image
+			if (profileImg.attr('src').includes('default-user')) {
+				if (gender === 'Female') {
+					profileImg.attr('src', '/assets/images/default-user-women.png');
+				} else {
+					profileImg.attr('src', '/assets/images/default-user-men.png');
+				}
+			}
+		});
+
+		// handle file selection preview
+		function handleFileUpload(files) {
+			if (files && files.length > 0) {
+				const file = files[0];
+				const reader = new FileReader();
+
+				reader.onload = function (e) {
+					// Hide placeholder section
+					document.getElementById('profile-img-div').style.display = 'none';
+
+					// Set the uploaded image src
+					const uploadedPhoto = document.getElementById('uploaded-photo');
+					uploadedPhoto.src = e.target.result;
+					uploadedPhoto.style.display = 'block';
+
+					// Display uploaded div
+					document.getElementById('file-uploaded').style.display = 'block';
+				}
+
+				reader.readAsDataURL(file);
+			}
+		}
+
+	</script>
+
+	<!-- Image Crop/Resize Modal -->
+	<style>
+		.img-crop-modal-overlay {
+			display: flex;
+			position: fixed;
+			inset: 0;
+			opacity: 0;
+			visibility: hidden;
+		}
+
+		/* Registration Submit Loader Overlay */
+		.submit-loader-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(255, 255, 255, 0.85);
+			backdrop-filter: blur(5px);
+			-webkit-backdrop-filter: blur(5px);
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			z-index: 99999;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease-in-out;
+		}
+
+		.submit-loader-overlay.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.submit-loader-spinner-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+
+		.submit-loader-spinner {
+			width: 55px;
+			height: 55px;
+			border: 5px solid rgba(0, 102, 45, 0.1);
+			border-top: 5px solid #00662d;
+			border-radius: 50%;
+			animation: submit-spin 1s linear infinite;
+		}
+
+		@@keyframes submit-spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+	</style>
+	<div id="imgCropModal" class="img-crop-modal-overlay">
+		<div class="img-crop-modal-card">
+			<button type="button" id="imgCropBtnClose" class="img-crop-modal-close">
+				<i class="fa fa-times"></i>
+			</button>
+			<div class="img-crop-modal-header">
+				<h5>Crop & Resize Image</h5>
+				<p>Adjust the crop area to fit the required 630×800 dimensions</p>
+			</div>
+			<div class="img-crop-modal-body">
+				<img id="imgCropImage" src="" alt="Crop preview">
+			</div>
+			<div class="img-crop-dim-info">
+				<span class="dim-original">Original: <strong id="imgCropDimOriginal">—</strong></span>
+				<span class="dim-target">Target: <strong id="imgCropDimTarget">630×800</strong></span>
+			</div>
+			<div class="img-crop-modal-footer">
+				<button type="button" id="imgCropBtnCancel" class="img-crop-btn-cancel">Cancel</button>
+				<button type="button" id="imgCropBtnApply" class="img-crop-btn-crop">Crop & Resize</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Cropper.js JS -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+	<!-- Image Validator JS -->
+	<script src="/js/image-validator.js"></script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// Initialize Image Validator for SignUp
+			if (typeof ImageValidator !== 'undefined') {
+				ImageValidator.initSignup();
+			}
+		});
+	</script>
+
+</body>
+
+
+</html>

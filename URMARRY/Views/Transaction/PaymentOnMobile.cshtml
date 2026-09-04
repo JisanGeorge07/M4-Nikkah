@@ -1,0 +1,76 @@
+﻿@model Application.Models.Transactions.PaymentGatewayResponse
+@{
+    Layout = "/Views/Shared/_LayoutForPayment.cshtml";
+}
+<style>
+    .payment-container {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .payment-box {
+        background-color: #fff;
+        padding: 2rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+    }
+
+   /*  .icon-success {
+        font-size: 3rem;
+        color: green;
+        margin-bottom: 1rem;
+        */ 
+    }
+
+    .transaction-details {
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+    .transaction-details p {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .btn {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.7rem 1.5rem;
+        background-color: #4caf50;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+
+</style>
+
+<div class="payment-container">
+    <div class="payment-box">
+        <div style="background-color:green">
+            <span style='font-size:50px; color:white;'>&#10004;</span>
+            <h4 style="color:white;">Payment Successful</h4>
+        </div>
+      
+        <div class="transaction-details">
+            <p><strong>Transaction ID:</strong> @Model.TxnId</p>
+            <p><strong>Amount:</strong> $@Model.Amount</p>
+            <p><strong>Status:</strong> @Model.Status</p>
+        </div>
+        @* <a asp-action="MyProfile" asp-controller="User" class="btn">Ok</a> *@
+    </div>
+</div>

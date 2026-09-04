@@ -1,0 +1,564 @@
+﻿@model URMARRY.Areas.Admin.Models.EnquiryViewModel
+@{
+    ViewBag.Title = "Enquiry";
+    Layout = null;
+    var enquiry = Model.Enquiry!;
+    var content = Model.HomeContent!;
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="wpOceans">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+</head>
+<body onload="window.print()">
+    <div style="position: absolute;height: 100%;text-align: center;top: 35%;z-index: -1;">
+        <img width="50%" src="/assets/images/m4nikah_logobg.png" alt="">
+    </div>
+    <table style="max-width:2480px;margin: auto;" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td align="center" style="padding: 10px 10px 10px 10px;">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="">
+                                <tr style="width: 100%;float: left;">
+                                    @if (!string.IsNullOrEmpty(enquiry.ImagePath))
+                                    {
+                                        <td align="center" style="padding-top: 0px; width: 100%;float: left;margin-top:0px;">
+                                            <img src="@Html.Raw("/" + enquiry.ImagePath)" alt="" width="210" height="auto" style="display: block; border: 0px;" />
+                                        </td>
+                                    }
+                                    <td align="center" style="padding-top: 10px;width: 100%;float: left;">
+                                        <h2 style="font-size: 16px;font-family: Arial, Helvetica, sans-serif; font-weight: 600; line-height: 26px; color: #333333; margin: 0;text-transform: uppercase;">
+                                            Profile of @enquiry.Name
+                                        </h2>
+                                    </td>
+                                </tr>
+
+
+                                <tr>
+                                    <td align="left" style="padding-top:0px;">
+
+                                        <table cellspacing="0" cellpadding="0" border="0" style="float: left;" width="100%">
+                                            <tbody style="float: left;width: 100%;">
+                                                <tr bordercolor="#c9c9c9" style="float:left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left; text-indent:15px;">
+                                                        Highest Education:
+                                                    </td>
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        @enquiry.EducationType
+                                                    </td>
+                                                </tr>
+
+                                                <tr bordercolor="#c9c9c9" style="float:left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left; text-indent:15px;">
+                                                        Gender:
+                                                    </td>
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        @enquiry.Gender
+                                                    </td>
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Religion:
+                                                    </td>
+                                                    @if (enquiry.ReligionId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.ReligionCastes.FirstOrDefault(x => x.Id == enquiry.ReligionId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Date of Birth:
+                                                    </td>
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        @enquiry.DOB
+                                                    </td>
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Community:
+                                                    </td>
+                                                    @if (enquiry.CommunityId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.Communities.FirstOrDefault(x => x.Id == enquiry.CommunityId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Nationality:
+                                                    </td>
+                                                    @if (enquiry.NationalityId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                            @Model.Nationalities.FirstOrDefault(x => x.Id == enquiry.NationalityId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Religiousness:
+                                                    </td>
+                                                    @if (enquiry.ReligiousnessId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.Religiousnesses.FirstOrDefault(x => x.Id == enquiry.ReligiousnessId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Phone:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.Phone))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                            @enquiry.Phone
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Financial Status:
+                                                    </td>
+                                                    @if (enquiry.FinancialStatusId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.FinancialStatuses.FirstOrDefault(x => x.Id == enquiry.FinancialStatusId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Marital Status:
+                                                    </td>
+                                                    @if (enquiry.MaritalStatusId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                            @Model.MaritalStatuses.FirstOrDefault(x => x.Id == enquiry.MaritalStatusId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Family Name:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.FamilyName))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.FamilyName
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Height:
+                                                    </td>
+                                                    @if (enquiry.HeightId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                            @Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.HeightId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Father Name:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.FatherName))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.FatherName
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Weight:
+                                                    </td>
+                                                    @if (enquiry.WeightId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                            @Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.WeightId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        Post:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.Post))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.Post
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Complexion:
+                                                    </td>
+                                                    @if (enquiry.ComplexionId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.ComplexionId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Village:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.Village))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.Village
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Body Type:
+                                                    </td>
+                                                    @if (enquiry.BodyTypeId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.BodyFeatures.FirstOrDefault(x => x.Id == enquiry.BodyTypeId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left;text-indent:15px;">
+                                                        Pin Code:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.PinCode))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.PinCode
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Physically Challenged:
+                                                    </td>
+                                                    @if (enquiry.IsPhysicallyChallenged)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Yes
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            No
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Country:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.Country))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.Country
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Highest Education:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.HighestEducation))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.HighestEducation
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        State:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.State))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.State
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float:left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px;width: 50%;float: left; text-indent:15px;">
+                                                        Highest Education:
+                                                    </td>
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left; text-indent:15px;">
+                                                        @enquiry.EducationType
+                                                    </td>
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        District:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.District))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.District
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Profession:
+                                                    </td>
+                                                    @if (enquiry.ProfessionId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.Professions.FirstOrDefault(x => x.Id == enquiry.ProfessionId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Present Location Country:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.PresentCountry))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.PresentCountry
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Profession Type:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.ProfessionType))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.ProfessionType
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Present Location City:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.PresentState))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.PresentState
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Mother Tongue:
+                                                    </td>
+                                                    @if (enquiry.MotherTongueId > 0)
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @Model.MotherTongues.FirstOrDefault(x => x.Id == enquiry.MotherTongueId).Title
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                                <tr bordercolor="#c9c9c9" style="float: left;width: 49.7%;border: 1px solid #c9c9c9;padding-top: 8px; padding-bottom: 8px;">
+                                                    <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                        Present Location Telephone:
+                                                    </td>
+                                                    @if (!string.IsNullOrWhiteSpace(enquiry.PresentDistrict))
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            @enquiry.PresentDistrict
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td align="left" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 600; line-height:16px; width: 50%;float: left;text-indent:15px;">
+                                                            Nil
+                                                        </td>
+                                                    }
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr style="width: 100%;">
+                                    <td align="center" style="padding-top: 10px;">
+                                        <img src="/assets/images/logo1.png" alt="" width="110" height="auto" style="display: block; border: 0px;" />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td align="center" style="padding: 10px 24px; font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 20px; color: #666;">
+                                        <p style="font-size: 10px;margin: 0;"></p>
+                                        <p style="font-size: 10px;margin: 0;">www.m4nikah.com </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

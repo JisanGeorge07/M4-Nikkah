@@ -1,0 +1,88 @@
+@model MatchingProfilesViewModel
+
+@{
+    ViewBag.Title = "Enquiries";
+
+    var user = Model.Registration!;
+    var partners = Model.RegistrationList!;
+    var matchings = Model.MatchingProfiles!;
+    var community = Model.Communities!;
+    var match = Model.Matches!;
+    var MaritalStatuses = Model.MaritalStatuses!;
+    int i = 0;
+}
+
+@section Title
+    {
+    Profile matching for @user.Name - @user.Village, @user.State, @user.Country
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">
+                    Partners
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="SaveMatch" asp-controller="Enquiry" method="post">
+                    <input type="hidden" id="UserId" name="UserId" value="@user.Id" />
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="15%">Name</th>
+                            <th width="10%">Image</th>
+                            <th width="15%">Community</th>
+                            <th width="15%">City</th>
+                            <th width="15%">Marital Status</th>
+                            <th width="15%">Date of birth</th>
+                            <th width="10%">Assign</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in partners)
+                        {
+                            var com = community.FirstOrDefault(x => x.Id == item.CommunityId);
+                            <tr>
+                                <td>@Html.Raw(item.RegisterNumber)</td>
+                                <td>@Html.Raw(item.Name)</td>
+                                <td>
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@Html.Raw("/" + item.ImagePath)" width="180">
+                                        }
+                                        else
+                                        {
+                                            <img src="@Url.Content(string.Equals(item.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" width="180">
+                                        }
+                                </td>
+                                <td>@Html.Raw(com != null ? com.Title : "")</td>
+                                <td>@Html.Raw(item.Village)</td>
+                                <td>@Html.Raw(MaritalStatuses.FirstOrDefault(x => x.Id == item.MaritalStatusId).Title)</td>
+                                <td>@Html.Raw(item.DOB)</td>
+                                <td>
+                                    @if (matchings.FirstOrDefault(x => x.PartnerId == item.Id) != null)
+                                    {
+                                            @Html.CheckBox("Matches[" + i + "].IsSelected", true)
+                                        @*<input type="checkbox" id="Matches[@i].IsSelected" name="Matches[@i].IsSelected" checked>*@
+                                    }
+                                    else
+                                    {
+                                            @Html.CheckBox("Matches[" + i + "].IsSelected", false)
+                                        @*<input type="checkbox" id="Matches[@i].IsSelected" name="Matches[@i].IsSelected">*@
+                                    }
+                                    <input type="hidden" id="Matches[@i].PartnerId" name="Matches[@i].PartnerId" value="@item.Id">
+                                </td>
+                                </tr>
+                                i++;
+                            }
+                    </tbody>
+                </table>
+                    <button type="submit" id="formsubmit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

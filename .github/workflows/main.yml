@@ -1,0 +1,38 @@
+name: Matrimony WebApp Dev
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.0'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish URMARRY/URMARRY.csproj --configuration Release --output ./publish --runtime win-x86 --self-contained false --framework net7.0
+
+      - name: Deploy to Simply
+        uses: jahbenjah/smarterasp.net-web-deploy@1.0.0.alpha.8
+        with:
+            website-name: jophybabu60-007-site2
+            server-computer-name: https://win6057.site4now.net:8172
+            server-username: jophybabu60-007
+            server-password: Nikah123##
+
+      - name: Configure Connection String
+        run: |
+          echo "ConnectionStrings:MyDatabaseConnectionString = Server=MYSQL6008.site4now.net;Database=db_aa2f71_m4devdb;Uid=aa2f71_m4devdb;Pwd=Nikah123##" >> ./publish/appsettings.json

@@ -1,0 +1,654 @@
+@*@using Application.Constants
+@model SearchViewModel;
+@{
+	Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<style>
+    /* Minimal styles for dual range slider to match your design */
+    .range-wrap {
+        position: relative;
+        height: 40px;
+        margin: 15px 0 25px;
+    }
+    .range-wrap .range {
+        position: absolute;
+        width: 100%;
+        pointer-events: none;
+        -webkit-appearance: none;
+        background: none;
+        z-index: 2;
+    }
+    .range-wrap .range::-webkit-slider-thumb {
+        pointer-events: auto;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #0b6b3a;
+        cursor: pointer;
+        border: 2px solid #fff;
+    }
+    .range-slider-track {
+        height: 5px;
+        width: 100%;
+        background: #b7d3c2;
+        position: absolute;
+        top: 6px;
+        border-radius: 5px;
+        z-index: 1;
+    }
+    .range-slider-fill {
+        height: 5px;
+        background: #0b6b3a;
+        position: absolute;
+        top: 6px;
+        border-radius: 5px;
+        z-index: 1;
+    }
+    .bubble {
+        position: absolute;
+        top: -30px;
+        background: #0b6b3a;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        z-index: 3;
+    }
+</style>
+
+<div class="d-md-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Search</h5>
+
+    <nav aria-label="breadcrumb" class="d-inline-block mt-2 mt-sm-0">
+        <ul class="breadcrumb bg-transparent rounded mb-0 p-0">
+            <li class="breadcrumb-item text-capitalize"><a asp-action="Dashboard" asp-controller="User">M4NIKAH</a></li>
+            <li class="breadcrumb-item text-capitalize active" aria-current="page">Search</li>
+        </ul>
+    </nav>
+</div> 
+
+<div class="col-xl-12 mt-3">
+    <!-- Account details card-->
+    <div class="card mb-4">
+        <div class="card-header font-weight-bold">Search Profiles</div>
+
+        <div class="tab_container">
+            <input id="tab1" type="radio" name="tabs" checked>
+            <label for="tab1"><span>ID Search</span></label>
+
+            <input id="tab2" type="radio" name="tabs">
+            <label for="tab2"><span>Search</span></label>
+
+            <section id="content1" class="tab-content">
+                <div class="row mb-3 searchdiv">
+                    <div class="col-md-12 text-center">
+                        <p>Search by Profile ID</p>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="search-bar newsearch d-md-block w-100">
+                            <div id="search" class="menu-search mb-0">
+                                <form asp-action="SearchProfileResults" asp-controller="User" method="get">
+                                    <div class="only1">
+                                        <input type="text" class="form-control mb-3" name="SearchQuery" placeholder="Search by Profile ID">
+                                        <input class="btn btn-primary" type="submit" value="Search">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="content2" class="tab-content">
+                <div class="col-md-12 text-center">
+                    <p>Search by Details</p>
+                </div>
+                <form asp-controller="User" asp-action="SearchProfileResults" method="get" class="formdetail">
+                    <label>Age</label>
+                    <div class="field">
+                        <div class="range-wrap">
+                            <div class="range-slider-track"></div>
+                            <div class="range-slider-fill" id="ageTrackFill"></div>
+                            <input type="range" min="18" max="80" value="@(Model.AgeFrom ?? 18)" class="range" id="ageFrom" name="AgeFrom">
+                            <input type="range" min="18" max="80" value="@(Model.AgeTo ?? 40)" class="range" id="ageTo" name="AgeTo">
+                            <div class="bubble" id="ageBubble"></div>
+                        </div>
+                        <div class="limits">
+                            <span>18 Yrs</span>
+                            <span>80 Yrs</span>
+                        </div>
+                    </div>
+
+                    <label>Height</label>
+                    <div class="field">
+                        <div class="range-wrap">
+                            <div class="range-slider-track"></div>
+                            <div class="range-slider-fill" id="heightTrackFill"></div>
+                            <input type="range" min="100" max="200" value="@(Model.HeightFrom ?? 100)" class="range" id="heightFrom" name="HeightFrom">
+                            <input type="range" min="100" max="200" value="@(Model.HeightTo ?? 180)" class="range" id="heightTo" name="HeightTo">
+                            <div class="bubble" id="heightBubble"></div>
+                        </div>
+                        <div class="limits">
+                            <span>100 cm</span>
+                            <span>200 cm</span>
+                        </div>   
+                    </div>
+
+                    <label>Marital Status</label>
+                    <div class="field selectdiv">
+                        <select asp-for="MaritalStatusId" class="form-select form-control m_lr">
+                            <option value="">Any</option>
+                            @foreach (var item in Model.MaritalStatuses)
+                            {
+                                <option value="@item.Id">@Html.Raw(item.Title)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <label>Community</label>
+                    <div class="field selectdiv">
+                        <select asp-for="CommunityId" class="form-select form-control m_lr">
+                            <option value="">Any</option>
+                            @foreach (var item in Model.Communities)
+                            {
+                                <option value="@item.Id">@Html.Raw(item.Title)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <label>Education</label>
+                    <div class="field selectdiv">
+                        <select asp-for="HighestEducationTitle" class="form-select form-control m_lr">
+                            <option value="">Any</option>
+                            @foreach (var item in Model.BodyFeatures)
+                            {
+                                @if (item.Type == BodyFeature.Education)
+                                {
+                                    <option value="@item.Title">@Html.Raw(item.Title)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <label>Home District</label> 
+                    <div class="field selectdiv">
+                        <select asp-for="district" class="form-select form-control m_lr" id="District">
+                            <option value="">Any</option>
+                            @foreach (var item in Model.Districts)
+                            {
+                                <option value="@item.Name">@Html.Raw(item.Name)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="buttndiv"><button class="btn btn-primary" type="submit">Search Now</button></div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!--modal start-->
+<div class="modal fade" id="payment1" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content rounded shadow border-0">
+			<div class="modal-header border-bottom">
+				<button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal" id="close-modal"><i class="uil uil-times fs-4 text-dark"></i></button>
+			</div>
+			<div class="modal-body pt-0">
+				<div class="paymentdivv" style="text-align: center; padding: 20px;">
+					<h7>Upgrade to Premium Membership to view contact details</h7>
+				</div>
+				<div class="text-center">
+					<div class="paymentdiv align-items-center justify-content-center mx-auto" style="background-color:#A5BE25; color:white; padding-top:10px;">
+						<h4>Membership Package</h4>
+						<h4>180 Days</h4>
+						<a style="background-color: #8CA11E;">
+							<h3>
+								<span style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ 2000</span>
+							</h3>
+						</a>
+					</div>
+					<div class="mt-4 features_div">
+						<h4>Features</h4>
+						<p class="text-muted">Unlock Contact Details</p>
+						<p class="text-muted">Get Notifications</p>
+						<div class="mt-4 newbtn pb-3">
+							<a asp-action="MakePayment" asp-controller="Transaction">
+								Pay Online
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--model end-->
+
+@section Scripts {
+    <style>
+        /* Select2 customizations to match existing design */
+        .select2-container--default .select2-selection--single {
+            background-color: transparent !important;
+            border: none !important;
+            height: auto !important;
+            padding: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #000 !important;
+            padding-left: 0 !important;
+            line-height: 1.5;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            right: 10px !important;
+        }
+        .select2-dropdown {
+            border: 1px solid #dfeae4 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+            overflow: hidden;
+            z-index: 1050;
+        }
+        .select2-search__field {
+            border: 1px solid #dfeae4 !important;
+            border-radius: 5px !important;
+            padding: 8px !important;
+            outline: none !important;
+        }
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: #0b6b3a !important;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+
+            function setupDualRange(fromId, toId, fillId, bubbleId, unit) {
+                const fromInput = document.getElementById(fromId);
+                const toInput = document.getElementById(toId);
+                const fill = document.getElementById(fillId);
+                const bubble = document.getElementById(bubbleId);
+
+                function update() {
+                    let minVal = parseInt(fromInput.value);
+                    let maxVal = parseInt(toInput.value);
+
+                    if (minVal > maxVal) {
+                        if (this === fromInput) fromInput.value = maxVal;
+                        else toInput.value = minVal;
+                        minVal = parseInt(fromInput.value);
+                        maxVal = parseInt(toInput.value);
+                    }
+
+                    const min = parseInt(fromInput.min);
+                    const max = parseInt(fromInput.max);
+                    const leftPercent = ((minVal - min) / (max - min)) * 100;
+                    const rightPercent = ((maxVal - min) / (max - min)) * 100;
+
+                    fill.style.left = leftPercent + "%";
+                    fill.style.width = (rightPercent - leftPercent) + "%";
+
+                    bubble.innerHTML = `${minVal} - ${maxVal} ${unit}`;
+                    bubble.style.left = (leftPercent + (rightPercent - leftPercent) / 2) + "%";
+                }
+
+                fromInput.addEventListener("input", update);
+                toInput.addEventListener("input", update);
+                update();
+            }
+
+            setupDualRange("ageFrom", "ageTo", "ageTrackFill", "ageBubble", "Yrs");
+            setupDualRange("heightFrom", "heightTo", "heightTrackFill", "heightBubble", "cm");
+
+            // Initialize Select2 for District
+            $('#District').select2({
+                placeholder: "Any",
+                allowClear: false,
+                width: '100%'
+            });
+
+            // Initialize for other dropdowns if needed for consistency
+            $('#CommunityId, #MaritalStatusId, #HighestEducationTitle').select2({
+                placeholder: "Any",
+                allowClear: false,
+                width: '100%'
+            });
+        });
+    </script>
+}*@
+
+@using Application.Constants
+@model SearchViewModel;
+@{
+	Layout = "/Views/Shared/_LayoutAccount.cshtml";
+
+    var selectedMaritalStatus = Model.MaritalStatuses.FirstOrDefault(x => x.Id == Model.MaritalStatusId)?.Title ?? "Any";
+    var selectedCommunity = Model.Communities.FirstOrDefault(x => x.Id == Model.CommunityId)?.Title ?? "Any";
+    var selectedEducation = Model.HighestEducationTitle ?? "Any";
+    var selectedDistrict = Model.district ?? "Any";
+}
+
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+            <!-- Tab Section -->
+            <div class="search-tabs-container">
+                <button id="idSearchTab" class="search-tab active">ID Search</button>
+                <button id="detailsSearchTab" class="search-tab inactive">Search</button>
+            </div>
+
+            <!-- ID Tab Content -->
+            <div id="idSearchContent" class="id-search-section">
+                <h3 class="section-title">Search by Profile ID or Name</h3>
+
+                <form asp-action="SearchProfileResults" asp-controller="User" method="get">
+                    <div class="search-card">
+                        <div class="search-input-group">
+                            <input type="text" name="SearchQuery" value="@Context.Request.Query["SearchQuery"]" placeholder="Enter Profile ID or Name">
+                            <i class="uil uil-search"></i>
+                        </div>
+
+                        <button type="submit" class="search-btn-large">Search</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Detail Search Content -->
+            <div id="detailsSearchContent" class="details-search-section d-none">
+                <h3 class="section-title">Search by Details</h3>
+
+                <form asp-controller="User" asp-action="SearchProfileResults" method="get">
+                    <!-- Age Slider -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/cake-icon.png" alt="age-icon" class="logo">
+                            Age
+                        </label>
+                        <div class="range-slider-container">
+                            <div class="range-slider">
+                                <div class="slider-track" id="ageTrack"></div>
+                                <input type="range" min="18" max="70" value="@(Model.AgeFrom ?? 18)" class="range-input" id="ageMin" name="AgeFrom">
+                                <input type="range" min="18" max="70" value="@(Model.AgeTo ?? 30)" class="range-input" id="ageMax" name="AgeTo">
+                                <div class="slider-tooltip" id="ageTooltip">30 Yrs</div>
+                            </div>
+                            <div class="slider-values">
+                                <div class="value-box" id="ageMinValue">18 Yrs</div>
+                                <div class="text-muted">—</div>
+                                <div class="value-box" id="ageMaxValue">30 Yrs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Height Slider -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/height-icon.png" alt="height-icon" class="logo"> Height
+                        </label>
+                        <div class="range-slider-container">
+                            <div class="range-slider">
+                                <div class="slider-track" id="heightTrack"></div>
+                                <input type="range" min="120" max="220" value="@(Model.HeightFrom ?? 137)" class="range-input" id="heightMin" name="HeightFrom">
+                                <input type="range" min="120" max="220" value="@(Model.HeightTo ?? 175)" class="range-input" id="heightMax" name="HeightTo">
+                                <div class="slider-tooltip" id="heightTooltip">175 cm</div>
+                            </div>
+                            <div class="slider-values">
+                                <div class="value-box" id="heightMinValue">137 cm</div>
+                                <div class="text-muted">—</div>
+                                <div class="value-box" id="heightMaxValue">175 cm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Marital Status -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/marital-icon.png" alt="marital-icon" class="logo"> Marital Status
+                        </label>
+                        <div class="custom-dropdown" data-placeholder="Any">
+                            <input type="hidden" name="MaritalStatusId" value="@Model.MaritalStatusId" />
+                            <div class="dropdown-selected">
+                                <span>@Html.Raw(selectedMaritalStatus)</span> <i class="uil uil-angle-down"></i>
+                            </div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-search-box">
+                                    <input type="text" placeholder="Search Marital Status...">
+                                </div>
+                                <ul class="dropdown-options">
+                                    <li class="dropdown-option @(string.IsNullOrEmpty(Model.MaritalStatusId?.ToString()) ? "active" : "")" data-value="">Any</li>
+                                    @foreach (var item in Model.MaritalStatuses)
+                                    {
+                                        <li class="dropdown-option @(Model.MaritalStatusId == item.Id ? "active" : "")" data-value="@item.Id">@Html.Raw(item.Title)</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/community-icon.png" alt="community-icon" class="logo"> Community
+                        </label>
+                        <div class="custom-dropdown" data-placeholder="Any">
+                            <input type="hidden" name="CommunityId" value="@Model.CommunityId" />
+                            <div class="dropdown-selected">
+                                <span>@Html.Raw(selectedCommunity)</span> <i class="uil uil-angle-down"></i>
+                            </div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-search-box">
+                                    <input type="text" placeholder="Search Community...">
+                                </div>
+                                <ul class="dropdown-options">
+                                    <li class="dropdown-option @(string.IsNullOrEmpty(Model.CommunityId?.ToString()) ? "active" : "")" data-value="">Any</li>
+                                    @foreach (var item in Model.Communities)
+                                    {
+                                        <li class="dropdown-option @(Model.CommunityId == item.Id ? "active" : "")" data-value="@item.Id">@Html.Raw(item.Title)</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/education-icon.png" alt="education-icon" class="logo"> Education
+                        </label>
+                        <div class="custom-dropdown" data-placeholder="Any">
+                            <input type="hidden" name="HighestEducationTitle" value="@Model.HighestEducationTitle" />
+                            <div class="dropdown-selected">
+                                <span>@Html.Raw(selectedEducation)</span> <i class="uil uil-angle-down"></i>
+                            </div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-search-box">
+                                    <input type="text" placeholder="Search Education...">
+                                </div>
+                                <ul class="dropdown-options">
+                                    <li class="dropdown-option @(string.IsNullOrEmpty(Model.HighestEducationTitle) ? "active" : "")" data-value="">Any</li>
+                                    @foreach (var item in Model.BodyFeatures)
+                                    {
+                                        @if (item.Type == BodyFeature.Education)
+                                        {
+                                            <li class="dropdown-option @(Model.HighestEducationTitle == item.Title ? "active" : "")" data-value="@item.Title">@Html.Raw(item.Title)</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Home District -->
+                    <div class="custom-dropdown-container">
+                        <label class="dropdown-label">
+                            <img src="/assets/images/icon/location-icon.png" alt="location-icon" class="logo"> Home District
+                        </label>
+                        <div class="custom-dropdown" data-placeholder="Any">
+                            <input type="hidden" name="district" value="@Model.district" />
+                            <div class="dropdown-selected">
+                                <span>@Html.Raw(selectedDistrict)</span> <i class="uil uil-angle-down"></i>
+                            </div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-search-box">
+                                    <input type="text" placeholder="Search District...">
+                                </div>
+                                <ul class="dropdown-options">
+                                    <li class="dropdown-option @(string.IsNullOrEmpty(Model.district) ? "active" : "")" data-value="">Any</li>
+                                    @foreach (var item in Model.Districts)
+                                    {
+                                        <li class="dropdown-option @(Model.district == item.Name ? "active" : "")" data-value="@item.Name">@Html.Raw(item.Name)</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="search-btn-large">Search Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+            
+@section Scripts
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tab Switching Logic
+            const idSearchTab = document.getElementById('idSearchTab');
+            const detailsSearchTab = document.getElementById('detailsSearchTab');
+            const idSearchContent = document.getElementById('idSearchContent');
+            const detailsSearchContent = document.getElementById('detailsSearchContent');
+
+            idSearchTab.addEventListener('click', () => {
+                idSearchTab.classList.add('active');
+                idSearchTab.classList.remove('inactive');
+                detailsSearchTab.classList.add('inactive');
+                detailsSearchTab.classList.remove('active');
+                idSearchContent.classList.remove('d-none');
+                detailsSearchContent.classList.add('d-none');
+            });
+
+            detailsSearchTab.addEventListener('click', () => {
+                detailsSearchTab.classList.add('active');
+                detailsSearchTab.classList.remove('inactive');
+                idSearchTab.classList.add('inactive');
+                idSearchTab.classList.remove('active');
+                detailsSearchContent.classList.remove('d-none');
+                idSearchContent.classList.add('d-none');
+            });
+
+            // Dual Range Slider Logic
+            function initRangeSlider(id, unit) {
+                const minInput = document.getElementById(id + 'Min');
+                const maxInput = document.getElementById(id + 'Max');
+                const minValue = document.getElementById(id + 'MinValue');
+                const maxValue = document.getElementById(id + 'MaxValue');
+                const track = document.getElementById(id + 'Track');
+                const tooltip = document.getElementById(id + 'Tooltip');
+
+                function update(e) {
+                    let min = parseInt(minInput.value);
+                    let max = parseInt(maxInput.value);
+
+                    if (min > max) {
+                        if (e && e.target === minInput) {
+                            minInput.value = max;
+                            min = max;
+                        } else {
+                            maxInput.value = min;
+                            max = min;
+                        }
+                    }
+
+                    minValue.textContent = min + ' ' + unit;
+                    maxValue.textContent = max + ' ' + unit;
+                    tooltip.textContent = max + ' ' + unit;
+
+                    const percent1 = ((min - minInput.min) / (minInput.max - minInput.min)) * 100;
+                    const percent2 = ((max - maxInput.min) / (maxInput.max - maxInput.min)) * 100;
+
+                    track.style.left = percent1 + '%';
+                    track.style.width = (percent2 - percent1) + '%';
+                    tooltip.style.left = percent2 + '%';
+                }
+
+                minInput.addEventListener('input', update);
+                maxInput.addEventListener('input', update);
+                update();
+            }
+
+            initRangeSlider('age', 'Yrs');
+            initRangeSlider('height', 'cm');
+
+            // Custom Dropdown Logic
+            const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+            dropdowns.forEach(dropdown => {
+                const selected = dropdown.querySelector('.dropdown-selected');
+                const menu = dropdown.querySelector('.dropdown-menu');
+                const searchInput = dropdown.querySelector('.dropdown-search-box input');
+                const options = dropdown.querySelectorAll('.dropdown-option');
+
+                selected.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = menu.style.display === 'flex';
+
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+                    document.querySelectorAll('.dropdown-selected').forEach(s => s.classList.remove('open'));
+
+                    if (!isOpen) {
+                        menu.style.display = 'flex';
+                        selected.classList.add('open');
+                        searchInput.focus();
+                    }
+                });
+
+                searchInput.addEventListener('click', (e) => e.stopPropagation());
+
+                searchInput.addEventListener('input', () => {
+                    const filter = searchInput.value.toLowerCase();
+                    options.forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        if (text.includes(filter)) {
+                            option.style.display = 'block';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+                });
+
+                options.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selected.querySelector('span').textContent = option.textContent;
+                        options.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        menu.style.display = 'none';
+                        selected.classList.remove('open');
+                        searchInput.value = ''; // Reset search
+                        options.forEach(opt => opt.style.display = 'block'); // Show all
+
+                        // Sync with hidden input
+                        const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+                        if (hiddenInput) {
+                            hiddenInput.value = option.getAttribute('data-value');
+                        }
+                    });
+                });
+            });
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+                document.querySelectorAll('.dropdown-selected').forEach(s => s.classList.remove('open'));
+            });
+        });
+    </script>
+}   

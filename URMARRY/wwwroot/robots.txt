@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /user/login
+Disallow: /admin/
+Disallow: /account/
+Disallow: /dashboard/
+
+Sitemap: https://m4nikah.com/sitemap.xml

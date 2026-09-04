@@ -1,0 +1,152 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<main class="flex-fill" style="min-width: 0;">
+                <div class="container" style="max-width: 960px;">
+                    <div class="p-4">
+                        <!-- Manage Alert Section -->
+                        <div class="mb-4">
+                            <h5 class="settings-title">Need & Support</h5>
+							<p>Need assistance with the app? Let us know your issue or question, and we'll get back to you promptly. </p>
+							<p><b>Attach a photo or video to help us understand the issue better.</b></p>
+							
+                            @if (TempData["Success"] != null)
+                            {
+                                <div class="alert alert-success">@TempData["Success"]</div>
+                            }
+                            @if (TempData["Error"] != null)
+                            {
+                                <div class="alert alert-danger">@TempData["Error"]</div>
+                            }
+
+							<div class="p-4 border-0" style="background-color: #E9F5EE; border-radius: 12px;">
+                                <form id="appealForm" enctype="multipart/form-data">
+                                    <input type="hidden" id="userId" value="@Model.Registration.Id" />
+                                    <div class="mb-4 position-relative">
+										<p><label for="comments">Comments/Appeal Message:</label></p>
+										<textarea class="form-control border-0 shadow-sm settings-input" rows="3" cols="50" id="comments" name="comments" required></textarea>
+                                    </div>
+                                    <div class="mb-4 position-relative">
+										<input type="file" class="form-control border-0 shadow-sm settings-input" id="myfile" name="myfile">
+                                    </div>
+
+                                    <button type="submit" class="btn text-white fw-bold px-4 save-button">
+                                        Submit Appeal
+                                    </button>
+                                </form>
+                            </div>
+							
+                            <div class="mt-5">
+								
+								<div class="w-100">
+									
+									<h5 class="settings-title">Need Instant Support?</h5>
+
+								<div class="help-info">
+									<div class="product-title">
+									<div class="icon2">
+                                    <img src="../../../../assets/images/icon/phone.png" alt="phone">
+                                    </div>
+                                    <div class="text2"><p>For Voice Support</p><h5>+919847838325</h5></div>
+									</div>
+									
+									<div class="billhist">
+									<a href="tel:+919847838325" class="btn btn-primary">
+										Call Us
+									</a>
+								</div>
+								</div>
+									
+								<div class="help-info">
+									<div class="product-title">
+									<div class="icon2">
+                                    <img src="../../../../assets/images/icon/mail-icon.png" alt="phone">
+                                    </div>
+                                    <div class="text2"><p>For Email Support</p><h5>info@m4nikah.com</h5></div>
+									</div>
+									
+									<div class="billhist">
+									<a href="mailto:info@m4nikah.com" class="btn btn-primary">
+										Email Us
+									</a>
+								</div>
+								</div>
+									
+								<div class="help-info">
+									<div class="product-title">
+									<div class="icon2">
+                                    <img src="../../../../assets/images/icon/whatsapp.icon.png" alt="phone">
+                                    </div>
+                                    <div class="text2"><p>For WhatsApp Support</p><h5>+919847838325</h5></div>
+									</div>
+									
+									<div class="billhist">
+									<a href="https://wa.me/919847838325" target="_blank" class="btn btn-primary">
+										WhatsApp
+									</a>
+								</div>
+								</div>	
+
+								
+
+							</div>
+								
+                              
+								
+							
+
+						</div>
+                        </div>
+
+                        
+
+                    </div>
+                </div>
+            </main>
+
+<script>
+    document.getElementById('appealForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+        
+        const formData = new FormData();
+        formData.append('userId', document.getElementById('userId').value);
+        formData.append('message', document.getElementById('comments').value);
+        
+        const fileInput = document.getElementById('myfile');
+        if (fileInput.files.length > 0) {
+            formData.append('attachment', fileInput.files[0]);
+        }
+        
+        try {
+            const response = await fetch('/api/support/submit-appeal', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                alert(result.message || 'Your appeal has been submitted successfully.');
+                window.location.href = '/user/suspended';
+            } else {
+                alert(result.message || 'An error occurred while submitting your appeal.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        } catch (error) {
+            console.error('Error submitting appeal:', error);
+            alert('An unexpected network error occurred.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+</script>

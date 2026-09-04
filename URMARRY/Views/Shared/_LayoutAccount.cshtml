@@ -1,0 +1,888 @@
+@model dynamic
+@*
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8"/>
+    <title>M4NIKAH - We help you find your perfect life partner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="M4NIKAH - We help you find your perfect life partner"
+    <meta name="keywords" content=""/>
+    <meta name="author" content=""/>
+    <meta name="email" content=""/>
+    <meta name="website" content=""/>
+    <meta name="Version" content=""/>
+
+    <!-- favicon -->
+    <link rel="shortcut icon" href="~/assets/images/favicon.png"/>
+    <!-- Css -->
+    <link href="~/assets/account/assets/libs/simplebar/simplebar.min.css" rel="stylesheet">
+    <!-- Bootstrap Css -->
+    <link href="~/assets/account/assets/css/bootstrap.min.css" class="theme-opt" rel="stylesheet" type="text/css"/>
+    <!-- Icons Css -->
+    <link href="~/assets/account/assets/libs/%40mdi/font/css/materialdesignicons.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="~/assets/account/assets/css/icons.min.css" rel="stylesheet" type="text/css"/>
+    <link href="~/assets/account/assets/libs/%40iconscout/unicons/css/line.css" type="text/css" rel="stylesheet"/>
+    <!-- Style Css-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="/assets/account/assets/css/style.min.css" class="theme-opt" rel="stylesheet" type="text/css"/>
+
+    <!-- Account Section Style -->
+    <link href="/assets/account/assets/css/style-main.css" class="theme-opt" rel="stylesheet" type="text/css" />
+    <!-- Courosel-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/tiny-slider.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/range-slider.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/min/tiny-slider.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X53CQBJMG6"></script>
+
+<script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-X53CQBJMG6');
+    </script>
+    <!--select 2 for searching in dropdowns-->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .searchdiv2 {
+            padding: 20px;
+        }
+
+        .searchdiv2 a {
+            background: #a5be25;
+            border: 0px;
+            -webkit-transition: all .3s ease;
+            transition: all .3s ease;
+        }
+
+        .searchdiv2 a:hover {
+            background: #00662d;
+            color: #fff !important;
+            border: 0px;
+            -webkit-transition: all .3s ease;
+            transition: all .3s ease;
+        }
+
+        .searchdiv2 a:hover i {
+            color: #00662d !important;
+        }
+
+        .searchdiv2 a i {
+            width: 36px;
+            height: 36px;
+            background-color: #f8f9fa;
+            display: -webkit-inline-box !important;
+            display: -ms-inline-flexbox !important;
+            display: inline-flex !important;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            font-size: 16px;
+            text-align: center;
+            border-radius: 100px !important;
+            -webkit-transition: all .3s ease;
+            transition: all .3s ease;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+<div class="page-wrapper toggled">
+    <!-- sidebar-wrapper -->
+    <nav id="sidebar" class="sidebar-wrapper">
+        <div class="sidebar-content" data-simplebar style="height: calc(100% - 60px);">
+            <div class="sidebar-brand">
+                <a asp-action="Dashboard" asp-controller="User">
+                    <img src="~/assets/images/logo.png" height="60" class="logo-light-mode" alt="">
+                </a>
+            </div>
+
+            <ul class="sidebar-menu">
+                <!-- <li class="searchdiv2 mx-2 p-2">
+                    <a asp-action="SearchProfile" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2"><i
+                            class="ti ti-search me-2 rounded-circle"></i> Search</a>
+                     <div class="sidebar-submenu">
+                            <ul>
+                                <li><a asp-action="SearchById" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile ID</a></li>
+                                <li><a asp-action="SearchProfile" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile
+Details</a></li>
+                            </ul>
+                        </div>
+                </li> -->
+
+                
+
+                <li class="searchdiv2"><div class="search-bar p-0 d-none d-md-block">
+                                <div id="search" class="menu-search mb-0 side-search-bar">
+                                    <form asp-action="SearchProfileResults" asp-controller="User" method="get" id="searchform" class="searchform">
+                                        <div class="w-100">
+                                            <input type="text" class="form-control border rounded" name="SearchQuery" id="s" placeholder="Search Keywords...">
+                                            <input type="submit" id="searchsubmit" value="Search">
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+						</li>
+
+                <li class="sidebar-dropdown">
+                        <a href="javascript:void(0)" class="btn btn-pills btn-secondary mt-2 me-2">Search</a>
+                        <div class="sidebar-submenu">
+                            <ul>
+                                <li><a asp-action="SearchById" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile ID</a></li>
+                                <li><a asp-action="SearchProfile" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile
+Details</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                <li class="sidebar-dropdown">
+                    <a href="javascript:void(0)">My Profile</a>
+                    <div class="sidebar-submenu">
+                        <ul>
+                            <li><a asp-action="MyProfile" asp-controller="User"><i class="ti ti-user me-2"></i> View My
+                                    Profile</a></li>
+                            <li><a asp-action="Edit" asp-controller="User"><i class="ti ti-user me-2"></i> Edit My
+                                    Profile</a></li>
+                            <li><a asp-action="Image" asp-controller="User"><i class="ti ti-camera me-2"></i> Manage
+                                    Photos</a></li>
+                            <!-- <li><a asp-action="GetStarredProfiles" asp-controller="User"><i class="ti ti-star me-2"></i>
+                                    Shortlisted Profiles</a></li> -->
+                        </ul>
+                    </div>
+                </li>
+                <li class="sidebar-dropdown">
+                    <a href="javascript:void(0)">Account Settings</a>
+                    <div class="sidebar-submenu">
+                        <ul>
+                            <li><a asp-action="ProfileVerification" asp-controller="User"><i class="ti ti-shield-check me-2"></i>
+                                    Profile Verification</a></li>
+                            <li><a asp-action="ChangePassword" asp-controller="User"><i class="ti ti-lock me-2"></i>
+                                    Edit Password</a></li>
+                            <li><a asp-action="DeleteAccount" asp-controller="User"><i class="ti ti-trash me-2"></i>
+                                    Delete Profile</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+
+            </ul>
+            <!-- sidebar-menu -->
+        </div>
+        <!-- Sidebar Footer -->
+        <ul class="sidebar-footer list-unstyled mb-0">
+            <li class="list-inline-item mb-0 w-100 text-center">
+                <a asp-action="Signout" asp-controller="User" class="btn btn-primary2 w-75 m-auto"><i
+                        class="ti ti-logout"></i> Logout</a>
+            </li>
+        </ul>
+        <!-- Sidebar Footer -->
+    </nav>
+    <!-- sidebar-wrapper -->
+    <!-- Start Page Content -->
+
+    <main class="page-content newaddbg">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="header-bar d-flex justify-content-between">
+                <div class="d-flex align-items-center">
+                    <a href="~/" class="logo-icon me-3">
+                        <img src="~/assets/images/favicon.png" height="45" class="small" alt="">
+                        <span class="big">
+                                <img src="~/assets/images/logo.png" height="42" class="logo-light-mode" alt="">
+                            </span>
+                    </a>
+                    <a id="close-sidebar" class="btn btn-icon btn-soft-light" href="javascript:void(0)">
+                        <i class="uil uil-bars align-middle" title="Contact Details"></i>
+                    </a>
+                    <div class="searchdiv02">
+							<a asp-action="SearchProfile" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2"><i class="ti ti-search
+me-2"></i> <span>Search</span></a>
+                        </div>
+                </div>
+                @* <form action="/SearchProfileResults" method="post" class="d-flex ms-3" style="flex-grow: 1;">
+                            <div class="form-group me-2 position-relative" style="width:100%; margin-bottom:10px;">
+                                <div class="form-group me-2 flex-grow-1 position-relative" style="max-width: 300px;">
+                                    <input type="text" name="searchQuery" class="form-control" placeholder="Name/ProfileId" id="searchInput"
+style="padding:0px;margin-top:10px; width:100%; border-width:medium;" value="@ViewBag.SearchQuery" />
+                                    <i class="bi bi-search position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);"></i> <!--
+Bootstrap icon for search -->
+                                </div>
+                            </div>
+                        </form> *@
+
+@* <form action="/SearchProfileResults" method="get" class="d-flex ms-3" style="flex-grow: 1;" id="searchForm">
+                    <div class="input-group input-group mx-3 mx-md-5">
+                        <input type="text" name="searchQuery" class="form-control"
+                               placeholder="Enter name or Profile ID"
+                               id="searchInput" value="@ViewBag.SearchQuery" />
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </form> *
+
+                <!--Start Topmenu-->
+					<div class="topmenu">
+                    <ul>
+
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+<li><a asp-controller="User" asp-action="Dashboard" class="@(currentAction == "Dashboard" ? "active" :
+"")">Profile</a></li>
+<li><a asp-controller="User" asp-action="Explore" class="@(currentAction == "Explore" ? "active" : "")">Explore</a></li>
+
+</ul><!--end navigation menu-->
+                    </div>
+					<!--end topmenu-->
+
+
+                <ul class="list-unstyled mb-0 d-flex align-items-center">
+                    <li class="list-inline-item mb-0 dropdown me-1">
+                        <a href="javascript:void(0)" id="notificationDropdown" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <div class="btn btn-icon btn-pills btn-soft-primary">
+                                <i class="uil uil-bell align-middle" title="Notifications"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            @await Component.InvokeAsync("Notifications")
+                        </div>
+                    </li>
+                    <li class="list-inline-item mb-0">
+                        <a href="javascript:void(0)" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
+                           aria-controls="offcanvasRight">
+                            <div class="btn btn-icon btn-pills btn-soft-primary">
+                                <i class="uil uil-apps align-middle" title="Contact Details"></i>
+                            </div>
+                        </a>
+                    </li>
+                    @await Component.InvokeAsync("UserProfile")
+                </ul>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="payment1" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="z-index:100 !important">
+                <div class="modal-content rounded shadow border-0">
+                    <div class="modal-header border-bottom">
+                        <button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal" id="close-modal">
+                            <i class="uil uil-times fs-4 text-dark"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <div class="paymentdivv" style="text-align: center; padding: 20px;">
+                            <h7>Upgrade to Premium Membership to view contact details</h7>
+                        </div>
+                        <div class="text-center">
+                            <div class="paymentdiv align-items-center justify-content-center mx-auto"
+                                 style="background-color:#A5BE25; color:white; padding-top:10px;">
+                                <h4>Membership Package</h4>
+                                <h4>180 Days</h4>
+                                <a style="background-color: #8CA11E;">
+                                    <h3>
+                                        <span
+                                            style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ 2000</span>
+                                    </h3>
+                                </a>
+                            </div>
+                            <div class="mt-4 features_div">
+                                <h4>Features</h4>
+                                <p class="text-muted">Unlock contact details of up to 50 members - 6 months validity</p>
+                                <p class="text-muted">Like your favourite profiles</p>
+                                <p class="text-muted">Get Notifications</p>
+                                <div class="mt-4 newbtn pb-3">
+                                    <a asp-action="MakePayment" asp-controller="Transaction">
+                                        Pay Online
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container">
+            <div class="layout-specing">
+                @RenderBody()
+            </div>
+        </div>
+        <footer class="shadow py-3">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="text-center mx-md-2">
+                            <p class="mb-0">© @DateTime.UtcNow.Year M4NIKAH. All Rights Reserved.</p>
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+            </div><!--end container-->
+        </footer><!--end footer-->
+        <!-- End -->
+    </main>
+    <!--End page-content" -->
+</div>
+<!-- page-wrapper -->
+@await Component.InvokeAsync("UserFooter")
+
+<!-- javascript -->
+<!-- JAVASCRIPT -->
+<script src="/assets/account/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/account/assets/libs/feather-icons/feather.min.js"></script>
+<script src="/assets/account/assets/libs/simplebar/simplebar.min.js"></script>
+<!-- Main Js -->
+<script src="/assets/account/assets/js/plugins.init.js"></script>
+<script src="/assets/account/assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@RenderSection("Scripts", required: false)
+</body>
+
+</html>
+*@
+
+
+<!doctype html>
+<html lang="en" dir="ltr">
+
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X53CQBJMG6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-X53CQBJMG6');
+</script>
+    <meta charset="utf-8" />
+    <script>
+        window.isPremiumMember = @((Model.Registration != null ? Model.Registration.IsPremiumMember : false).ToString().ToLower());
+    </script>
+    <title>M4NIKAH - We help you find your perfect life partner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="M4NIKAH - We help you find your perfect life partner" />
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <meta name="email" content="" />
+    <meta name="website" content="" />
+    <meta name="Version" content="" />
+
+    <!-- favicon -->
+    <link rel="shortcut icon" href="~/assets/images/favicon.png" />
+    <!-- Css -->
+    <link href="~/assets/account/assets/libs/simplebar/simplebar.min.css" rel="stylesheet">
+    <link href="~/assets/account/assets/libs/tiny-slider/tiny-slider.css" rel="stylesheet">
+    <!-- Bootstrap Css -->
+    <link href="~/assets/account/assets/css/bootstrap.min.css" class="theme-opt" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="~/assets/account/assets/libs/%40mdi/font/css/materialdesignicons.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="~/assets/account/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/account/assets/libs/%40iconscout/unicons/css/line.css" type="text/css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/solid.css">
+    <!-- Style Css-->
+    <link href="~/assets/account/assets/css/style.min.css" class="theme-opt" rel="stylesheet" type="text/css" />
+    <!-- Account Section Style -->
+    <link href="~/assets/account/assets/css/style-main.css" class="theme-opt" rel="stylesheet" type="text/css" />
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+
+<body class="min-vh-100 bg-white">
+
+    <div class="min-vh-100 bg-white">
+        <header class="sticky-top bg-white border-bottom" style="z-index: 1050;">
+            <div class="d-flex align-items-center justify-content-between px-2 px-md-4" style="height: 64px;">
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-toggle d-flex d-lg-none" data-bs-toggle="offcanvas"
+                        data-bs-target="#mobileSidebar">
+                    <i data-lucide="menu"></i>
+                </button>
+
+                <!-- Logo -->
+                <div class="d-flex align-items-center" style="flex: 1;">
+                    <a asp-action="Dashboard" asp-controller="User" class="logo">
+                        <img src="~/assets/images/logo.png" height="58" class="logo-light-mode" alt="M4NIKAH">
+                    </a>
+                </div>
+
+                @{
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                }
+
+                <!-- Nav Links -->
+                <div class="d-none d-lg-flex align-items-center justify-content-center" style="flex: 2;">
+                    <nav class="d-flex align-items-center nav-menu" style="gap: 2.5rem;">
+                        <a asp-controller="User" asp-action="Dashboard"
+                           class="nav-link @(currentAction == "Dashboard" ? "active" : "")">Profile</a>
+                        <!-- <a href="/src/pages/Account/Chat/Chat.html" class="nav-link">Chat</a> -->
+                        <a asp-controller="User" asp-action="Explore"
+                           class="nav-link @(currentAction == "Explore" ? "active" : "")">Explore</a>
+                    </nav>
+                </div>
+
+                <!-- Right Section -->
+                <div class="d-flex align-items-center justify-content-end" style="flex: 1; gap: 1rem;">
+
+                    <!-- Notification -->
+                    <a asp-controller="User" asp-action="Notification"
+                       class="border-0 d-flex align-items-center justify-content-center text-white notification-icon position-relative"
+                       style="width: 32px; height: 32px; border-radius: 50%; background-color: #A5BE25;">
+                        <i data-lucide="bell-ring"></i>
+                        <span id="notificationBadge" class="position-absolute badge rounded-pill bg-danger" 
+                              style="top: -2px; right: -2px; font-size: 9px; padding: 2px 5px; display: none; z-index: 10; line-height: 1;">
+                            0
+                        </span>
+                    </a>
+
+                    <!-- Search -->
+                    <a asp-controller="User" asp-action="SearchProfile" class="header-search-btn d-none d-md-flex">
+
+                        <i data-lucide="search"></i>
+                        <span>Search</span>
+                    </a>
+
+                    <!-- Profile -->
+                    <!-- <button class="border-0 bg-transparent p-0">
+                        @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
+                        {
+                            <img src="@Html.Raw("/" + Model.Registration?.ImagePath)" class="avatar avatar-ex-small rounded"
+                                 alt="">
+                        }
+                        else
+                        {
+                            <img src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                 class="avatar avatar-ex-small rounded" alt="">
+                        }
+                    </button> -->
+
+                    <div class="dropdown">
+                        @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
+                        {
+						<img width="34"
+                            height="34" src="@Html.Raw("/" + Model.Registration?.ImagePath)"
+							 class="dropdown-toggle profile-avatar"
+							 data-bs-toggle="dropdown">
+                        }
+                        else 
+                        {
+                            <img width="34"
+                            height="34" src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                 class="dropdown-toggle profile-avatar"
+							 data-bs-toggle="dropdown">
+                        }
+						<ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+							<!-- <li><a class="dropdown-item" href="#">View My Profile</a></li>
+							<li><a class="dropdown-item" href="#">Edit My Profile</a></li>
+							<li><a class="dropdown-item" href="#">Manage Photos</a></li>
+							<li><a class="dropdown-item" href="#">Change Password</a></li> -->
+							<li><a class="dropdown-item" asp-controller="User" asp-action="Signout">Logout</a></li>
+						</ul>
+					</div> 
+
+                    
+
+                </div>
+            </div>
+        </header>
+
+
+
+        <!-- Mobile Sidebar -->
+        <div class="offcanvas offcanvas-start" id="mobileSidebar">
+            <div class="mobile-sidebar-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
+                    {
+                        <img src="@Html.Raw("/" + Model.Registration?.ImagePath)" alt="Profile" class="mobile-profile-avatar">
+                    }
+                    else
+                    {
+                        <img src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                             alt="Profile" class="mobile-profile-avatar">
+                    }
+
+                    <div>
+                        <div class="mobile-user-name text-white">@Html.Raw(Model.Registration?.Name)</div>
+                        <div class="mobile-user-id text-white-50">@Html.Raw(Model.Registration?.RegisterNumber)</div>
+                    </div>
+                </div>
+                <button class="mobile-close-btn" data-bs-dismiss="offcanvas">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="offcanvas-body d-flex flex-column p-3">
+                <div class="mobile-nav-group">
+                    <a asp-controller="User" asp-action="Dashboard"
+                       class="mobile-nav-link @(currentAction == "Dashboard" ? "active" : "")">
+                        <i data-lucide="user-round"></i> Profile
+                    </a>
+                    <!-- <a href="/src/pages/Account/Chat/Chat.html" class="mobile-nav-link">
+                        <i data-lucide="message-circle-more"></i> Chat
+                    </a> -->
+                    <a asp-controller="User" asp-action="Explore"
+                       class="mobile-nav-link @(currentAction == "Explore" ? "active" : "")">
+                        <i data-lucide="users-round"></i> Explore
+                    </a>
+                </div>
+
+                <div class="mobile-nav-label">Account Management</div>
+                <div class="mobile-nav-group">
+                    <a asp-action="Edit" asp-controller="User" class="mobile-nav-link @(currentAction == "Edit" ? "active" : "")">
+                        <i data-lucide="user-round-pen"></i> View/Edit profile
+                    </a>
+                    <a asp-controller="User" asp-action="SearchProfile" class="mobile-nav-link @(currentAction == "SearchProfile" ? "active" : "")">
+                        <i data-lucide="search"></i> Search Profile
+                    </a>
+                    <a asp-action="Image" asp-controller="User" class="mobile-nav-link @(currentAction == "Image" ? "active" : "")">
+                        <i data-lucide="image-plus"></i> Manage Photos
+                    </a>
+                </div>
+
+                <div class="mobile-nav-group">
+                    <a asp-action="ProfileVerification" asp-controller="User" class="mobile-nav-link @(currentAction == "ProfileVerification" ? "active" : "")">
+                        <i data-lucide="shield-check"></i> Profile Verification
+                    </a>
+                    <a asp-controller="User" asp-action="Notification" class="mobile-nav-link @(currentAction == "Notification" ? "active" : "")">
+                        <i data-lucide="bell-ring"></i> Notifications
+                    </a>
+                    <a asp-action="ChangePassword" asp-controller="User" class="mobile-nav-link @(currentAction == "ChangePassword" ? "active" : "")">
+                        <i data-lucide="user-round-cog"></i>Account Settings
+                    </a> 
+                    <a asp-action="BillHistory" asp-controller="User" class="mobile-nav-link @(currentAction == "BillHistory" ? "active" : "")">
+                        <i data-lucide="receipt"></i>Billing history
+                    </a>
+                    <!-- <a href="/src/pages/Account/Support/Support.html" class="mobile-nav-link">
+                        <i data-lucide="badge-question-mark"></i> Help & Support
+                    </a> -->
+                </div>
+ 
+                <div class="mobile-logout-wrapper mt-auto">
+                    <button onClick="window.location.href='@Url.Action("Signout", "User")'" class="mobile-logout-btn">
+                        LOGOUT <i data-lucide="power"></i>
+                    </button>
+                </div> 
+            </div> 
+        </div>
+
+
+        <div class="d-flex">
+            <aside class="d-none d-lg-block position-sticky p-4 flex-shrink-0"
+                   style="top: 64px; width: 320px; min-height: 100vh;">
+
+                <nav class="rounded-4 text-white"
+                     style="background: linear-gradient(180deg, #62953E 0%, #128742 100%);">
+
+                    <ul class="list-unstyled px-4 py-5" style="row-gap: 8px; display: flex; flex-direction: column;">
+
+                        <li>
+                            <a asp-controller="User" asp-action="Edit"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "Edit" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="user-round-pen"></i>
+                                View/Edit my profile
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="User" asp-action="SearchProfile"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "SearchProfile" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="search"></i>
+                                Search Profile
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="Image" asp-controller="User"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "Image" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="image-plus"></i>
+                                Manage My Photos
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="ProfileVerification" asp-controller="User"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "ProfileVerification" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="shield-check"></i>
+                                Profile Verification
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="User" asp-action="Notification"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "Notification" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="bell-ring"></i>
+                                Notifications
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="ChangePassword" asp-controller="User"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "ChangePassword" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="user-round-cog"></i>
+                                Account Settings
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="BillHistory" asp-controller="User"
+                               class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link @(currentAction == "BillHistory" ? "active" : "")"
+                               style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="receipt"></i>
+                                Billing history
+                            </a>
+                        </li>
+
+                        <!-- <li>
+                            <a href="/src/pages/Account/Support/Support.html"
+                                class="d-flex align-items-center text-white text-decoration-none px-2 py-2 rounded sidebar-link"
+                                style="font-size: 13px; gap: 12px;">
+                                <i data-lucide="badge-question-mark"></i>
+                                Help/Support
+                            </a>
+                        </li> -->
+
+                    </ul>
+                </nav>
+            </aside>
+<!-- 
+            <div class="container">
+                <div class="layout-specing"> -->
+                    @RenderBody()
+                <!-- </div>
+            </div> -->
+
+            <aside class="d-none d-xl-block" style="width: 288px; padding: 1.5rem;">
+                <div class="bg-white border border-2 p-4 w-100 mx-auto"
+                     style="max-width: 400px; border-radius: 30px; border-color: #CDC8C8;">
+
+                    <!-- Top Section -->
+                    <div class="d-flex">
+
+                        <!-- Avatar -->
+                        <div style="width: 46px; height: 46px; border-radius: 50%; overflow: hidden;">
+                            @* <img src="~/assets/images/sheimg6.jpg" alt="user"
+                                style="width: 100%; height: 100%; object-fit: cover;"> *@
+
+                            @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
+                            {
+                                <img src="@Html.Raw("/" + Model.Registration?.ImagePath)" alt="user"
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <img src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                     alt="user" style="width: 100%; height: 100%; object-fit: cover;">
+                            }
+                        </div>
+
+                        <!-- User Info -->
+                        <div class="ms-3 mt-1">
+                            <h2 class="mb-1" style="font-size: 12px; font-weight: 500; color: #2C2C2C;">
+                                @Html.Raw(Model.Registration?.Name)
+                            </h2>
+                            <p class="mb-0" style="font-size: 12px; font-weight: 500; color: #2C2C2C;">
+                                @Html.Raw(Model.Registration?.RegisterNumber)
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Section -->
+
+                    <div class="text-center mt-3">
+
+                        @* <p style="font-size: 10px; color: #6D6D6D; margin-bottom: 6px;">
+                            Free Membership
+                        </p> *@
+
+                        <!-- Upgrade Button -->
+                        @if(!Model.Registration.IsPremiumMember)
+                        {
+                        <button type="button" class="btn w-100 mb-2 text-white"
+                                style="background-color: #A5BE25; border-radius: 999px; font-size: 10px; padding: 10px;" onclick="showPackagesLayoutModal()">
+                            Upgrade to Premium
+                        </button>
+                        }
+                        
+
+                        <!-- Logout Button -->
+                        <a asp-action="Signout" asp-controller="User"
+                           class="btn w-100 d-flex align-items-center justify-content-center text-white logout-button"
+                           style="background-color: #0B6B2E; border-radius: 999px; font-size: 10px; padding: 10px; gap: 8px;">
+
+                            LOGOUT
+                            <i data-lucide="power"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+            </aside>
+
+            
+
+        </div>
+    </div>
+
+    <!-- Package Details Modal -->
+    <div id="packagesModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePackagesLayoutModal()">
+        <div class="upgrade-modal-card" style="max-width: 630px;">
+            <div class="modal-close-btn" onclick="hidePackagesLayoutModal()">
+                <i class="uil uil-times"></i>
+            </div>
+    
+            <div class="modal-body-scroll">
+                @* <img id="packageModalProfileImg" src="@(!string.IsNullOrEmpty(user.ImagePath) ? Html.Raw("/" + user.ImagePath) : Url.Content(imagePath))" alt="Profile"
+                    class="modal-profile-img" onerror="this.src='@Url.Content(defaultImage)'"> *@
+    
+                <h5 class="fw-medium fs-18 mb-2 px-3" style="color: #000;" id="packagesLayoutModalTitle">Upgrade to premium membership to view contact
+                    details</h5>
+                <p class="text-muted fs-12 mb-3 px-4" id="packagesLayoutModalSubTitle">Unlock access to contact details by upgrading to premium! Get
+                    closer to meaningful connections.</p>
+    
+                <div class="package-details-inner">
+                    <!-- Illustration -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="position-relative d-flex align-items-center gap-2">
+                            <img src="../../../../assets/images/icon/birds.png">
+                        </div>
+                    </div>
+    
+                    <h6 class="fw-medium fs-18 mb-2 text-uppercase" style="letter-spacing: 1px;">Membership Package</h6>
+    
+                    <div class="package-pill-days">180 DAYS</div><br>
+                    <div class="package-pill-price">₹ 2000</div>
+    
+                    <div class="mt-3 mb-3">
+                        <p class="fw-bold mb-3" style="font-size: 14px;">Features</p>
+                        <div class="d-flex justify-content-center">
+                            <div class="package-feature-list">
+                                <!-- <div class="package-feature-item">
+                                    <i class="uil uil-comment-alt-notes"></i>
+                                    <span>Personalised messages to 40 Members</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-comments"></i>
+                                    <span>Chat with prospects directly</span>
+                                </div> -->
+                                <div class="package-feature-item">
+                                    <i class="uil uil-mobile-android"></i>
+                                    <span>View mobile numbers 50</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-camera"></i>
+                                    <span>Send photo unlock requests</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <a asp-action="MakePayment" asp-controller="Transaction" class="btn btn-pay-online shadow" style="font-size: 17px;">Pay Online</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lucide icon -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+
+        function showPackagesLayoutModal(mode) {
+            const modal = document.getElementById('packagesModal');
+            if (modal) {
+                const titleElem = document.getElementById('packagesLayoutModalTitle');
+                const subTitleElem = document.getElementById('packagesLayoutModalSubTitle');
+                if (titleElem && subTitleElem) {
+                    if (mode === 'photo') {
+                        titleElem.innerText = 'Upgrade to premium membership to send photo unlock requests';
+                        subTitleElem.innerText = 'Unlock the ability to request photo access by upgrading to premium! Connect with your perfect match today.';
+                    } else {
+                        titleElem.innerText = 'Upgrade to premium membership to view contact details';
+                        subTitleElem.innerText = 'Unlock access to contact details by upgrading to premium! Get closer to meaningful connections.';
+                    }
+                }
+                modal.classList.add('active');
+            }
+        }
+
+        function hidePackagesLayoutModal() {
+            const modal = document.getElementById('packagesModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+    <!-- javascript -->
+
+    <script src="/assets/account/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/account/assets/libs/feather-icons/feather.min.js"></script>
+    <script src="/assets/account/assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="/assets/account/assets/libs/tiny-slider/min/tiny-slider.js"></script>
+    <script src="/assets/account/assets/js/plugins.init.js"></script>
+    <script src="/assets/account/assets/js/app.js"></script>
+        <script src="/assets/js/app.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @RenderSection("Scripts", required: false)
+    <script>
+        function checkUnreadNotifications() {
+            $.ajax({
+                url: '/api/notifications/unread-count',
+                type: 'GET',
+
+                success: function (data) {
+                    if (data && data.unreadCount > 0) {
+                        $('#notificationBadge').text(data.unreadCount).show();
+                    } else {
+                        $('#notificationBadge').hide();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching unread notification count:', error);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Check immediately on load
+            checkUnreadNotifications();
+
+            // Poll every 30 seconds
+            setInterval(checkUnreadNotifications, 30000);
+        });
+    </script>
+</body>
+
+</html>

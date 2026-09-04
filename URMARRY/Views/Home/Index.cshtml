@@ -1,0 +1,4443 @@
+@model HomeViewModel
+@{
+	ViewData["Title"] = "Best Muslim Matrimony in Kerala | M4Nikah";
+	
+	var content = Model.HomeContent!;
+	var enquiry = Model.Registration!;
+	var list = Model.Registrations!;
+	var banner = Model.HomeBanners!;
+	var about = Model.About!;
+	int b = 0;
+	var enquiryJson = Newtonsoft.Json.JsonConvert.SerializeObject(enquiry);
+}
+
+@section Head {
+	<title>Best Muslim Matrimony in Kerala | M4Nikah</title>
+	<meta name="description" content=" Find verified Muslim brides and grooms in Kerala with M4Nikah. Connect with a suitable life partner through our trusted Muslim matrimony platform.">
+	<link rel="canonical" href="https://m4nikah.com/">
+	<meta name="robots" content="index, follow, max-snippet:-1, max-video-preview:-1, max-image-preview:large">
+	<meta name="google-site-verification" content="cWOx-TearMCkX0IilX6JnoixAqZpglMEgTjwSrIU0OU" />
+
+	<!-- Geo Meta Tags -->
+	<meta name="geo.region" content="IN-KL">
+	<meta name="geo.placename" content="Kerala, India">
+	<meta name="geo.position" content="10.999980208600025;76.00130047986762">
+	<meta name="ICBM" content="10.999980208600025, 76.00130047986762">
+
+	<!-- Schema Markup -->
+	<script type="application/ld+json">
+	{
+	  "@@context": "https://schema.org",
+	  "@@graph": [
+	    {
+	      "@@type": "Organization",
+	      "@@id": "https://m4nikah.com/#organization",
+	      "name": "M4NIKKAH",
+	      "url": "https://m4nikah.com/",
+	      "logo": "https://m4nikah.com/assets/images/logo.png",
+	      "sameAs": [
+	        "https://www.facebook.com/m4nikah.co",
+	        "https://www.instagram.com/m4nikah_muslim_matrimony"
+	      ]
+	    },
+	    {
+	      "@@type": "WebSite",
+	      "@@id": "https://m4nikah.com/#website",
+	      "name": "M4NIKKAH",
+	      "url": "https://m4nikah.com/",
+	      "publisher": {
+	        "@@id": "https://m4nikah.com/#organization"
+	      }
+	    }
+	  ]
+	}
+	</script>
+
+	<script type="application/ld+json">
+	{
+	  "@@context": "https://schema.org",
+	  "@@type": "LocalBusiness",
+	  "@@id": "https://m4nikah.com/#localbusiness",
+	  "name": "M4NIKKAH",
+	  "image": "https://m4nikah.com/assets/images/logo.png",
+	  "url": "https://m4nikah.com/",
+	  "telephone": "+919847838325",
+	  "address": {
+	    "@@type": "PostalAddress",
+	    "streetAddress": "Kottakkal",
+	    "addressLocality": "Malappuram",
+	    "addressRegion": "Kerala",
+	    "postalCode": "676503",
+	    "addressCountry": "IN"
+	  },
+	  "geo": {
+	    "@@type": "GeoCoordinates",
+	    "latitude": 10.999979958095631,
+	    "longitude": 76.00130145153581
+	  },
+	  "openingHoursSpecification": {
+	    "@@type": "OpeningHoursSpecification",
+	    "dayOfWeek": [
+	      "Monday",
+	      "Tuesday",
+	      "Wednesday",
+	      "Thursday",
+	      "Friday",
+	      "Saturday",
+	      "Sunday"
+	    ],
+	    "opens": "08:30",
+	    "closes": "18:00"
+	  },
+	  "sameAs": [
+	    "https://www.facebook.com/m4nikah.co",
+	    "https://www.instagram.com/m4nikah_muslim_matrimony"
+	  ]
+	}
+	</script>
+}
+<section class="home-slider position-relative">
+	<div id="carouselExampleInterval" class="carousel slide" data-bs-ride="carousel">
+		<div class="carousel-inner">
+			@foreach (var item in banner.OrderBy(x => x.DisplayOrder).Where(x => x.IsActive))
+			{
+				b++; 
+				<div class="carousel-item @Html.Raw(b == 1 ? "active" : "")" data-bs-interval="3000">
+					<div class="bg-home-75vh d-flex align-items-center" style="background: url('@Html.Raw("/" + item.ImagePath)') center center;">
+						<div class="bg-overlay"></div>
+						<div class="container">
+							<div class="row mt-5 justify-content-center">
+								<div class="col-12">
+									<div class="title-heading text-center">
+										<h1 class="title text-white title-dark mb-3">@Html.Raw(item.Title)</h1>
+										<p class="para-desc mx-auto mb-0">@Html.Raw(item.Body)</p>
+										@if(item.IsPlaystoreButtonEnabled)
+										{
+										<a href="@Html.Raw(item.PlaystoreButtonLink)" target="_blank">
+										<img src="/assets/images/androiid.svg"></a>
+			                            }
+										@if(item.IsAppstoreButtonEnabled)
+										{
+										<a href="@Html.Raw(item.AppstoreButtonLink)" target="_blank">
+										<img src="/assets/images/ios.svg"></a>
+										}
+									</div>   
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</section>
+
+<section class="section">
+	<div class="container">
+
+		<div class="row justify-content-center">
+			<div class="col-xl-11 col-12 text-center mt-sm-0 pt-sm-0">
+				<div class="text-center features-absolute">
+					<ul class="menu_main nav nav-pills bg-light shadow border-bottom flex-sm-row d-md-inline-flex nav-justified mb-0 rounded-top position-relative overflow-hidden" id="pills-tab" role="tablist">
+						<li class="nav-item m-1">
+							<a class="nav-link py-2 px-5 active rounded" id="buy-login" data-bs-toggle="pill" href="#buy" role="tab" aria-controls="buy" aria-selected="false">
+								<div class="text-center">
+									<span class=" mb-0">Register</span>
+								</div>
+							</a>
+						</li>
+						<li class="nav-item m-1">
+							<a class="nav-link py-2 px-5 rounded" id="sold-login" data-bs-toggle="pill" href="#sold" role="tab" aria-controls="sold" aria-selected="false">
+								<div class="text-center">
+									<span class=" mb-0">Login</span>
+								</div>
+							</a>
+						</li>
+					</ul>
+
+					<div class="tab-content bg-white rounded shadow" id="pills-tabContent">
+						<div class="add_new1 card border-0 tab-pane fade show active" id="buy" role="tabpanel" aria-labelledby="buy-login">
+							<div class="row">
+
+								<div class="col-12 col-lg-12 col-xl-12 text-center p-0 mt-3 mb-2 setpdiv">
+									<div class="card px-0 pt-4 pb-0 mt-3 mb-0 wpo-contact-section-wrapper">
+										<div class="wpo-section-title"> 
+											<p>Fill all form field to go to next step and All fields are mandatory.</p>
+										</div>
+
+										@using (Html.BeginForm("PostEnquiry", "Home", FormMethod.Post, new { enctype = "multipart/form-data", @id = "msform" }))
+                            {
+											<ul id="progressbar" class="donee">
+												<li class="active" id="personal"><strong>Step 1</strong></li>
+												<li id="personal"><strong>Verify</strong></li>
+												<li id="personal"><strong>Step 2</strong></li>
+												<li id="personal"><strong>Step 3</strong></li>
+												<li id="personal"><strong>Step 4</strong></li>
+												<li id="confirm"><strong>Finish</strong></li>
+											</ul>
+
+											<fieldset id="s1">
+												<div class="form-card wpo-contact-form-area">
+													<div class="row">
+														<div class="col-7">
+															<h1 class="title fs-title">Account Information:</h1>
+														</div>
+														<div class="col-5">
+															<h1 class="title steps">Step 1</h1>
+														</div>
+													</div>
+													<!--rowstart-->
+													<div class="row">
+														<div class="col-lg-6">
+									<div class="mb-3">
+										<div class="custom-select-wrapper" data-field="ProfileForId">
+											<div class="custom-select-trigger">
+												<span>Create Profile for *</span>
+												<i class="uil uil-angle-down"></i>
+											</div>
+											<div class="custom-options">
+												@foreach (var item in Model.ProfileFor)
+												{
+													<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+												}
+											</div>
+											<input type="hidden" name="ProfileForId" id="ProfileForId" value="">
+										</div>
+									</div>
+								</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input id="Name" name="Name" type="text" class="reg-input-custom" placeholder="Name *" maxlength="30" pattern="^[A-Za-z\s]{1,30}$" title="Maximum 30 letters allowed." required oninput="removeCustomValidation('Name')">
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input type="number" maxlength="10" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength); removeCustomValidation('Phone')" id="Phone" class="reg-input-custom" placeholder="Phone Number *" name="Phone">
+																<span id="phoneValidationMessage" style="color: red; display: none; padding-left: 15px; font-size: 12px;">Phone number already exists!</span>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3 malefemale">
+																<div class="form flex-center">
+																	<div class="genderr">
+																		Gender *:
+																	</div>
+																	<div class="form-row flex-center">
+																		<input type="radio" name="Gender" id="Male" value="Male" class="form-input" onchange="removeCustomValidation('malefemale')">
+																		<label for="Male" class="form-label">Male</label>
+																	</div>
+																	<div class="form-row flex-center">
+																		<input type="radio" name="Gender" id="Female" value="Female" class="form-input" onchange="removeCustomValidation('malefemale')">
+																		<label for="Female" class="form-label">Female</label>
+																	</div>
+																	<span id="genderSuccessTick" class="radio-success-tick"></span>
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input type="email" id="Email" name="Email" class="reg-input-custom" placeholder="Email *" maxlength="50" title="Maximum 50 characters allowed." required oninput="removeCustomValidation('Email')">
+																<span id="emailValidationMessage" style="color: red; display: none; padding-left: 15px; font-size: 12px;">Email already exists!</span>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="password-field-container">
+																	<input type="password" class="reg-input-custom" placeholder="Create Password *" id="Password" name="Password" maxlength="20" title="Maximum 20 characters allowed." required oninput="removeCustomValidation('Password')">
+																	<button type="button" class="password-toggle-btn">
+																		<i class="uil uil-eye"></i>
+																	</button>
+																</div>
+																<small id="validation-message" class="text-muted" style="margin-left: 15px; font-size: 12px;">Password must have at least 6 characters</small>
+															</div>
+														</div><!--end col-->
+													</div>
+													<!--rowend-->
+												</div>
+												<div class="termsdiv">
+													<div class="form-check">
+														<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+														<label class="form-check-label" for="flexCheckDefault">
+															By clicking next, you accept our <a href="@Url.Action("TermsConditions", "Home")">Terms & Conditions</a> and <a href="@Url.Action("Privacy", "Home")">Privacy Policy </a>
+														</label>
+													</div>
+												</div>
+												<button id="nextButton" type="button" class="next action-button" disabled>Next</button>
+											</fieldset>
+											<fieldset id="s6">
+						<div class="form-card">
+							<div class="row">
+								<div class="col-7">
+									<h1 class="title fs-title">Verification Code:</h1>
+								</div>
+								<div class="col-5">
+									<h1 class="title steps">Verify</h1>
+								</div>
+							</div>
+							<div class="otp-form">
+								<!-- Mobile OTP Form -->
+								<div class="mobile-otp">
+									<h1 class="title">OTP Verification</h1>
+									<p style="color: #555; font-size: 14px; line-height: 1.6; margin-bottom: 14px;">
+										Please type the verification code sent to your registered Phone Number and Email.
+									</p>
+
+									<!-- Phone & Email Info Display -->
+									<div style="background: linear-gradient(135deg, #f0faf4 0%, #e8f5ed 100%); border: 1px solid #c8e6d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+										<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+											<div style="display: flex; align-items: center; gap: 8px;">
+												<span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #00662d; border-radius: 50%; color: #fff; font-size: 13px;"><i class="fa fa-phone"></i></span>
+												<span style="font-size: 14px; color: #333;">Phone: <strong id="lblphone" style="color: #00662d;"></strong></span>
+											</div>
+											<button type="button" id="editPhoneBtn" style="background: none; border: 1px solid #00662d; color: #00662d; font-size: 12px; padding: 3px 10px; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;" onmouseover="this.style.background='#00662d';this.style.color='#fff';" onmouseout="this.style.background='none';this.style.color='#00662d';">
+												<i class="fa fa-pencil" style="font-size: 11px;"></i> Edit
+											</button>
+										</div>
+										<div style="display: flex; align-items: center; gap: 8px;">
+											<span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #00662d; border-radius: 50%; color: #fff; font-size: 13px;"><i class="fa fa-envelope"></i></span>
+											<span style="font-size: 14px; color: #333;">Email: <strong id="lblemail" style="color: #00662d;"></strong></span>
+										</div>
+									</div>
+
+									<!-- Inline Edit Phone Container (hidden by default) -->
+									<div id="editPhoneContainer" style="display: none; margin-bottom: 16px; padding: 16px; border: 1px solid #c8e6d0; border-radius: 10px; background: linear-gradient(135deg, #fafffe 0%, #f0faf4 100%); box-shadow: 0 2px 8px rgba(0,102,45,0.08);">
+										<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+											<span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #e8f5ed; border-radius: 50%; color: #00662d; font-size: 12px;"><i class="fa fa-pencil"></i></span>
+											<label style="font-size: 13px; font-weight: 600; color: #00662d; margin: 0; font-family: 'Poppins', sans-serif;">Update Phone Number</label>
+										</div>
+										<input type="number" id="EditPhoneInput" class="reg-input-custom" placeholder="Enter new phone number" maxlength="10" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" style="margin-bottom: 6px; border-radius: 8px; border: 1px solid #c8e6d0; padding: 10px 14px; font-size: 14px; width: 100%; transition: border-color 0.2s ease; font-family: 'Poppins', sans-serif;" onfocus="this.style.borderColor='#00662d'; this.style.boxShadow='0 0 0 3px rgba(0,102,45,0.1)';" onblur="this.style.borderColor='#c8e6d0'; this.style.boxShadow='none';">
+										<span id="editPhoneValidationMsg" style="color: #e43f52; display: none; padding-left: 2px; font-size: 12px; min-height: 16px;"></span>
+										<div style="display: flex; gap: 10px; margin-top: 10px;">
+											<button type="button" id="cancelEditPhoneBtn" style="flex: 1; padding: 8px 0; font-size: 13px; font-weight: 500; border: 1px solid #ccc; background: #fff; color: #555; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;" onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='#fff';">Cancel</button>
+											<button type="button" id="submitEditPhoneBtn" style="flex: 2; padding: 8px 0; font-size: 13px; font-weight: 600; border: none; background: linear-gradient(135deg, #00662d 0%, #00873b 100%); color: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; box-shadow: 0 2px 6px rgba(0,102,45,0.2);" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,102,45,0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='0 2px 6px rgba(0,102,45,0.2)'; this.style.transform='translateY(0)';">Update & Send OTP</button>
+										</div>
+									</div>
+
+									<div class="otp-container">
+										<!-- Six input fields for OTP digits -->
+										<input type="number" class="otp-input" id="Pin1" pattern="\d" maxlength="1">
+										<input type="number" class="otp-input" id="Pin2" pattern="\d" maxlength="1" disabled>
+										<input type="number" class="otp-input" id="Pin3" pattern="\d" maxlength="1" disabled>
+										<input type="number" class="otp-input" id="Pin4" pattern="\d" maxlength="1" disabled>
+										<input type="number" class="otp-input" id="Pin5" pattern="\d" maxlength="1" disabled>
+										<input type="number" class="otp-input" id="Pin6" pattern="\d" maxlength="1" disabled>
+									</div>
+									<div class="mt-3 text-center">
+										<button type="button" id="resendOTPBtn" class="btn btn-link text-decoration-none p-0 text-primary fw-semibold" style="display: none; border: none; background: none; font-size: 15px; cursor: pointer;">Resend OTP</button>
+										<div id="otpCountdownText" class="text-muted mt-2 small" style="font-size: 14px;">Resend OTP in <span id="otpTimer" class="fw-bold" style="color: #e91e63;">60</span>s</div>
+										<span id="otpMessage" class="d-block mt-2 small" style="font-weight: 500; font-size: 14px; min-height: 20px;"></span>
+									</div>
+
+									<div class="d-flex justify-content-between align-items-center mt-4">
+										<input type="button" name="previous" class="previous action-button-previous m-0" style="float: none;" value="Previous" />
+										<button type="button" id="verifyMobileOTP" class="action-button m-0" style="float: none; width: auto; padding: 10px 20px;">VERIFY &amp; PROCEED</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</fieldset>
+											<fieldset id="s2">
+												<div class="form-card wpo-contact-form-area">
+													<div class="row">
+														<div class="col-7">
+															<h1 class="title fs-title">Account Information:</h1>
+														</div>
+														<div class="col-5">
+															<h1 class="title steps">Step 2</h1>
+														</div>
+													</div>
+
+													<!--rowstart-->
+													<div class="row">
+														<div><p class="mb-0">Date of Birth*</p></div>
+														<div class="col-lg-12 mb-3 radio-buttons addpdd dateofbirth">
+									
+											<select class="reg-select-native" name="Year" id="Year" onchange="updateDays(); removeCustomValidation('Year');">
+												<option selected="selected" value="">Year</option>
+												@for (int i = DateTime.Now.Year - 18; i >= 1960; i--)
+												{
+													<option value="@i">@i</option>
+												}
+											</select>
+										
+
+										<!-- Month dropdown with larger width -->
+										
+											<select class="reg-select-native" name="Month" id="Month" onchange="updateDays(); removeCustomValidation('Month');">
+												<option selected="selected" value="">Month</option>
+												<option value="01">January</option>
+												<option value="02">February</option>
+												<option value="03">March</option>
+												<option value="04">April</option>
+												<option value="05">May</option>
+												<option value="06">June</option>
+												<option value="07">July</option>
+												<option value="08">August</option>
+												<option value="09">September</option>
+												<option value="10">October</option>
+												<option value="11">November</option>
+												<option value="12">December</option>
+											</select>
+										
+
+										<!-- Day dropdown with smaller width -->
+										
+											<select class="reg-select-native" name="Day" id="Day" onchange="removeCustomValidation('Day');">
+												<option selected="selected" value="">Day</option>
+												<!-- Options will be dynamically populated -->
+											</select>
+										
+										<span id="dobSuccessTick" class="dob-success-tick"></span>
+								</div>
+
+								<div class="col-lg-6">
+									<div class="mb-3">
+										<div class="custom-select-wrapper" data-field="ReligionId">
+											<div class="custom-select-trigger">
+												<span>Your Religion *</span>
+												<i class="uil uil-angle-down"></i>
+											</div>
+											<div class="custom-options">
+												@foreach (var item in Model.Religions)
+												{
+													<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+												}
+											</div>
+											<input type="hidden" name="ReligionId" id="ReligionId" value="">
+										</div>
+									</div>
+								</div><!--end col-->
+
+								<div class="col-lg-6">
+									<div class="mb-3">
+										<div class="custom-select-wrapper" data-field="NationalityId">
+											<div class="custom-select-trigger">
+												<span>Nationality *</span>
+												<i class="uil uil-angle-down"></i>
+											</div>
+											<div class="custom-options">
+												@foreach (var item in Model.Nationalities)
+												{
+													<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+												}
+											</div>
+											<input type="hidden" name="NationalityId" id="NationalityId" value="">
+										</div>
+									</div>
+								</div><!--end col-->
+													</div>
+													<!--rowend-->
+
+												</div>
+
+												<input type="button" name="next" class="next action-button" value="Next" />
+												<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+											</fieldset>
+											<fieldset id="s3">
+												<div class="form-card wpo-contact-form-area">
+													<div class="row">
+														<div class="col-7">
+															<h1 class="title fs-title">Account Information:</h1>
+														</div>
+														<div class="col-5">
+															<h1 class="title steps">Step 3</h1>
+														</div>
+													</div>
+
+													<!--rowstart-->
+													<div class="row">
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="MaritalStatusId">
+																	<div class="custom-select-trigger">
+																		<span>Select Marital Status*</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.MaritalStatuses)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="MaritalStatusId" id="MaritalStatusId" value="" onchange="toggleChildrenDropDown(); removeCustomValidation('MaritalStatusId');">
+																</div>
+															</div>
+															<div class="mb-3" id="childrenDropdown" style="display: none;">
+																<div class="custom-select-wrapper" data-field="NumberOfChildrens">
+																	<div class="custom-select-trigger">
+																		<span>Number Of Children</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		<div class="custom-option" data-value="0">0</div>
+																		<div class="custom-option" data-value="1">1</div>
+																		<div class="custom-option" data-value="2">2</div>
+																		<div class="custom-option" data-value="3">3</div>
+																		<div class="custom-option" data-value="4">4+</div>
+																	</div>
+																	<input type="hidden" name="NumberOfChildrens" id="NumberOfChildrens" value="" onchange="removeCustomValidation('NumberOfChildrens')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="HeightId">
+																	<div class="custom-select-trigger">
+																		<span>Height *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Height))
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="HeightId" id="HeightId" value="" onchange="removeCustomValidation('HeightId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="WeightId">
+																	<div class="custom-select-trigger">
+																		<span>Weight *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Weight))
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="WeightId" id="WeightId" value="" onchange="removeCustomValidation('WeightId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="ComplexionId">
+																	<div class="custom-select-trigger">
+																		<span>Complexion *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Complexion))
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="ComplexionId" id="ComplexionId" value="" onchange="removeCustomValidation('ComplexionId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="BodyTypeId">
+																	<div class="custom-select-trigger">
+																		<span>Body Type *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.BodyType))
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="BodyTypeId" id="BodyTypeId" value="" onchange="removeCustomValidation('BodyTypeId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6 addradio2">
+															<div class="col-lg-12"><p class="mb-2">Physically Challenged ?*</p></div>
+															<div class="col-lg-12 radio-buttons">
+																<p>
+																	<input type="radio" id="Yes" name="IsPhysicallyChallenged" value="Yes">
+																	<label for="Yes">Yes</label>
+																</p>
+																<p>
+																	<input type="radio" id="No" name="IsPhysicallyChallenged" value="No" checked>
+																	<label for="No">No</label>
+																</p>
+																<span id="physicalSuccessTick" class="radio-success-tick"></span>
+															</div>
+														</div>
+														<div class="col-lg-6" id="physicalDisabilityContainer" style="display: none;">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="PhysicallyChallengedDetail">
+																	<div class="custom-select-trigger">
+																		<span>Select Issue *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.PhysicalDisability))
+																		{
+																			<div class="custom-option" data-value="@item.Title">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="PhysicallyChallengedDetail" id="PhysicallyChallengedDetail" value="" onchange="removeCustomValidation('PhysicallyChallengedDetail')">
+																</div>
+															</div>
+														</div>
+
+
+
+
+													</div>
+													<!--rowend-->
+
+
+												</div>
+												<input type="button" name="next" class="next action-button" value="Next" />
+												<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+											</fieldset>
+											<fieldset id="s4">
+												<div class="form-card wpo-contact-form-area">
+													<div class="row">
+														<div class="col-7">
+															<h1 class="title fs-title">Account Information1:</h1>
+														</div>
+														<div class="col-5">
+															<h1 class="title steps">Step 4</h1>
+														</div>
+													</div>
+
+													<!--rowstart-->
+													<div class="row"> 
+														<div><p class="mb-0">Highest Education*</p></div>
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="HighestEducation">
+																	<div class="custom-select-trigger">
+																		<span>Please Select</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == BodyFeature.Education))
+																		{
+																			<div class="custom-option" data-value="@item.Title">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="HighestEducation" id="HighestEducation" value="" onchange="removeCustomValidation('HighestEducation')">
+																</div>
+															</div>
+														</div>
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper multi-select" data-field="EducationType">
+																	<div class="custom-select-trigger">
+																		<span>Select Course(s) * (Max 4)</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.Course))
+																		{
+																			<div class="custom-option" data-value="@item.Title">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="EducationType" id="EducationType" value="" onchange="removeCustomValidation('EducationType')">
+																</div>
+																<div class="selected-tags-container mt-2"></div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="ProfessionId">
+																	<div class="custom-select-trigger">
+																		<span>Profession *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.Professions)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="ProfessionId" id="ProfessionId" value="" onchange="removeCustomValidation('ProfessionId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="ProfessionType">
+																	<div class="custom-select-trigger">
+																		<span>Profession Type *</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.BodyFeatures.Where(x => x.Type == Application.Constants.BodyFeature.ProfessionType))
+																		{
+																			<div class="custom-option" data-value="@item.Title">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="ProfessionType" id="ProfessionType" value="" onchange="removeCustomValidation('ProfessionType')">
+																</div>
+															</div>
+														</div><!--end col-->
+
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="MotherTongueId">
+																	<div class="custom-select-trigger">
+																		<span>Mother Tongue*</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.MotherTongues)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="MotherTongueId" id="MotherTongueId" value="" onchange="removeCustomValidation('MotherTongueId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="CommunityId">
+																	<div class="custom-select-trigger">
+																		<span>Community*</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.Communities)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="CommunityId" id="CommunityId" value="" onchange="removeCustomValidation('CommunityId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="ReligiousnessId">
+																	<div class="custom-select-trigger">
+																		<span>Religiousness*</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.Religiousnesses)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="ReligiousnessId" id="ReligiousnessId" value="" onchange="removeCustomValidation('ReligiousnessId')">
+																</div>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<div class="custom-select-wrapper" data-field="FinancialStatusId">
+																	<div class="custom-select-trigger">
+																		<span>Financial Status*</span>
+																		<i class="uil uil-angle-down"></i>
+																	</div>
+																	<div class="custom-options">
+																		@foreach (var item in Model.FinancialStatuses)
+																		{
+																			<div class="custom-option" data-value="@item.Id">@Html.Raw(item.Title)</div>
+																		}
+																	</div>
+																	<input type="hidden" name="FinancialStatusId" id="FinancialStatusId" value="" onchange="removeCustomValidation('FinancialStatusId')">
+																</div>
+															</div>
+														</div>
+
+														
+
+													</div>
+												</div>
+												<input type="button" name="next" class="next action-button" value="Next" />
+												<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+											</fieldset>
+											<fieldset id="s5">
+												<div class="form-card wpo-contact-form-area">
+													<div class="row">
+														<div class="col-7">
+															<h1 class="title fs-title">Account Information:</h1>
+														</div>
+														<div class="col-5">
+															<h1 class="title steps">Step 5</h1>
+														</div>
+													</div>
+													<div class="row">
+														<div><p class="mb-0">Home Location</p></div>
+
+														<div class="col-lg-12">
+															<div class="mb-3">
+																<input name="FamilyName" id="FamilyName" type="text" class="reg-input-custom" placeholder="Family Name*" maxlength="30" pattern="^[A-Za-z\s]{1,30}$" title="Maximum 30 letters allowed." required oninput="removeCustomValidation('FamilyName')">
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input name="FatherName" id="FatherName" type="text" class="reg-input-custom" placeholder="Father Name*" maxlength="30" pattern="^[A-Za-z\s]{1,30}$" title="Maximum 30 letters allowed." required oninput="removeCustomValidation('FatherName')">
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input name="Post" id="Post" type="text" class="reg-input-custom" placeholder="Post*" maxlength="30" title="Maximum 30 letters allowed." required oninput="removeCustomValidation('Post')">
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input name="PinCode" id="PinCode" type="text" class="reg-input-custom" inputmode="numeric" placeholder="Pin Code*" maxlength="6" pattern="^\d{6}$" title="Please enter a valid 6-digit pin code." required oninput="removeCustomValidation('PinCode')">
+															</div>
+														</div><!--end col-->
+
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<select class="reg-select-native" name="Country" id="Country" required onchange="removeCustomValidation('Country')">
+																	<option selected="selected" value="">Country*</option>
+																	@foreach (var item in Model.Nationalities)
+																	{
+																		<option value="@item.Title">@Html.Raw(item.Title)</option>
+																	}
+																</select>
+															</div>
+														</div>
+
+														<div class="col-lg-6" id="stateContainer">
+															<div class="mb-3">
+																<select class="reg-select-native" name="State" id="State">
+																	<option selected="selected" value="">State*</option>
+																	@foreach (var item in Model.States)
+																	{
+																		<option value="@item.Name">@Html.Raw(item.Name)</option>
+																	}
+																</select>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6" id="districtContainer">
+															<div class="mb-3">
+																<select class="reg-select-native" name="District" id="District">
+																	<option selected="selected" value="">District*</option>
+																	@foreach (var item in Model.Districts)
+																	{
+																		<option value="@item.Name">@Html.Raw(item.Name)</option>
+																	}
+																</select>
+															</div>
+														</div><!--end col-->
+														<div class="col-lg-6" id="cityContainer">
+															<div class="mb-3">
+																<select class="reg-select-native" name="Village" id="Village">
+																	<option selected="selected" value="">City*</option>
+																	@foreach (var item in Model.Cities)
+																	{
+																		<option value="@item.Name">@Html.Raw(item.Name)</option>
+																	}
+																</select>
+															</div>
+														</div><!--end col-->
+														
+														<div><p class="mb-0">Present Location</p></div>
+
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<select class="reg-select-native" name="PresentCountry" id="PresentCountry" required onchange="removeCustomValidation('PresentCountry')">
+																	<option selected="selected" value="">Present Country*</option>
+																	@foreach (var item in Model.Nationalities)
+																	{
+																		<option value="@item.Title">@Html.Raw(item.Title)</option>
+																	}
+																</select>
+															</div>
+														</div>
+													
+														<div class="col-lg-6">
+															<div class="mb-3">
+																<input type="number" maxlength="10" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength); removeCustomValidation('LandlineNumber')" class="reg-input-custom" name="LandlineNumber" id="LandlineNumber" placeholder="Telephone Number *">
+															</div>
+														</div><!--end col-->
+															
+														<div><p class="mb-0">Brief About Yourself *</p></div>
+														<div class="col-lg-12">
+															<div class="mb-3">
+																<textarea name="About" id="About" type="text" class="reg-input-custom" placeholder="Brief About Yourself *..." style="min-height: 100px; border-radius: 20px; padding: 15px 25px; height: auto;" maxlength="300" title="Maximum 300 characters allowed." required oninput="removeCustomValidation('About')"></textarea>
+															</div>
+														</div>
+													</div>
+
+													<div class="row">
+														<div class="col-lg-12">
+															<div class="mb-3">
+																<div class="text-center pb-4 w-100 m-auto">
+																	<h1 class="title">Add Photo</h1>
+																	<p class="mb-0 wid_p1">Your profile will only be visible to other members when you add a photo.</p>
+																	<div class="signup-img-info-banner">
+																		<i class="fa fa-info-circle"></i>
+																		<span>Image must be exactly 630×800 pixels for the best display.</span>
+																	</div>
+																</div>
+																<div class="profile-photo-div" id="profile-photo-div">
+																	<!-- placeholder image -->
+																	<div class="profile-img-div" id="profile-img-div" style="height: 250px;">
+																		<div id="loader"></div>
+																		<img id="profile-img" src="/assets/images/default-user-men.png">
+																		<input id="x-position" type="range" name="x-position" value="0" min="0">
+																		<input id="y-position" type="range" name="y-position" value="0" min="0">
+																	</div>
+																	<!-- uploaded image -->
+																	<div class="profile-img-div" id="file-uploaded" style="height: 250px; display: none">
+																		<div id="loader"></div>
+																		<img id="uploaded-photo" style="height: 250px; width:250px;" src="">
+																	</div>
+																	<div class="signup-dimension-badge"></div>
+
+																	<div class="profile-buttons-div">
+																		<div class="profile-img-input" id="profile-img-input">
+																			<label class="button" id="change-photo-label" for="Image">UPLOAD YOUR PHOTO</label>
+																			<input type="file" name="Image" id="Image" style="display: none;" accept="image/*" onchange="handleFileUpload(this.files)">
+																		</div>
+																		<div class="profile-img-confirm" id="profile-img-confirm" style="display: none;">
+																			<div class="button half green" id="save-img"><i class="fa fa-check" aria-hidden="true"></i></div>
+																			<div class="button half red" id="cancel-img"><i class="fa fa-remove" aria-hidden="true"></i></div>
+																		</div>
+																	</div>
+																</div>
+
+																<div class="photo-privacy-box mt-4">
+																	<h1 class="title privacy-title-reg mb-3 text-center">Photo Privacy Settings</h1>
+																	
+																	<div class="privacy-options-reg">
+																		<div class="privacy-item-reg d-flex align-items-center justify-content-between py-2 border-bottom">
+																			<label class="mb-0 text-muted" style="cursor: pointer;" for="photoVisibleToAll">Visible to all</label>
+																			<div class="form-check form-switch mb-0">
+																				<input class="form-check-input privacy-toggle" type="checkbox" id="photoVisibleToAll" checked>
+																			</div>
+																		</div>
+																		
+																		<div class="privacy-item-reg d-flex align-items-center justify-content-between py-2 border-bottom">
+																			<label class="mb-0 text-muted" style="cursor: pointer;" for="photoVisibleToPremium">Visible to premium members only</label>
+																			<div class="form-check form-switch mb-0">
+																				<input class="form-check-input privacy-toggle" type="checkbox" id="photoVisibleToPremium">
+																			</div>
+																		</div>
+																		
+																		<div class="privacy-item-reg d-flex align-items-center justify-content-between py-2">
+																			<label class="mb-0 text-muted" style="cursor: pointer;" for="photoVisibleToAccepted">Visible to accepted interest users only</label>
+																			<div class="form-check form-switch mb-0">
+																				<input class="form-check-input privacy-toggle" type="checkbox" id="photoVisibleToAccepted">
+																			</div>
+																		</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+
+													<!--rowend-->
+
+												</div>
+												 @*<input type="button" name="next" style="float:none;" class="next action-button" value="Skip" />*@
+												 <button type="button" id="btnSubmitRegistration" class="next action-button" style="float: right;">Submit</button>
+												<input type="button" name="previous" class="previous action-button-previous" value="Previous" />
+											</fieldset>
+										}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="add_new1 card border-0 tab-pane fade" id="sold" role="tabpanel" aria-labelledby="sold-login">
+							<div class="card-body text-start">
+								<div class="row">
+									<div class="col-12 col-lg-12 col-xl-12 text-center p-0 mt-3 mb-2 setpdiv">
+										<div class="card px-0 pt-4 pb-0 mt-3 mb-3 wpo-contact-section-wrapper">
+
+											<div class="wpo-section-title">
+												<p>Welcome Back! Please Login</p>
+											</div>
+
+											<form asp-action="Login" asp-controller="User" class="login-form mt-4">
+												<div class="row">
+													<div class="col-lg-12">
+														<div class="mb-3">
+															<input type="email" class="reg-input-custom" placeholder="Email" id="LoginEmail" name="LoginEmail" required>
+														</div>
+													</div>
+
+													<div class="col-lg-12">
+														<div class="mb-3">
+															<div class="password-field-container">
+																<input type="password" class="reg-input-custom" placeholder="Password" id="LoginPassword" name="LoginPassword" required>
+																<button type="button" class="password-toggle-btn">
+																	<i class="uil uil-eye"></i>
+																</button>
+															</div>
+														</div>
+													</div>
+
+													<div class="col-lg-12">
+														<div class="d-flex justify-content-between">
+															<div class="mb-3">
+																<div class="form-check">
+																	@*<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+																	<label class="form-check-label" for="flexCheckDefault">Remember me</label>*@
+																</div>
+															</div>
+															<p class="forgot-pass mb-0"><a asp-action="ForgotPassword" asp-controller="User" class="text-dark">Forgot Password ?</a></p>
+														</div>
+													</div>
+
+													<div class="col-lg-12 mb-0">
+														<div class="d-grid">
+															<button type="submit" class="btn btn-primary">Sign in</button>
+														</div>
+													</div>
+
+													<div class="col-lg-12 mt-3 text-center">
+														<div class="d-flex justify-content-between align-items-center">
+															<small><a asp-action="LoginWithEmailOtp" asp-controller="User" class="text-muted fw-semibold"><i class="uil uil-envelope-alt me-1"></i>Login with Email OTP</a></small>
+															<small><a asp-action="LoginWithMobileOtp" asp-controller="User" class="text-muted fw-semibold"><i class="uil uil-phone me-1"></i>Login with Mobile OTP</a></small>
+														</div>
+													</div>
+												</div>
+											</form>
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</section>
+
+<section class="section pt-0">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-12 text-center">
+				<div class="section-title titlebar mb-4 pb-0">
+					<h1 class="title mb-4">@Html.Raw(content.Tagline)</h1>
+					<img src="/assets/images/titile_bar.jpg" alt="">
+				</div>
+			</div><!--end col-->
+		</div><!--end row-->
+
+		<div class="row">
+			<div class="col-lg-4 col-md-4 mt-4 pt-2">
+				<div class="features feature-primary feature-full-bg rounded p-4 bg-light text-center position-relative overflow-hidden border-0">
+					<span class="h1 icon-color">
+						<i class="uil uil-check-circle"></i>
+					</span>
+					<div class="card-body addd1 p-0 content">
+						<h1 class="title">@Html.Raw(content.Title1)</h1>
+						<p class="para text-muted mb-0">@Html.Raw(content.Body1)</p>
+					</div>
+					<span class="big-icon text-center">
+						<i class="uil uil-check-circle"></i>
+					</span>
+				</div>
+			</div><!--end col-->
+
+			<div class="col-lg-4 col-md-4 mt-4 pt-2">
+				<div class="features feature-primary feature-full-bg rounded p-4 bg-light text-center position-relative overflow-hidden border-0">
+					<span class="h1 icon-color">
+						<i class="uil uil-chat-bubble-user"></i>
+					</span>
+					<div class="card-body addd1 p-0 content">
+						<h1 class="title">@Html.Raw(content.Title2)</h1>
+						<p class="para text-muted mb-0">@Html.Raw(content.Body2)</p>
+					</div>
+					<span class="big-icon text-center">
+						<i class="uil uil-chat-bubble-user"></i>
+					</span>
+				</div>
+			</div>
+
+			<div class="col-lg-4 col-md-4 mt-4 pt-2">
+				<div class="features feature-primary feature-full-bg rounded p-4 bg-light text-center position-relative overflow-hidden border-0">
+					<span class="h1 icon-color">
+						<i class="uil uil-lock-access"></i>
+					</span>
+					<div class="card-body addd1 p-0 content">
+						<h1 class="title">@Html.Raw(content.Title3)</h1>
+						<p class="para text-muted mb-0">@Html.Raw(content.Body3)</p>
+					</div>
+					<span class="big-icon text-center">
+						<i class="uil uil-lock-access"></i>
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="container mt-100 mt-60">
+		<div class="row align-items-center">
+			<div class="col-lg-6 col-md-6">
+				<div class="row align-items-center">
+					<div class="col-lg-6 col-6 mt-4 mt-lg-0 pt-2 pt-lg-0">
+						<div class="card work-container work-primary work-modern overflow-hidden rounded border-0 shadow-md">
+							<div class="card-body p-0">
+								@if (!string.IsNullOrEmpty(about.Home1ImagePath))
+								{
+									<img src="@Html.Raw("/" + about.Home1ImagePath)" class="img-fluid" alt="@about.Home1ImageAlt">
+								}
+								<div class="overlay-work"></div>
+							</div>
+						</div>
+					</div><!--end col-->
+
+					<div class="col-lg-6 col-6">
+						<div class="row">
+							<div class="col-lg-12 col-md-12 mt-4 mt-lg-0 pt-2 pt-lg-0">
+								<div class="card work-container work-primary work-modern overflow-hidden rounded border-0 shadow-md">
+									<div class="card-body p-0">
+										@if (!string.IsNullOrEmpty(about.Home2ImagePath))
+								{
+									<img src="@Html.Raw("/" + about.Home2ImagePath)" class="img-fluid" alt="@about.Home2ImageAlt">
+								}
+										<div class="overlay-work"></div>
+
+									</div>
+								</div>
+							</div><!--end col-->
+
+							<div class="col-lg-12 col-md-12 mt-4 pt-2">
+								<div class="card work-container work-primary work-modern overflow-hidden rounded border-0 shadow-md">
+									<div class="card-body p-0">
+										@if (!string.IsNullOrEmpty(about.Home3ImagePath))
+								{
+									<img src="@Html.Raw("/" + about.Home3ImagePath)" class="img-fluid" alt="@about.Home3ImageAlt">
+								}
+										<div class="overlay-work"></div>
+									</div>
+								</div>
+							</div><!--end col-->
+						</div><!--end row-->
+					</div><!--end col-->
+				</div><!--end row-->
+			</div><!--end col-->
+
+			<div class="col-lg-6 col-md-6 mt-4 mt-lg-0 pt-2 pt-lg-0">
+				<div class="ms-lg-4">
+					<div class="section-title mb-4 pb-2">
+						<h1 class="title mb-4">@Html.Raw(about.HomeTitle)</h1>
+						<p class="text-muted">@Html.Raw(about.HomeBody)</p>
+					</div>
+
+					<div class="mt-4 pt-2">
+						<a href="@Html.Raw(about.HomeButtonUrl)" class="btn btn-primary m-1">@Html.Raw(about.HomeButtonTitle) <i class="uil uil-angle-right-b align-middle"></i></a>
+					</div>
+
+				</div>
+			</div>
+		</div><!--end row-->
+	</div><!--end container-->
+</section>
+
+@if (Model.SuccessStories != null && Model.SuccessStories.Any())
+{
+    <!--  TESTIMONIALS SECTION START -->
+    <section class="testimonials-section" id="happyStoriesSection">
+
+        <!-- Floating heart decorations -->
+        <span class="testi-heart testi-heart--tl">&#9829;</span>
+        <span class="testi-heart testi-heart--tr">&#9829;</span>
+        <span class="testi-heart testi-heart--bl">&#9829;</span>
+        <span class="testi-heart testi-heart--br">&#9829;</span>
+        <span class="testi-heart testi-heart--ml">&#9829;</span>
+        <span class="testi-heart testi-heart--mr">&#9829;</span>
+
+        <!-- Section Header -->
+        <div class="testi-header">
+            <h1 class="title testi-title">HAPPY STORIES</h1>
+            <p class="testi-subtitle">Real People. Real Stories. Real Relationships.</p>
+        </div>
+
+        <!-- Slider Track -->
+        <div class="testi-slider-wrapper">
+            <div class="testi-track" id="testiTrack">
+                @foreach (var story in Model.SuccessStories)
+                {
+                    var relativeDate = "";
+                    var diff = DateTime.UtcNow - story.MarriageDate;
+                    if (diff.Days < 0)
+                    {
+                        relativeDate = $"Married {story.MarriageDate.ToString("MMMM yyyy")}";
+                    }
+                    else if (diff.Days < 30)
+                    {
+                        relativeDate = "Married Recently";
+                    }
+                    else if (diff.Days < 365)
+                    {
+                        int months = diff.Days / 30;
+                        relativeDate = $"Married {months} {(months == 1 ? "Month" : "Months")} Ago";
+                    }
+                    else
+                    {
+                        int years = diff.Days / 365;
+                        relativeDate = $"Married {years} {(years == 1 ? "Year" : "Years")} Ago";
+                    }
+
+                    <div class="testi-slide">
+                        <div class="testi-heart-outer">
+                            <div class="testi-heart-border">
+                                <div class="testi-heart-clip">
+                                    <img src="@(string.IsNullOrEmpty(story.CouplePhotoPath) ? "/assets/images/person1.jpg" : story.CouplePhotoPath)" alt="Happy Couple" class="testi-couple-img">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="testi-card">
+                            @{
+                                var displayStory = string.IsNullOrEmpty(story.AdminEditedStory) ? story.Story : story.AdminEditedStory;
+                                if (displayStory != null && displayStory.Length > 300)
+                                {
+                                    displayStory = displayStory.Substring(0, 300) + "...";
+                                }
+                            }
+                            <p class="testi-quote">
+                                @displayStory
+                            </p>
+                            
+                            <div class="testi-rating" style="color: #ffb400; margin-bottom: 8px; font-size: 1.1rem;">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    if (s <= story.Rating)
+                                    {
+                                        <span>★</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #ccc;">★</span>
+                                    }
+                                }
+                            </div>
+
+                            @{
+                                string groomNameDisplay = story.GroomDisplayName ?? "";
+                                string brideNameDisplay = story.BrideDisplayName ?? "";
+                                
+                                if (story.HideFullName)
+                                {
+                                    Func<string, string> getInitials = (name) => {
+                                        if (string.IsNullOrWhiteSpace(name)) return "?";
+                                        var parts = name.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                        if (parts.Length == 1)
+                                            return parts[0][0].ToString().ToUpper() + ".";
+                                        return string.Join(". ", parts.Select(p => p[0].ToString().ToUpper())) + ".";
+                                    };
+                                    
+                                    groomNameDisplay = getInitials(groomNameDisplay);
+                                    brideNameDisplay = getInitials(brideNameDisplay);
+                                }
+                            }
+
+                            <h1 class="title testi-couple-name">@(groomNameDisplay.ToUpper()) &amp; @(brideNameDisplay.ToUpper())</h1>
+                            <span class="testi-duration">@relativeDate</span>
+                        </div>
+                    </div>
+                }
+            </div><!-- /.testi-track -->
+        </div><!-- /.testi-slider-wrapper -->
+
+        <!-- Dot Navigation -->
+        <div class="testi-dots" id="testiDots">
+            @for (int i = 0; i < Model.SuccessStories.Count; i++)
+            {
+                <button class="testi-dot @(i == 0 ? "active" : "")" onclick="goToSlide(@i)" aria-label="Slide @(i + 1)"></button>
+            }
+        </div>
+
+        <!-- Prev / Next arrows (tablet & desktop) -->
+        <button class="testi-arrow testi-arrow--prev" onclick="prevSlide()" aria-label="Previous">
+            <i class="uil uil-angle-left"></i>
+        </button>
+        <button class="testi-arrow testi-arrow--next" onclick="nextSlide()" aria-label="Next">
+            <i class="uil uil-angle-right"></i>
+        </button>
+
+    </section>
+    <!--  TESTIMONIALS SECTION END -->
+}
+
+<section class="section pt-0 pb-3">
+	<div class="container-fluid">
+		<div class="row justify-content-center">
+			<div class="col-12 text-center">
+				<div class="section-title titlebar mb-4 pb-0">
+					<h1 class="title mb-4">@Html.Raw(content.ListTitle)</h1>
+					<img src="/assets/images/titile_bar.jpg" alt="">
+				</div>
+			</div><!--end col-->
+		</div>
+	@*
+		<div class="row">
+ 
+			<div class="tiny-ten-item"> 
+				@foreach(var item in list)
+				{
+					
+					var dateOfBirth = !string.IsNullOrEmpty(item.DOB) ? item.DOB : "01/01/1990";
+
+					// Remove time component if present
+					dateOfBirth = dateOfBirth.Split('T')[0];
+
+
+					var str1 = dateOfBirth.Replace("-","/").Split('/');
+
+
+					var day1 = string.Empty;
+					var month1 = string.Empty;
+					var year1 = str1[2];
+
+					
+					if (str1[0].Length < 2)
+					{
+						day1 = "0" + str1[0];
+					}
+					else
+					{
+						day1 = str1[0];
+					}
+					if (str1[1].Length < 2)
+					{
+						month1 = "0" + str1[1];
+					}
+					else
+					{
+						month1 = str1[1].Trim();
+					}
+					if (day1.Length > 2)
+					{
+						var y = year1;
+						var d = day1;
+						day1 = y;
+						year1 = d;
+					}
+
+					var dob1 = day1.Trim() + "/" + month1.Trim() + "/" + year1.Trim();
+					string[] formats = { "d/M/yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd" };
+
+					DateTime myDate1 = DateTime.ParseExact(dob1, formats, System.Globalization.CultureInfo.InvariantCulture);
+
+					<div class="tiny-slide">
+					<div class="col-lg-12 mt-4 pt-2">
+						<div class="team team-primary text-center bg-transparent border-0">
+							<div class="card-body p-0">
+								<div class="position-relative m4nikah-home-person imagenew">
+									@if(!string.IsNullOrEmpty(item.ImagePath))
+									{
+										@if (!item.PhotoVisibleToAll)
+										{
+											<img src="@Html.Raw("/" + item.ImagePath)" style="max-height:300px; filter: blur(8px);" class="img-fluid rounded-pill01" alt="">
+											<div class="premium-blur position-absolute top-0 start-0 w-100 h-100 rounded-pill01" style="z-index: 2;"></div>
+											
+										}
+										else
+										{
+											<img src="@Html.Raw("/" + item.ImagePath)" style="max-height:300px;" class="img-fluid rounded-pill01" alt="">
+										}
+									}
+									else{
+											<img src="@Url.Content(string.Equals(item.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" style="max-height:300px;" class="img-fluid rounded-pill01" alt="">
+									}
+									<ul class="list-unstyled mb-0 team-icon">
+										<li class="list-inline-item">
+												@if (!string.IsNullOrEmpty(item.RegisterNumber))
+												{
+													<a asp-action="Profile" asp-controller="User" asp-route-url="@item.RegisterNumber" class="btn btn-primary viewprof">Profile Details</a>
+												}
+												else
+												{
+													<a asp-action="Details" asp-controller="User" asp-route-url="@item.Id" class="btn btn-primary viewprof">Profile Details</a>
+												}
+										</li>
+									</ul>
+								</div>
+								<div class="content profilediv pt-3 pb-3">
+										<h5 class="mb-0">
+											@if (!string.IsNullOrEmpty(item.RegisterNumber))
+												{
+												<a asp-action="Profile" asp-controller="User" asp-route-url="@item.RegisterNumber" class="name text-dark">@Html.Raw(item.Name)</a>
+												}
+												else
+												{
+												<a asp-action="Details" asp-controller="User" asp-route-url="@item.Id" class="name text-dark">@Html.Raw(item.Name)</a>
+												}
+												</h5>
+									<small class="designation text-muted">Age : @Html.Raw(DateTime.UtcNow.Year - myDate1.Year)</small>
+									<br /><small class="designation text-muted">@Html.Raw(item.District)</small>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				}
+			</div>
+		</div><!--end row-->
+
+		*@
+	</div><!--end container-->
+	<style>
+		/* .select2-container--default .select2-selection--single
+		{
+			background-color: #fff;
+			border: 1px solid #aaa;
+			border-radius: 4px;
+			width: 419px;
+			height: 49px;
+		}
+
+			.select2-container--default .select2-selection--single .select2-selection__arrow {
+				height: 44px;
+				position: absolute;
+				top: 1px;
+				right: -307px;
+				width: 20px;
+			}
+
+			.select2-container--default .select2-selection--single .select2-selection__rendered {
+				color: #000;
+				line-height: 47px;
+			}
+
+			.select2-container--default .select2-selection--single .select2-selection__placeholder {
+				color: #000;
+				padding-left: 12px;
+			}
+
+		.select2-container--default .select2-search--dropdown .select2-search__field {
+			width: 408px;
+			border: 1px solid #aaa;
+		}
+
+		.select2-container--open .select2-dropdown--below {
+			border-top: none;
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+			width: 419px !important;
+		}
+
+		.select2-container--open .select2-dropdown--above {
+			border-bottom: none;
+			border-bottom-left-radius: 0;
+			border-bottom-right-radius: 0;
+			width: 419px !important;
+		} */
+		.select2-container {
+			box-sizing: border-box;
+			display: inline-block;
+			margin: 0;
+			width: 100% !important;
+			position: relative;
+			vertical-align: middle;
+		}
+
+		.select2-selection--single {
+			height: 48px; /* Adjust based on design */
+			padding-left: 45px; /* Space for the icon */
+			display: flex;
+			align-items: center;
+		}
+
+		.select2-selection__rendered {
+			line-height: 48px; /* Match the input height */
+		}
+
+		.select2-selection__arrow {
+			height: 48px; /* Adjust based on design */
+		}
+
+		.select2-container--default .select2-selection--single .select2-selection__placeholder {
+			color: black;
+		}
+
+
+		.select2-container--default .select2-selection--single {
+			background-color: #fff;
+			border: 1px solid #aaa;
+			border-radius: 4px;
+			height: 50px;
+		}
+
+			.select2-container--default .select2-selection--single .select2-selection__rendered {
+				color: #444;
+				line-height: 45px;
+			}
+
+			.select2-container--default .select2-selection--single .select2-selection__arrow {
+				height: 26px;
+				position: absolute;
+				top: 12px;
+				right: 1px;
+				width: 20px;
+			}
+
+				.select2-container--default .select2-selection--single .select2-selection__arrow b {
+					border-color: #888 transparent transparent transparent;
+					border-style: solid;
+					border-width: 5px 4px 0 4px;
+					height: 0;
+					left: 50%;
+					margin-left: -20px;
+					margin-top: -2px;
+					position: absolute;
+					top: 50%;
+					width: 0;
+				}
+
+		/* Premium Styles for Select2 Multiple (Course Dropdown) */
+		.select2-container--default .select2-selection--multiple {
+			background-color: #fff;
+			border: 1px solid #aaa;
+			border-radius: 4px;
+			min-height: 50px;
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			padding: 4px 12px;
+		}
+
+		.select2-container--default.select2-container--focus .select2-selection--multiple {
+			border: 1px solid #00662d;
+			outline: 0;
+		}
+
+		.select2-container--default .select2-selection--multiple .select2-selection__choice {
+			background-color: #00662d;
+			border: none;
+			color: #fff;
+			border-radius: 4px;
+			padding: 5px 12px;
+			font-size: 14px;
+			margin: 3px 4px;
+			display: inline-flex;
+			align-items: center;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			font-family: inherit;
+		}
+
+		.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+			color: rgba(255, 255, 255, 0.85);
+			margin-right: 8px;
+			border-right: none;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+			transition: color 0.2s ease;
+		}
+
+		.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+			color: #fff;
+			background-color: transparent;
+		}
+
+		.select2-container--default .select2-selection--multiple .select2-search__field {
+			margin-top: 0;
+			height: 32px;
+			line-height: 32px;
+			font-family: inherit;
+			padding-left: 5px;
+		}
+
+		/* Custom styles for Photo Privacy Toggle in Registration Step 5 */
+		.photo-privacy-box {
+			max-width: 450px;
+			margin: 25px auto 0 auto;
+			padding: 20px;
+			background: #ffffff;
+			border-radius: 15px;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+			border: 1px solid #eef2f5;
+		}
+
+		.privacy-title-reg {
+			font-size: 16px;
+			font-weight: 600;
+			color: #333333;
+		}
+
+		.privacy-item-reg {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.privacy-item-reg label {
+			font-size: 14px;
+			font-weight: 500;
+			cursor: pointer;
+		}
+
+		.photo-privacy-box .form-switch .form-check-input {
+			width: 42px !important;
+			height: 24px !important;
+			background-color: #bdbdbd !important;
+			border: none !important;
+			border-radius: 24px !important;
+			cursor: pointer;
+			background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+			background-position: left center !important;
+			transition: background-position 0.15s ease-in-out, background-color 0.15s ease-in-out;
+		}
+
+		.photo-privacy-box .form-switch .form-check-input:checked {
+			background-color: #00662d !important;
+			background-position: right center !important;
+		}
+
+		.photo-privacy-box .form-switch .form-check-input:focus {
+			box-shadow: none !important;
+			outline: none !important;
+		}
+
+		/* Registration Submit Loader Overlay */
+		.submit-loader-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(255, 255, 255, 0.85);
+			backdrop-filter: blur(5px);
+			-webkit-backdrop-filter: blur(5px);
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			z-index: 99999;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease-in-out;
+		}
+
+		.submit-loader-overlay.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.submit-loader-spinner-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+
+		.submit-loader-spinner {
+			width: 55px;
+			height: 55px;
+			border: 5px solid rgba(0, 102, 45, 0.1);
+			border-top: 5px solid #00662d;
+			border-radius: 50%;
+			animation: submit-spin 1s linear infinite;
+		}
+
+		@@keyframes submit-spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+
+		/* Password field toggle styles */
+		.password-field-container {
+			position: relative;
+			width: 100%;
+		}
+		.password-toggle-btn {
+			position: absolute;
+			right: 20px;
+			top: 0;
+			bottom: 0;
+			border: none;
+			background: transparent;
+			padding: 0;
+			margin: 0;
+			color: #989898;
+			cursor: pointer;
+			z-index: 10;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: color 0.2s ease;
+			font-size: 20px;
+		}
+		.password-toggle-btn:hover {
+			color: #00662d;
+		}
+		.password-field-container .reg-input-custom {
+			padding-right: 50px !important;
+		}
+
+		/* Custom select trigger invalid state thick red border */
+		.setpdiv .custom-select-trigger.is-invalid {
+			border: 3px solid red !important;
+		}
+
+		/* Valid state styles with tick icon */
+		.setpdiv .reg-input-custom.is-valid,
+		.setpdiv textarea.is-valid {
+			border: 1px solid #15ae6b !important;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315ae6b' width='18px' height='18px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") !important;
+			background-repeat: no-repeat !important;
+			background-position: right 20px center !important;
+			background-size: 20px 20px !important;
+			padding-right: 45px !important;
+		}
+
+		/* Specific adjustment for password input: checkmark goes to the rightmost end, eye toggle shifts left */
+		.setpdiv .password-field-container .reg-input-custom.is-valid {
+			background-position: right 18px center !important;
+			padding-right: 75px !important;
+		}
+		.setpdiv .password-field-container .reg-input-custom.is-valid + .password-toggle-btn {
+			right: 45px !important;
+		}
+
+		/* Custom select trigger valid state */
+		.setpdiv .custom-select-trigger.is-valid {
+			border: 1px solid #15ae6b !important;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315ae6b' width='18px' height='18px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") !important;
+			background-repeat: no-repeat !important;
+			background-position: right 38px center !important;
+			background-size: 20px 20px !important;
+			padding-right: 60px !important;
+		}
+
+		/* Native select valid state (multiple background images for tick and arrow) */
+		.setpdiv .reg-select-native.is-valid {
+			border: 1px solid #15ae6b !important;
+			background-image: 
+				url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315ae6b' width='18px' height='18px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E"),
+				url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+			background-position: right 38px center, right 20px center !important;
+			background-repeat: no-repeat, no-repeat !important;
+			background-size: 20px 20px, 12px 12px !important;
+			padding-right: 60px !important;
+		}
+		
+		/* DOB and radio tick alignments */
+		.dob-success-tick {
+			display: none;
+			width: 24px;
+			height: 50px;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315ae6b' width='22px' height='22px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: 22px 22px;
+			flex-shrink: 0;
+		}
+
+		.radio-success-tick {
+			display: none;
+			width: 24px;
+			height: 24px;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315ae6b' width='22px' height='22px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: 22px 22px;
+			flex-shrink: 0;
+			align-self: center;
+			margin-left: 10px;
+			margin-bottom: 7px; 
+		}
+		
+		.dob-success-tick.active,
+		.radio-success-tick.active {
+			display: flex !important;
+		}
+
+		.setpdiv .radio-buttons {
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center !important;
+			flex-wrap: wrap !important;
+		}
+
+		/* Custom overrides for DOB dropdowns and Gender fields border color */
+		.setpdiv .dateofbirth .custom-select-trigger.is-valid {
+			border: 1px solid #15ae6b !important;
+			background-image: none !important;
+			padding-right: 15px !important;
+		}
+		.setpdiv .malefemale.is-valid {
+			border: 1px solid #15ae6b !important;
+			border-radius: 100px !important;
+		}
+		.setpdiv .malefemale.is-invalid {
+			border: 3px solid red !important;
+			border-radius: 100px !important;
+		}
+		/* Horizontally align physically challenged success tick */
+		.setpdiv .addradio2 .radio-buttons p {
+			width: auto !important;
+			margin-right: 20px !important;
+			float: none !important;
+			margin-bottom: 0 !important;
+		}
+	</style>
+	<!-- Cropper.js and Image Validator CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+	<link rel="stylesheet" href="/css/image-validator.css" />
+</section>
+
+<input type="hidden" id="VerificationCode" />
+<input type="hidden" id="Id" />
+<input type="hidden" id="RegistrationNo" />
+
+<!-- Registration Submit Loader Overlay -->
+<div id="submitLoaderOverlay" class="submit-loader-overlay">
+	<div class="submit-loader-spinner-container">
+		<div class="submit-loader-spinner"></div>
+	</div>
+</div>
+@* @section Scripts { *@
+@* 	<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script> *@
+@* 	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script> *@
+@* } *@
+
+<script>
+	function toggleChildrenDropDown() {
+		var maritalStatusId = document.getElementById('MaritalStatusId').value;
+		var childrenDropdown = document.getElementById('childrenDropdown');
+		@* var textInputDiv = document.getElementById('textInputDiv'); *@
+
+		// Show or hide the children dropdown and textbox based on the marital status
+		if (maritalStatusId == '2' || maritalStatusId == '3' || maritalStatusId == '4' || maritalStatusId == '5' || maritalStatusId == '6') {
+			$('#NumberOfChildrens').prop('disabled', false);
+			childrenDropdown.style.display = 'block';
+			@* textInputDiv.style.display = 'block'; *@
+		} else {
+			childrenDropdown.style.display = 'none';
+			@* textInputDiv.style.display = 'none'; *@
+			$('#NumberOfChildrens').prop('disabled', true);
+		}
+	}
+	    function updateDays() {
+        const year = parseInt(document.getElementById("Year").value);
+        const month = parseInt(document.getElementById("Month").value);
+        const daySelect = document.getElementById("Day");
+
+        // Clear existing options
+        daySelect.innerHTML = '<option selected="selected" value="">Day</option>';
+
+        // Check if year and month are selected
+        if (year && month) {
+            let daysInMonth;
+
+            // Determine number of days in the selected month
+            if (month === 2) { // February
+                // Check for leap year
+                if ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) {
+                    daysInMonth = 29; // Leap year
+                } else {
+                    daysInMonth = 28; // Non-leap year
+                }
+            } else if ([4, 6, 9, 11].includes(month)) { // April, June, September, November
+                daysInMonth = 30;
+            } else {
+                daysInMonth = 31; // January, March, May, July, August, October, December
+            }
+
+            // Populate the day dropdown
+            for (let i = 1; i <= daysInMonth; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+        }
+    }
+</script>
+
+@* <script>
+	$(document).ready(function () {
+		$('#Email').on('blur', function () {
+			var email = $(this).val();
+			if (email) {
+				$.ajax({
+					url: '/Home/Save',  // Adjust the URL to your controller
+					data: { email: message },
+					success: function (response) {
+						if (response.exists) {
+							$('#validation-message').text('Email address already exists.');
+							$('.next').prop('disabled', true);  // Disable Next button
+						} else {
+							$('#validation-message').text('');
+							$('.next').prop('disabled', false);  // Enable Next button
+						}
+					}
+				});
+			}
+		});
+	});
+</script> *@
+
+	<!-- Image Crop/Resize Modal -->
+	<style>
+		.img-crop-modal-overlay {
+			display: flex;
+			position: fixed;
+			inset: 0;
+			opacity: 0;
+			visibility: hidden;
+		}
+	</style>
+	<div id="imgCropModal" class="img-crop-modal-overlay">
+		<div class="img-crop-modal-card">
+			<button type="button" id="imgCropBtnClose" class="img-crop-modal-close">
+				<i class="fa fa-times"></i>
+			</button>
+			<div class="img-crop-modal-header">
+				<h1 class="title">Crop & Resize Image</h1>
+				<p>Adjust the crop area to fit the required 630×800 dimensions</p>
+			</div>
+			<div class="img-crop-modal-body">
+				<img id="imgCropImage" src="" alt="Crop preview">
+			</div>
+			<div class="img-crop-dim-info">
+				<span class="dim-original">Original: <strong id="imgCropDimOriginal">—</strong></span>
+				<span class="dim-target">Target: <strong id="imgCropDimTarget">630×800</strong></span>
+			</div>
+			<div class="img-crop-modal-footer">
+				<button type="button" id="imgCropBtnCancel" class="img-crop-btn-cancel">Cancel</button>
+				<button type="button" id="imgCropBtnApply" class="img-crop-btn-crop">Crop & Resize</button>
+			</div>
+		</div>
+	</div>
+
+	@if (Model.Registration != null && Model.Registration.Id > 0 && !Model.Registration.IsComplete)
+	{
+		<style>
+			#resumeRegistrationModal.upgrade-modal-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.7);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				z-index: 100000;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.3s ease;
+			}
+			#resumeRegistrationModal.upgrade-modal-overlay.active {
+				display: flex !important;
+				opacity: 1 !important;
+				visibility: visible !important;
+			}
+			#resumeRegistrationModal .upgrade-modal-card {
+				background: #fff;
+				border-radius: 16px;
+				width: 90%;
+				max-width: 450px;
+				padding: 30px;
+				position: relative;
+				box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+				text-align: center;
+			}
+			#resumeRegistrationModal .modal-close-btn {
+				position: absolute;
+				top: 15px;
+				right: 15px;
+				font-size: 20px;
+				color: #999;
+				cursor: pointer;
+				transition: color 0.2s;
+			}
+			#resumeRegistrationModal .modal-close-btn:hover {
+				color: #333;
+			}
+			#resumeRegistrationModal .btn-continue-reg {
+				background-color: #00662d !important;
+				color: #fff !important;
+				border: none;
+				border-radius: 8px;
+				padding: 12px 24px;
+				font-weight: 600;
+				font-family: 'Poppins', sans-serif;
+				cursor: pointer;
+				transition: all 0.2s;
+				width: 100%;
+			}
+			#resumeRegistrationModal .btn-continue-reg:hover {
+				background-color: #004d22 !important;
+				transform: translateY(-1px);
+			}
+		</style>
+
+		<!-- Registration Resume Prompt Modal Overlay -->
+		<div id="resumeRegistrationModal" class="upgrade-modal-overlay">
+			<div class="upgrade-modal-card">
+				<div class="modal-close-btn" onclick="hideResumeRegistrationModal()">
+					<i class="uil uil-times"></i>
+				</div>
+				<div class="modal-body-scroll" style="padding: 10px 0;">
+					<div class="text-center mb-4">
+						<div style="font-size: 3rem; color: #00662d; margin-bottom: 15px;">👋</div>
+						<h1 class="title fw-semibold mt-2" style="color: #111; font-family: 'Poppins', sans-serif;">Welcome Back!</h1>
+						<p class="text-muted fs-14 mt-2" style="font-family: 'Poppins', sans-serif; line-height: 1.6;">
+							Welcome back, <strong>@Model.Registration.Name</strong>!<br/>
+							Please complete the remaining steps to activate your profile and proceed to your dashboard.
+						</p>
+					</div>
+					<div class="d-flex justify-content-center gap-3 w-100 px-4 mb-2">
+						<button type="button" class="btn-continue-reg" onclick="hideResumeRegistrationModal()">Continue Registration</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@section Scripts{
+	<script>
+		// Override jQuery.fn.css to intercept border validation styling for custom selects
+		(function($) {
+			const originalCss = $.fn.css;
+			$.fn.css = function() {
+				const id = this.attr('id');
+				if (id) {
+					let hasBorderChange = false;
+					let borderVal = null;
+					
+					if (typeof arguments[0] === 'string' && arguments[0] === 'border') {
+						hasBorderChange = true;
+						borderVal = arguments[1];
+					} else if (typeof arguments[0] === 'object' && 'border' in arguments[0]) {
+						hasBorderChange = true;
+						borderVal = arguments[0]['border'];
+					}
+					
+					if (hasBorderChange) {
+						// For custom select wrapper triggers
+						const wrapper = this.closest('.custom-select-wrapper');
+						if (wrapper.length) {
+							const trigger = wrapper.find('.custom-select-trigger');
+							if (borderVal && borderVal.indexOf('red') !== -1) {
+								trigger.addClass('is-invalid');
+								trigger.removeClass('is-valid');
+							} else {
+								trigger.removeClass('is-invalid');
+							}
+							return this;
+						}
+						
+						// For native selects (replaces Select2 styling block)
+						if (this.hasClass('reg-select-native')) {
+							if (borderVal && borderVal.indexOf('red') !== -1) {
+								this.addClass('is-invalid');
+								this.removeClass('is-valid');
+							} else {
+								this.removeClass('is-invalid');
+							}
+							return this;
+						}
+					}
+				}
+				return originalCss.apply(this, arguments);
+			};
+
+			// Shim to redirect select2 container styling to native elements
+			const originalNext = $.fn.next;
+			$.fn.next = function(selector) {
+				if (selector === ".select2-container") {
+					// If select2 container is requested but not found or not visible, return the element itself
+					const nextEl = originalNext.call(this, selector);
+					if (nextEl.length === 0 || !nextEl.is(':visible')) {
+						return this;
+					}
+					return nextEl;
+				}
+				return originalNext.call(this, selector);
+			};
+		})(jQuery);
+
+		// Custom Dropdown Selection Logic
+		function setupSearchForCustomSelect(wrapper) {
+			const optionsContainer = wrapper.querySelector(".custom-options");
+			if (!optionsContainer) return;
+
+			// Check if search input already exists
+			if (optionsContainer.querySelector(".custom-select-search-container")) return;
+
+			// Only add search if there are more than 8 options
+			const optionsCount = optionsContainer.querySelectorAll(".custom-option").length;
+			if (optionsCount <= 8) return;
+
+			const searchContainer = document.createElement("div");
+			searchContainer.className = "custom-select-search-container";
+
+			const searchInput = document.createElement("input");
+			searchInput.type = "text";
+			searchInput.className = "custom-select-search-input";
+			searchInput.placeholder = "Search...";
+
+			searchContainer.appendChild(searchInput);
+			// Insert search at the top of optionsContainer
+			optionsContainer.insertBefore(searchContainer, optionsContainer.firstChild);
+
+			// Stop click propagation on search container/input so clicking it doesn't close the dropdown
+			searchContainer.addEventListener("click", function(e) {
+				e.stopPropagation();
+			});
+
+			searchInput.addEventListener("input", function() {
+				const filterText = this.value.toLowerCase().trim();
+				optionsContainer.querySelectorAll(".custom-option").forEach(opt => {
+					const optionText = opt.innerText.toLowerCase();
+					if (optionText.includes(filterText)) {
+						opt.style.display = "";
+					} else {
+						opt.style.display = "none";
+					}
+				});
+			});
+		}
+
+		function initCustomSelects() {
+			document.querySelectorAll(".custom-select-wrapper").forEach((wrapper) => {
+				const trigger = wrapper.querySelector(".custom-select-trigger");
+				const options = wrapper.querySelector(".custom-options");
+
+				if (!trigger || !options) return;
+
+				// Clone node to clear old listeners
+				const newTrigger = trigger.cloneNode(true);
+				trigger.parentNode.replaceChild(newTrigger, trigger);
+
+				// Bind change listener on the hidden input to update the visual state of the new trigger
+				const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+				if (hiddenInput) {
+					$(hiddenInput).on('change', function () {
+						// Skip for multi-select wrappers — their selected state is managed by updateMultiSelect()
+						if (wrapper.classList.contains("multi-select")) return;
+
+						const val = this.value;
+						let selectedText = '';
+						options.querySelectorAll('.custom-option').forEach((opt) => {
+							const optVal = opt.getAttribute('data-value') || opt.innerText.trim();
+							if (optVal === val) {
+								opt.classList.add('selected');
+								selectedText = opt.innerText.trim();
+							} else {
+								opt.classList.remove('selected');
+							}
+						});
+						if (selectedText) {
+							const textSpan = newTrigger.querySelector("span");
+							if (textSpan) {
+								textSpan.innerText = selectedText;
+							} else {
+								newTrigger.innerText = selectedText;
+							}
+						}
+					});
+
+					// Trigger change if there is an initial value (e.g. populated on load)
+					if (hiddenInput.value !== null && hiddenInput.value !== undefined && hiddenInput.value !== '') {
+						$(hiddenInput).trigger('change');
+					}
+				}
+
+				newTrigger.addEventListener("click", function (e) {
+					e.preventDefault();
+					e.stopPropagation();
+
+					const isOpen = options.classList.contains("show");
+
+					document.querySelectorAll(".custom-options").forEach((opt) => {
+						if (opt !== options) opt.classList.remove("show");
+					});
+					document.querySelectorAll(".custom-select-wrapper").forEach((w) => {
+						if (w !== wrapper) w.classList.remove("active");
+					});
+
+					if (!isOpen) {
+						options.classList.add("show");
+						wrapper.classList.add("active");
+
+						// Focus the search input if present
+						const searchInput = options.querySelector(".custom-select-search-input");
+						if (searchInput) {
+							searchInput.value = "";
+							options.querySelectorAll(".custom-option").forEach(opt => opt.style.display = "");
+							setTimeout(() => searchInput.focus(), 50);
+						}
+					} else {
+						options.classList.remove("show");
+						wrapper.classList.remove("active");
+					}
+				});
+
+				const isMulti = wrapper.classList.contains("multi-select");
+
+				wrapper.querySelectorAll(".custom-option").forEach((option) => {
+					const newOption = option.cloneNode(true);
+					option.parentNode.replaceChild(newOption, option);
+
+					newOption.addEventListener("click", function (e) {
+						e.stopPropagation();
+						const value = this.getAttribute("data-value") || this.innerText.trim();
+
+						if (isMulti) {
+							const isAlreadySelected = this.classList.contains("selected");
+							if (!isAlreadySelected) {
+								const currentSelectedCount = wrapper.querySelectorAll(".custom-option.selected").length;
+								if (currentSelectedCount >= 4) {
+									alert('You can select a maximum of 4 courses.');
+									return;
+								}
+							}
+							this.classList.toggle("selected");
+							updateMultiSelect(wrapper);
+						} else {
+							const textSpan = newTrigger.querySelector("span");
+							if (textSpan) {
+								textSpan.innerText = this.innerText;
+							} else {
+								newTrigger.innerText = this.innerText;
+							}
+
+							wrapper.querySelectorAll(".custom-option").forEach((opt) => opt.classList.remove("selected"));
+							this.classList.add("selected");
+
+							options.classList.remove("show");
+							wrapper.classList.remove("active");
+
+							const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+							if (hiddenInput) {
+								hiddenInput.value = value;
+								$(hiddenInput).trigger('change');
+								const fieldId = hiddenInput.id || hiddenInput.name;
+								if (fieldId) {
+									removeCustomValidation(fieldId);
+								}
+							}
+						}
+					});
+				});
+
+				// Set up typing search if applicable
+				setupSearchForCustomSelect(wrapper);
+
+				if (isMulti) {
+					updateMultiSelect(wrapper);
+				}
+			});
+		}
+
+		function updateMultiSelect(wrapper) {
+			const selectedOptions = Array.from(wrapper.querySelectorAll(".custom-option.selected"));
+			const selectedValues = selectedOptions.map(opt => opt.getAttribute("data-value") || opt.innerText.trim());
+
+			const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+			if (hiddenInput) {
+				hiddenInput.value = selectedValues.join(", ");
+				$(hiddenInput).trigger('change');
+				const fieldId = hiddenInput.id || hiddenInput.name;
+				if (fieldId) {
+					removeCustomValidation(fieldId);
+				}
+			}
+
+			const trigger = wrapper.querySelector(".custom-select-trigger");
+			const textSpan = trigger.querySelector("span");
+			if (textSpan) {
+				if (selectedValues.length === 0) {
+					textSpan.innerHTML = 'Select Course(s) <span class="mandatory-star">*</span> (Max 4)';
+				} else if (selectedValues.length === 1) {
+					textSpan.innerText = selectedValues[0];
+				} else {
+					textSpan.innerText = `${selectedValues.length} Courses Selected`;
+				}
+			}
+
+			const parentGroup = wrapper.closest(".mb-3") || wrapper.parentElement;
+			let tagsContainer = parentGroup.querySelector(".selected-tags-container");
+			if (!tagsContainer) {
+				tagsContainer = document.createElement("div");
+				tagsContainer.className = "selected-tags-container mt-2";
+				parentGroup.appendChild(tagsContainer);
+			}
+
+			tagsContainer.innerHTML = "";
+
+			selectedOptions.forEach(opt => {
+				const val = opt.getAttribute("data-value") || opt.innerText.trim();
+
+				const tag = document.createElement("div");
+				tag.className = "selected-tag-badge";
+				tag.innerHTML = `
+					<span>${val}</span>
+					<i class="uil uil-times remove-tag-btn" data-value="${val}"></i>
+				`;
+
+				tag.querySelector(".remove-tag-btn").addEventListener("click", function (e) {
+					e.stopPropagation();
+					opt.classList.remove("selected");
+					updateMultiSelect(wrapper);
+				});
+
+				tagsContainer.appendChild(tag);
+			});
+		}
+
+		document.addEventListener("click", function () {
+			document.querySelectorAll(".custom-options").forEach((opt) => opt.classList.remove("show"));
+			document.querySelectorAll(".custom-select-wrapper").forEach((w) => w.classList.remove("active"));
+		});
+
+		// Helper to convert native select to custom select design
+		function convertNativeSelectToCustomSelect(selectId) {
+			const select = document.getElementById(selectId);
+			if (!select) return;
+
+			// Create wrapper
+			const wrapper = document.createElement('div');
+			wrapper.className = 'custom-select-wrapper';
+			wrapper.setAttribute('data-field', selectId);
+
+			// Create trigger
+			const trigger = document.createElement('div');
+			trigger.className = 'custom-select-trigger';
+			
+			const span = document.createElement('span');
+			const selectedOption = select.options[select.selectedIndex];
+			span.innerText = selectedOption ? selectedOption.text : '';
+			trigger.appendChild(span);
+
+			const icon = document.createElement('i');
+			icon.className = 'uil uil-angle-down';
+			trigger.appendChild(icon);
+
+			// Create options container
+			const optionsContainer = document.createElement('div');
+			optionsContainer.className = 'custom-options';
+
+			// Insert wrapper before the select, then move select inside the wrapper
+			select.parentNode.insertBefore(wrapper, select);
+			wrapper.appendChild(trigger);
+			wrapper.appendChild(optionsContainer);
+			wrapper.appendChild(select); // moves select inside the wrapper
+
+			// Hide the native select
+			select.style.setProperty('display', 'none', 'important');
+
+			// Function to populate custom options from native select options
+			function populateOptions() {
+				optionsContainer.innerHTML = '';
+				const currentVal = select.value;
+				let selectedText = '';
+
+				Array.from(select.options).forEach(opt => {
+					const val = opt.value;
+					const text = opt.text;
+					
+					const optionDiv = document.createElement('div');
+					optionDiv.className = 'custom-option';
+					if (val === currentVal) {
+						optionDiv.classList.add('selected');
+						selectedText = text;
+					}
+					optionDiv.setAttribute('data-value', val);
+					optionDiv.innerText = text;
+
+					optionDiv.addEventListener('click', function(e) {
+						e.stopPropagation();
+						
+						// Update select value
+						select.value = val;
+						
+						// Trigger change event for validation and ajax cascading
+						$(select).trigger('change');
+						
+						// Update trigger text
+						span.innerText = text;
+
+						// Update selected class
+						optionsContainer.querySelectorAll('.custom-option').forEach(div => {
+							div.classList.remove('selected');
+						});
+						optionDiv.classList.add('selected');
+
+						// Close options
+						optionsContainer.classList.remove('show');
+						wrapper.classList.remove('active');
+					});
+
+					optionsContainer.appendChild(optionDiv);
+				});
+
+				// Setup search filter if needed
+				setupSearchForCustomSelect(wrapper);
+
+				// Update trigger text
+				if (selectedText) {
+					span.innerText = selectedText;
+				} else {
+					const activeOpt = select.options[select.selectedIndex];
+					span.innerText = activeOpt ? activeOpt.text : '';
+				}
+			}
+
+			// Initial population
+			populateOptions();
+
+			// Setup trigger click to toggle dropdown
+			trigger.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const isOpen = optionsContainer.classList.contains('show');
+
+				// Close all other dropdowns
+				document.querySelectorAll('.custom-options').forEach(opt => {
+					if (opt !== optionsContainer) opt.classList.remove('show');
+				});
+				document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+					if (w !== wrapper) w.classList.remove('active');
+				});
+
+				if (!isOpen) {
+					optionsContainer.classList.add('show');
+					wrapper.classList.add('active');
+
+					// Focus the search input if present
+					const searchInput = optionsContainer.querySelector(".custom-select-search-input");
+					if (searchInput) {
+						searchInput.value = "";
+						optionsContainer.querySelectorAll(".custom-option").forEach(opt => opt.style.display = "");
+						setTimeout(() => searchInput.focus(), 50);
+					}
+				} else {
+					optionsContainer.classList.remove('show');
+					wrapper.classList.remove('active');
+				}
+			});
+
+			// Listen for select option changes using MutationObserver
+			const observer = new MutationObserver(function(mutations) {
+				populateOptions();
+			});
+			observer.observe(select, { childList: true });
+
+			// Listen for select value changes from code (external change trigger)
+			$(select).on('change', function() {
+				const currentVal = select.value;
+				let selectedText = '';
+				
+				optionsContainer.querySelectorAll('.custom-option').forEach(div => {
+					if (div.getAttribute('data-value') === currentVal) {
+						div.classList.add('selected');
+						selectedText = div.innerText;
+					} else {
+						div.classList.remove('selected');
+					}
+				});
+
+				if (selectedText) {
+					span.innerText = selectedText;
+				} else {
+					const activeOpt = select.options[select.selectedIndex];
+					span.innerText = activeOpt ? activeOpt.text : '';
+				}
+			});
+		}
+
+		// Initialize custom selects on page load
+		$(document).ready(function() {
+			initCustomSelects();
+			convertNativeSelectToCustomSelect('Year');
+			convertNativeSelectToCustomSelect('Month');
+			convertNativeSelectToCustomSelect('Day');
+			convertNativeSelectToCustomSelect('Country');
+			convertNativeSelectToCustomSelect('State');
+			convertNativeSelectToCustomSelect('District');
+			convertNativeSelectToCustomSelect('Village');
+			convertNativeSelectToCustomSelect('PresentCountry');
+		});
+
+		function removeCustomValidation(fieldId) {
+			if (fieldId === 'malefemale') {
+				// Check if a radio button is selected
+				if ($('input[name="Gender"]:checked').length > 0) {
+					// Remove the red border from the .malefemale div
+					$(".malefemale").removeClass('is-invalid');
+				}
+			}
+			else if (fieldId === 'Day' || fieldId === 'Month' || fieldId === 'Year') {
+					$("#Day").css({
+						'border': '',
+					});
+					$("#Month").css({
+						'border': '',
+					});
+					$("#Year").css({
+						'border': '',
+					});
+					if (window.checkFieldValidation) {
+						window.checkFieldValidation('Day');
+						window.checkFieldValidation('Month');
+						window.checkFieldValidation('Year');
+					}
+			}
+			else if (fieldId === 'Country' || fieldId === 'State' || fieldId === 'District' || fieldId === 'Village') {
+				// Remove the red border from the Select2 container if the field is not empty
+				$("#" + fieldId).next(".select2-container").css('border', '');
+			}
+			else if (fieldId === 'PresentCountry' || fieldId === 'PresentState' || fieldId === 'PresentDistrict' || fieldId === 'PresentCity') {
+				// Remove the red border from the Select2 container if the field is not empty
+				$("#" + fieldId).next(".select2-container").css('border', '');
+			}
+			else {
+				// Handle other fields
+				$("#" + fieldId).css({
+					'border': '',
+				});
+				if (fieldId === 'Password') {
+					var passwordVal = $("#Password").val();
+					var msg = $("#validation-message");
+					if (passwordVal === "" || passwordVal === null) {
+						msg.text("Password must have at least 6 characters").removeClass("text-success text-danger").addClass("text-muted");
+					} else if (passwordVal.length < 6) {
+						msg.text("Password must have at least 6 characters").removeClass("text-success text-muted").addClass("text-danger");
+					} else {
+						msg.text("").removeClass("text-danger text-muted").addClass("text-success");
+					}
+				}
+			}
+			
+			if (fieldId !== 'malefemale' && fieldId !== 'Day' && fieldId !== 'Month' && fieldId !== 'Year' && window.checkFieldValidation) {
+				window.checkFieldValidation(fieldId);
+			}
+		}
+		var enquiry = @Html.Raw(enquiryJson);
+		$(document).ready(function () {
+
+			// Photo Privacy Toggle Combinability Logic for Registration Form (Step 5)
+			const regToggleAll = document.getElementById('photoVisibleToAll');
+			const regTogglePremium = document.getElementById('photoVisibleToPremium');
+			const regToggleAccepted = document.getElementById('photoVisibleToAccepted');
+
+			if (regToggleAll && regTogglePremium && regToggleAccepted) {
+				regToggleAll.addEventListener('change', function() {
+					if (this.checked) {
+						regTogglePremium.checked = false;
+						regToggleAccepted.checked = false;
+					}
+				});
+
+				const onRegRestrictionToggle = function() {
+					if (this.checked) {
+						regToggleAll.checked = false;
+					}
+					if (!regTogglePremium.checked && !regToggleAccepted.checked) {
+						regToggleAll.checked = true;
+					}
+				};
+
+				regTogglePremium.addEventListener('change', onRegRestrictionToggle);
+				regToggleAccepted.addEventListener('change', onRegRestrictionToggle);
+			}
+
+			var current_fs, next_fs, previous_fs; //fieldsets
+			var opacity;
+			var current = 1;
+			var steps = $("fieldset").length;
+			setProgressBar(current);
+			function showWarning(message) {
+			
+				alert(message);
+
+			}
+			
+
+			/********************** Registration Validation ************************/
+
+			$(".next").click(function () {
+
+				current_fs = $(this).parent();
+				next_fs = $(this).parent().next();
+				var divId = current_fs[0].attributes.id.value
+				var selectedCountry = $("#Country").val().trim();
+				var selectedState = $("#State").val().trim();
+				if (divId == "s1") {
+					$("#ProfileForId").css('border', '');
+					$("#Name").css('border', '');
+					$("#Phone").css('border', '');
+					$("#Email").css('border', '');
+					$("#Password").css('border', '');
+					if ($("#ProfileForId").val() == "" || $("#ProfileForId").val() == null || $("#ProfileForId").val() == "0") {
+						$("#ProfileForId").css('border', '3px solid red');
+						showWarning("Please provide profile for");
+					}
+					else if ($("#Name").val() == "" || $("#Name").val() == null) {
+						$("#Name").css('border', '3px solid red');
+						showWarning("Please provide name");
+					}
+					else if ($("#Phone").val() == "" || !/^\d{8,10}$/.test($("#Phone").val())) {
+						$("#Phone").css('border', '3px solid red');
+						showWarning("Please provide a valid Phone Number");
+					}
+					else if ($('input[name="Gender"]:checked').val() == "" || $('input[name="Gender"]:checked').val() == null) {
+						$(".malefemale").addClass('is-invalid');
+						showWarning("Please provide gender");
+					}
+					else if ($("#Email").val() == "" || $("#Email").val() == null) {
+						$("#Email").css('border', '3px solid red');
+						showWarning("Please provide email");
+					}
+					else if ($("#Password").val() == "" || $("#Password").val() == null) {
+						$("#Password").css('border', '3px solid red');
+						$("#validation-message").text("Password must have at least 6 characters").removeClass("text-success text-muted").addClass("text-danger");
+						showWarning("Please provide password");
+					}
+					else if ($("#Password").val().length < 6) {
+						$("#Password").css('border', '3px solid red');
+						$("#validation-message").text("Password must have at least 6 characters").removeClass("text-success text-muted").addClass("text-danger");
+						showWarning("Password must have at least 6 characters");
+					}
+					else if (!$("#flexCheckDefault").is(":checked")) {
+						showWarning("Please accept the Terms & Conditions and Privacy Policy to proceed.");
+					}
+					else {
+						Save("Step-1");
+						$("#lblphone").html($("#Phone").val());
+						$("#lblemail").html($("#Email").val());
+						goNext(current_fs, next_fs);
+						startOTPTimer();
+					}
+				}
+				else if (divId == "s2") {
+					$("#Year").css('border', '');
+					$("#Month").css('border', '');
+					$("#Day").css('border', '');
+					$("#ReligionId").css('border', '');
+					$("#NationalityId").css('border', '');
+					if ($("#Day").val() == "" || $("#Day").val() == null
+						|| $("#Month").val() == "" || $("#Month").val() == null
+						|| $("#Year").val() == "" || $("#Year").val() == null) {
+						$("#Day").css('border', '3px solid red');
+						$("#Month").css('border', '3px solid red');
+						$("#Year").css('border', '3px solid red');
+						showWarning("Please provide date of birth");
+					}
+					else if ($("#ReligionId").val() == "" || $("#ReligionId").val() == null || $("#ReligionId").val() == "0") {
+						$("#ReligionId").css('border', '3px solid red');
+						showWarning("Please provide religion");
+					}
+					else if ($("#NationalityId").val() == "" || $("#NationalityId").val() == null || $("#NationalityId").val() == "0") {
+						$("#NationalityId").css('border', '3px solid red');
+						showWarning("Please provide nationality");
+					}
+					else {
+						Save("Step-2");
+						goNext(current_fs, next_fs);
+					}
+				}
+				else if (divId == "s3") {
+					$("#MaritalStatusId").css('border', '');
+					$("#NumberOfChildrens").css('border', '');
+					$("#HeightId").css('border', '');
+					$("#WeightId").css('border', '');
+					$("#ComplexionId").css('border', '');
+					$("#BodyTypeId").css('border', '');
+					$("#PhysicallyChallengedDetail").css('border', '');
+					if ($("#MaritalStatusId").val() == "" || $("#MaritalStatusId").val() == null || $("#MaritalStatusId").val() == "0") {
+						$("#MaritalStatusId").css('border', '3px solid red');
+						//$("#MaritalStatusId").focus();
+						showWarning("Please provide marital status");
+					}
+					else if (($("#NumberOfChildrens").val() == "" || $("#NumberOfChildrens").val() == null) && ($("#MaritalStatusId").val() != "1")) {
+						$("#NumberOfChildrens").css('border', '3px solid red');
+						//$("#NumberOfChildrens").focus();
+						showWarning("Please provide Number of Children");
+					}
+					else if ($("#HeightId").val() == "" || $("#HeightId").val() == null || $("#HeightId").val() == "0") {
+						$("#HeightId").css('border', '3px solid red');
+						//$("#HeightId").focus();
+						showWarning("Please provide height");
+					}
+					else if ($("#WeightId").val() == "" || $("#WeightId").val() == null || $("#WeightId").val() == "0") {
+						$("#WeightId").css('border', '3px solid red');
+						//$("#WeightId").focus();
+						showWarning("Please provide weight");
+					}
+					else if ($("#ComplexionId").val() == "" || $("#ComplexionId").val() == null || $("#ComplexionId").val() == "0") {
+						$("#ComplexionId").css('border', '3px solid red');
+						//$("#ComplexionId").focus();
+						showWarning("Please provide complexion");
+					}
+					else if ($("#BodyTypeId").val() == "" || $("#BodyTypeId").val() == null || $("#BodyTypeId").val() == "0") {
+						$("#BodyTypeId").css('border', '3px solid red');
+						//$("#BodyTypeId").focus();
+						showWarning("Please provide body type");
+					}
+					else if ($('input[name="IsPhysicallyChallenged"]:checked').val() === 'Yes' && ($("#PhysicallyChallengedDetail").val() == "" || $("#PhysicallyChallengedDetail").val() == null)) {
+						$("#PhysicallyChallengedDetail").css('border', '3px solid red');
+						showWarning("Please select the physically challenged issue");
+					}
+					else {
+						Save("Step-3");
+						goNext(current_fs, next_fs);
+					}					
+				}
+				else if (divId == "s4") {
+					$("#HighestEducation").css('border', '');
+					$("#EducationType").next(".select2-container").css('border', '');
+					$("#ProfessionId").css('border', '');
+					$("#ProfessionType").css('border', '');
+					$("#MotherTongueId").css('border', '');
+					$("#CommunityId").css('border', '');
+					$("#ReligiousnessId").css('border', '');
+					$("#FinancialStatusId").css('border', '');
+					
+					var selectedCourses = $("#EducationType").val();
+					if ($("#HighestEducation").val() == "" || $("#HighestEducation").val() == null) {
+						$("#HighestEducation").css('border', '3px solid red');
+						//$("#HighestEducation").focus();
+						showWarning("Please provide highest education");
+					}
+					else if (!selectedCourses || (Array.isArray(selectedCourses) ? selectedCourses.length === 0 : selectedCourses.trim() === "")) {
+						$("#EducationType").next(".select2-container").css({
+							'border': '3px solid red',
+							'border-radius': '4px'
+						});
+						showWarning("Please provide course");
+					}
+					else if ($("#ProfessionId").val() == "" || $("#ProfessionId").val() == null || $("#ProfessionId").val() == "0") {
+						$("#ProfessionId").css('border', '3px solid red');
+						//$("#ProfessionId").focus();
+						showWarning("Please provide profession");
+					} else if ($("#ProfessionType").val() == "" || $("#ProfessionType").val() == null) {
+						$("#ProfessionType").css('border', '3px solid red');
+						showWarning("Please provide profession type");
+					}
+					else if ($("#MotherTongueId").val() == "" || $("#MotherTongueId").val() == null || $("#MotherTongueId").val() == "0") {
+						$("#MotherTongueId").css('border', '3px solid red');
+						//$("#MotherTongueId").focus();
+						showWarning("Please provide mother tongue");
+					}
+					else if ($("#CommunityId").val() == "" || $("#CommunityId").val() == null || $("#CommunityId").val() == "0") {
+						$("#CommunityId").css('border', '3px solid red');
+						//$("#CommunityId").focus();
+						showWarning("Please provide community");
+					}
+					else if ($("#ReligiousnessId").val() == "" || $("#ReligiousnessId").val() == null || $("#ReligiousnessId").val() == "0") {
+						$("#ReligiousnessId").css('border', '3px solid red');
+						//$("#ReligiousnessId").focus();
+						showWarning("Please provide religiousness");
+					}
+					else if ($("#FinancialStatusId").val() == "" || $("#FinancialStatusId").val() == null || $("#FinancialStatusId").val() == "0") {
+						$("#FinancialStatusId").css('border', '3px solid red');
+						//$("#FinancialStatusId").focus();
+						showWarning("Please provide financial status");
+					}
+					else {
+						Save("Step-4");
+						goNext(current_fs, next_fs);
+					}					
+				}
+				else if (divId == "s5") {
+					var isSkip = ($(this).val() === 'Skip');
+					if (isSkip) {
+						Save("Step-5", false);
+					} else {
+						$("#FamilyName").css('border', '');
+						$("#FatherName").css('border', '');
+						$("#Post").css('border', '');
+						$("#PinCode").css('border', '');
+						$("#Country").css('border', '');
+						$("#State").css('border', '');
+						$("#District").css('border', '');
+						$("#Village").css('border', '');
+						$("#PresentCountry").css('border', '');
+						$("#PresentState").css('border', '');
+						$("#PresentDistrict").css('border', '');
+						$("#PresentCity").css('border', '');
+						$("#LandlineNumber").css('border', '');
+						$("#About").css('border', '');
+
+						if ($("#FamilyName").val().trim() == "") {
+							$("#FamilyName").css('border', '3px solid red');
+							//$("#FamilyName").focus();
+							showWarning("Please provide Family Name");
+						}
+						else if ($("#FatherName").val().trim() == "") {
+							$("#FatherName").css('border', '3px solid red');
+							//$("#FatherName").focus();
+							showWarning("Please provide Father Name");
+						}
+						else if ($("#Post").val().trim() == "") {
+							$("#Post").css('border', '3px solid red');
+							//$("#Post").focus();
+							showWarning("Please provide Post");
+						}
+						else if ($("#PinCode").val().trim() == "" || !/^\d{6}$/.test($("#PinCode").val())) {
+							$("#PinCode").css('border', '3px solid red');
+							//$("#PinCode").focus();
+							showWarning("Please provide a valid 6-digit Pin Code");
+						}
+						else if ($("#Country").val().trim() == "") {
+							$("#Country").next(".select2-container").css('border', '3px solid red');
+							//$("#Country").focus();
+							showWarning("Please select Country");
+						}
+						else if (($("#State").val().trim() == "") && ($("#Country").val().trim() == "India")) {
+							// $("#State").css('border', '3px solid red');
+							$("#State").next(".select2-container").css('border', '3px solid red');
+							showWarning("Please select State");
+						}
+						else if (($("#District").val().trim() == "") && ($("#Country").val().trim() == "India")) {
+							// $("#District").css('border', '3px solid red');
+							$("#District").next(".select2-container").css('border', '3px solid red');
+							//$("#Country").focus();
+							showWarning("Please select District");
+						}
+						else if (($("#Village").val().trim() == "") && ($("#State").val().trim() == "Kerala")) {
+							//$("#Village").css('border', '3px solid red');
+							$("#Village").next(".select2-container").css('border', '3px solid red');
+							//$("#Country").focus();
+							showWarning("Please select City");
+						}
+						else if ($("#PresentCountry").val().trim() == "") {
+							$("#PresentCountry").next(".select2-container").css('border', '3px solid red');
+							//$("#PresentCountry").focus();
+							showWarning("Please select Present Country");
+						}
+					
+						else if ($("#LandlineNumber").val().trim() == "" || !/^\d{8,10}$/.test($("#LandlineNumber").val())) {
+							$("#LandlineNumber").css('border', '3px solid red');
+							//$("#LandlineNumber").focus();
+							showWarning("Please provide a valid Phone Number");
+						}
+						else if ($("#About").val().trim() == "") {
+							$("#About").css('border', '3px solid red');
+							//$("#About").focus();
+							showWarning("Please provide a brief about yourself");
+						}
+						else {
+							var isSubmit = ($(this).attr('id') === 'btnSubmitRegistration');
+							Save("Step-5", isSubmit);
+						}
+					}
+				}
+					// 	showWarning("Please select PresentState");
+					// }
+					// else if (($("#PresentDistrict").val().trim() == "") && ($("#PresentCountry").val().trim() == "India")) {
+					// 	// $("#PresentDistrict").css('border', '3px solid red');
+					// 	$("#PresentDistrict").next(".select2-container").css('border', '3px solid red');
+					// 	//$("#Country").focus();
+					// 	showWarning("Please select PresentDistrict");
+					// }
+					// else if (($("#PresentCity").val().trim() == "") && ($("#PresentState").val().trim() == "Kerala")) {
+					// 	// $("#PresentCity").css('border', '3px solid red');
+					// 	$("#PresentCity").next(".select2-container").css('border', '3px solid red');
+					// 	//$("#Country").focus();
+					// 	showWarning("Please select PresentCity");
+					// }
+				
+				else if (divId == "s6" && $("#Pin1").val() != "" && $("#Pin1").val() != null
+					&& $("#Pin2").val() != "" && $("#Pin2").val() != null
+					&& $("#Pin3").val() != "" && $("#Pin3").val() != null
+					&& $("#Pin4").val() != "" && $("#Pin4").val() != null
+					&& $("#Pin5").val() != "" && $("#Pin5").val() != null
+					&& $("#Pin6").val() != "" && $("#Pin6").val() != null) {
+						var pin = $("#Pin1").val() + $("#Pin2").val()+ $("#Pin3").val() + $("#Pin4").val() + $("#Pin5").val() + $("#Pin6").val();
+						if(pin == $("#VerificationCode").val()){
+							Save("Step-6");
+							// alert("Registration has been successfully completed");
+						}
+						else{
+						showWarning("Invalid Verification code");
+						}					
+				}
+				else {
+					alert("Please provide the mandatory fields");
+				}
+			});
+
+			$(".previous").click(function () {
+
+				current_fs = $(this).closest('fieldset');
+				previous_fs = current_fs.prev();
+
+				//Remove class active
+				$("#progressbar li").eq($("fieldset").index(current_fs)).removeClass("active");
+
+				//show the previous fieldset
+				previous_fs.show();
+
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now) {
+						// for making fielset appear animation
+						opacity = 1 - now;
+
+						current_fs.css({
+							'display': 'none',
+							'position': 'relative'
+						});
+						previous_fs.css({ 'opacity': opacity });
+					},
+					duration: 500
+				});
+				setProgressBar(--current);
+			});
+
+			function goNext(current_fs, next_fs) {
+				//Add Class Active
+				$("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active");
+
+				//show the next fieldset
+				next_fs.show();
+				//hide the current fieldset with style
+				current_fs.animate({ opacity: 0 }, {
+					step: function (now) {
+						// for making fielset appear animation
+						opacity = 1 - now;
+
+						current_fs.css({
+							'display': 'none',
+							'position': 'relative'
+						});
+						next_fs.css({ 'opacity': opacity });
+					},
+					duration: 500
+				});
+				setProgressBar(++current);
+			}
+
+			function setProgressBar(curStep) {
+				var percent = parseFloat(100 / steps) * curStep;
+				percent = percent.toFixed();
+				$(".progress-bar")
+					.css("width", percent + "%")
+			}
+
+			$(".submit").click(function () {
+				return false;
+			});
+
+			$("#verifyMobileOTP").click(function () {
+				if ($("#Pin1").val() != "" && $("#Pin1").val() != null
+					&& $("#Pin2").val() != "" && $("#Pin2").val() != null
+					&& $("#Pin3").val() != "" && $("#Pin3").val() != null
+					&& $("#Pin4").val() != "" && $("#Pin4").val() != null
+					&& $("#Pin5").val() != "" && $("#Pin5").val() != null
+					&& $("#Pin6").val() != "" && $("#Pin6").val() != null) {				
+					var pin = $("#Pin1").val() + $("#Pin2").val() + $("#Pin3").val() + $("#Pin4").val() + $("#Pin5").val() + $("#Pin6").val();				
+					
+					$.ajax({
+						type: 'POST',
+						url: '/Home/VerifyOtp',
+						data: { id: $("#Id").val(), otp: pin },
+						dataType: 'json',
+						success: function(response) {
+							if (response.success) {
+								Save("Step-OTP-Verify");					
+								var current_fs = $("#s6");
+								var next_fs = $("#s2");
+								goNext(current_fs, next_fs);
+							} else {
+								alert(response.message);
+							}
+						},
+						error: function() {
+							alert("An error occurred during verification. Please try again.");
+						}
+					});
+				}
+				else {
+					alert("Please provide verification code");
+				}
+			});
+
+			var otpCountdownInterval;
+			function startOTPTimer() {
+				clearInterval(otpCountdownInterval);
+				var duration = 60;
+				$("#resendOTPBtn").hide();
+				$("#otpCountdownText").show();
+				$("#otpTimer").text(duration);
+				$("#otpMessage").text("");
+
+				otpCountdownInterval = setInterval(function () {
+					duration--;
+					$("#otpTimer").text(duration);
+
+					if (duration <= 0) {
+						clearInterval(otpCountdownInterval);
+						$("#otpCountdownText").hide();
+						$("#resendOTPBtn").show();
+					}
+				}, 1000);
+			}
+
+			$("#resendOTPBtn").click(function () {
+				var id = $("#Id").val();
+				if (!id || id <= 0) {
+					alert("Registration session not found. Please try again from Step 1.");
+					return;
+				}
+
+				$("#resendOTPBtn").hide();
+				$("#otpMessage").css("color", "gray").text("Resending OTP...");
+
+				$.ajax({
+					type: 'POST',
+					url: '/Home/ResendOtp',
+					data: { id: id },
+					dataType: 'json',
+					success: function (response) {
+						if (response.success) {
+							$("#otpMessage").css("color", "green").text("OTP resent successfully.");
+							startOTPTimer();
+						} else {
+							$("#otpMessage").css("color", "red").text(response.message);
+							if (response.message.indexOf("Limit exceeded") >= 0 || response.message.indexOf("Maximum") >= 0) {
+								$("#otpCountdownText").hide();
+								$("#resendOTPBtn").hide();
+							} else {
+								$("#resendOTPBtn").show();
+							}
+						}
+					},
+					error: function () {
+						$("#otpMessage").css("color", "red").text("Failed to resend OTP. Please try again.");
+						$("#resendOTPBtn").show();
+					}
+				});
+			});
+
+		});
+
+		function handleFileUpload(files) {
+			if (files && files.length > 0) {
+				const file = files[0];
+				const reader = new FileReader();
+
+				reader.onload = function (e) {
+					// Hide the upload section
+					document.getElementById('profile-img-div').style.display = 'none';
+
+					// Set the uploaded image src
+					const uploadedPhoto = document.getElementById('uploaded-photo');
+					uploadedPhoto.src = e.target.result;
+					uploadedPhoto.style.display = 'block';
+
+					// Display the success message
+					document.getElementById('file-uploaded').style.display = 'block';
+				}
+
+				reader.readAsDataURL(file);
+			}
+		}
+
+		/********** Assigning values to form data and calling post API ************/
+
+		function Save(step, isSubmit = false) {
+			var formData = new FormData();
+			var totalFiles = document.getElementById("Image").files.length;
+
+			for (var i = 0; i < totalFiles; i++) {
+				var file = document.getElementById("Image").files[i];
+				formData.append("Image", file);
+			}
+			formData.append("Id", $("#Id").val());
+			//console.log("Id: " + $("#Id").val());
+
+			formData.append("ProfileForId", $("#ProfileForId").val());
+			//console.log("ProfileForId: " + $("#ProfileForId").val());
+
+			formData.append("Name", $("#Name").val());
+			//console.log("Name: " + $("#Name").val());
+
+			formData.append("Email", $("#Email").val());
+			//console.log("Email: " + $("#Email").val());
+
+			formData.append("Phone", $("#Phone").val());
+			//console.log("Phone: " + $("#Phone").val());
+			var phoneCountryData = $("#Phone").intlTelInput("getSelectedCountryData");
+			if (phoneCountryData && phoneCountryData.dialCode) {
+				formData.append("CountryCode", "+" + phoneCountryData.dialCode);
+			}
+
+			formData.append("Gender", $('input[name="Gender"]:checked').val());
+			//console.log("Gender: " + $('input[name="Gender"]:checked').val());
+
+			formData.append("Password", $("#Password").val());
+			//console.log("Password: " + $("#Password").val());
+
+			formData.append("Day", $("#Day").val());
+			//console.log("Day: " + $("#Day").val());
+
+			formData.append("Month", $("#Month").val());
+			//console.log("Month: " + $("#Month").val());
+
+			formData.append("Year", $("#Year").val());
+			//console.log("Year: " + $("#Year").val());
+
+			formData.append("ReligionId", $("#ReligionId").val());
+			//console.log("ReligionId: " + $("#ReligionId").val());
+
+			formData.append("NationalityId", $("#NationalityId").val());
+			//console.log("NationalityId: " + $("#NationalityId").val());
+
+			formData.append("MaritalStatusId", $("#MaritalStatusId").val());
+			//console.log("MaritalStatusId: " + $("#MaritalStatusId").val());
+			formData.append("NumberOfChildrens", $("#NumberOfChildrens").val());
+			//console.log("NumberOfChildrens: " + $("#NumberOfChildren").val());
+
+			formData.append("HeightId", $("#HeightId").val());
+			//console.log("HeightId: " + $("#HeightId").val());
+
+			formData.append("WeightId", $("#WeightId").val());
+			//console.log("WeightId: " + $("#WeightId").val());
+
+			formData.append("ComplexionId", $("#ComplexionId").val());
+			//console.log("ComplexionId: " + $("#ComplexionId").val());
+
+			formData.append("BodyTypeId", $("#BodyTypeId").val());
+			//console.log("BodyTypeId: " + $("#BodyTypeId").val());
+
+			formData.append("IsPhysicallyChallenged", $('input[name="IsPhysicallyChallenged"]:checked').val() === 'Yes');
+			//console.log("IsPhysicallyChallenged: " + $('input[name="IsPhysicallyChallenged"]:checked').val());
+
+			formData.append("PhysicallyChallengedDetail", $("#PhysicallyChallengedDetail").val() || "");
+			//console.log("PhysicallyChallengedDetail: " + $("#PhysicallyChallengedDetail").val());
+
+			formData.append("HighestEducation", $("#HighestEducation").val());
+			//console.log("HighestEducation: " + $("#HighestEducation").val());
+
+			var selectedCourses = $("#EducationType").val();
+			var coursesString = Array.isArray(selectedCourses) ? selectedCourses.join(", ") : (selectedCourses || "");
+			formData.append("EducationType", coursesString);
+			//console.log("EducationType: " + coursesString);
+
+			formData.append("ProfessionId", $("#ProfessionId").val());
+			//console.log("ProfessionId: " + $("#ProfessionId").val());
+
+			formData.append("ProfessionType", $("#ProfessionType").val());
+			//console.log("ProfessionType: " + $("#ProfessionType").val());
+
+			formData.append("MotherTongueId", $("#MotherTongueId").val());
+			//console.log("MotherTongueId: " + $("#MotherTongueId").val());
+
+			formData.append("CommunityId", $("#CommunityId").val());
+			//console.log("CommunityId: " + $("#CommunityId").val());
+
+			formData.append("ReligiousnessId", $("#ReligiousnessId").val());
+			//console.log("ReligiousnessId: " + $("#ReligiousnessId").val());
+
+			formData.append("FinancialStatusId", $("#FinancialStatusId").val());
+			//console.log("FinancialStatusId: " + $("#FinancialStatusId").val());
+
+			formData.append("FamilyName", $("#FamilyName").val());
+			//console.log("FamilyName: " + $("#FamilyName").val());
+
+			formData.append("FatherName", $("#FatherName").val());
+			//console.log("FatherName: " + $("#FatherName").val());
+
+			formData.append("Post", $("#Post").val());
+			//console.log("Post: " + $("#Post").val());
+
+			formData.append("Village", $("#Village").val());
+			//console.log("Village: " + $("#Village").val());
+
+			formData.append("PinCode", $("#PinCode").val());
+			//console.log("PinCode: " + $("#PinCode").val());
+
+			formData.append("Country", $("#Country").val());
+			//console.log("Country: " + $("#Country").val());
+
+			formData.append("State", $("#State").val());
+			//console.log("State: " + $("#State").val());
+
+			formData.append("District", $("#District").val());
+			//console.log("District: " + $("#District").val());
+			formData.append("Village", $("#Village").val());
+			//console.log("District: " + $("#District").val());
+
+			formData.append("PresentCountry", $("#PresentCountry").val());
+			//console.log("PresentCountry: " + $("#PresentCountry").val());
+
+			// formData.append("PresentState", $("#PresentState").val());
+			// //console.log("PresentState: " + $("#PresentState").val());
+
+			// formData.append("PresentDistrict", $("#PresentDistrict").val());
+			// //console.log("PresentDistrict: " + $("#PresentDistrict").val());
+
+			// formData.append("PresentCity", $("#PresentCity").val());
+
+			formData.append("NumberOfChildrens", $("#NumberOfChildrens").val());
+			//console.log("PresentCity: " + $("#PresentCity").val());
+
+			formData.append("About", $("#About").val());
+			//console.log("About: " + $("#About").val());
+
+			formData.append("LandlineNumber", $("#LandlineNumber").val());
+			//console.log("LandlineNumber: " + $("#LandlineNumber").val());
+			var landlineCountryData = $("#LandlineNumber").intlTelInput("getSelectedCountryData");
+			if (landlineCountryData && landlineCountryData.dialCode) {
+				formData.append("SecondaryCountryCode", "+" + landlineCountryData.dialCode);
+			}
+
+			formData.append("PhotoVisibleToAll", $("#photoVisibleToAll").is(":checked"));
+			formData.append("PhotoVisibleToPremium", $("#photoVisibleToPremium").is(":checked"));
+			formData.append("PhotoVisibleToAccepted", $("#photoVisibleToAccepted").is(":checked"));
+
+			formData.append("CompletedStep", step);
+			//console.log("form", formData);
+			// $("input[name='next']").on('click', function (e) {
+			// 	if ($(this).prop('disabled')) {
+			// 		e.preventDefault();
+			// 		return false;// Prevent moving forward if disabled
+			// 	}
+			// });
+			if (step === "Step-5" && isSubmit) {
+				$("#submitLoaderOverlay").addClass("active");
+				$("#btnSubmitRegistration").prop("disabled", true);
+			}
+
+			// var formData = new FormData($('#msform')[0]);
+			$.ajax({
+				type: 'post',
+				url: '/Home/Save',
+				data: formData,
+				dataType: 'json',
+				contentType: false,
+				processData: false,
+				xhr: function () { //fix to remove http2 error
+					var xhr = new window.XMLHttpRequest();
+					xhr.open("POST", '/Home/Save', true);
+					xhr.setRequestHeader("Upgrade-Insecure-Requests", "1");
+					return xhr;
+				},
+				success: function (response) {
+					if (response.status == 1) {
+						$("#Id").val(response.id);
+						$("#VerificationCode").val(response.code);
+						if (step === "Step-5" && isSubmit) {
+							$("#submitLoaderOverlay").removeClass("active");
+							$("#btnSubmitRegistration").prop("disabled", false);
+						}
+						if (step === "Step-5") {
+							RegistrationSuccessAlert(response.id);
+						}
+					}
+
+					else {
+						if (step === "Step-5" && isSubmit) {
+							$("#submitLoaderOverlay").removeClass("active");
+							$("#btnSubmitRegistration").prop("disabled", false);
+						}
+						alert(response.message);
+						// $("input[name='next']").prop("disabled", true);
+					}
+				},
+				error: function (error) {
+					if (step === "Step-5" && isSubmit) {
+						$("#submitLoaderOverlay").removeClass("active");
+						$("#btnSubmitRegistration").prop("disabled", false);
+					}
+					console.log(error);
+					//alert("Something went wrong");
+				}
+			});
+		}
+
+		function isnumber(evt) {
+			var ikeycode = (evt.which) ? evt.which : evt.ikeycode
+			if (ikeycode != 46 && ikeycode > 37 && ikeycode > 47 && ikeycode > 57)
+				return false;
+			return true;
+		}
+
+		// -----Country Code Selection
+		$("#Phone").intlTelInput({
+			initialCountry: "in",
+			separateDialCode: true,
+			 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/11.0.4/js/utils.js"
+		});
+
+		$("#LandlineNumber").intlTelInput({
+			initialCountry: "in",
+			separateDialCode: true,
+			utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/11.0.4/js/utils.js"
+		});
+
+		// -----Inline Edit Phone in Verify Step
+		$("#EditPhoneInput").intlTelInput({
+			initialCountry: "in",
+			separateDialCode: true,
+			utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/11.0.4/js/utils.js"
+		});
+
+		// Show inline edit phone container
+		$("#editPhoneBtn").click(function () {
+			$("#EditPhoneInput").val($("#Phone").val());
+			var activeCountryData = $("#Phone").intlTelInput("getSelectedCountryData");
+			if (activeCountryData && activeCountryData.iso2) {
+				$("#EditPhoneInput").intlTelInput("setCountry", activeCountryData.iso2);
+			}
+			$("#editPhoneValidationMsg").hide().text("");
+			$("#editPhoneContainer").slideDown(200);
+			$(this).hide();
+		});
+
+		// Cancel inline edit phone
+		$("#cancelEditPhoneBtn").click(function () {
+			$("#editPhoneContainer").slideUp(200);
+			$("#editPhoneBtn").show();
+			$("#editPhoneValidationMsg").hide().text("");
+		});
+
+		// Submit updated phone and resend OTP
+		$("#submitEditPhoneBtn").click(function () {
+			var newPhone = $("#EditPhoneInput").val().trim();
+			var id = $("#Id").val();
+			var editCountryData = $("#EditPhoneInput").intlTelInput("getSelectedCountryData");
+			var editCountryCode = editCountryData && editCountryData.dialCode ? "+" + editCountryData.dialCode : "";
+
+			// Reset validation
+			$("#editPhoneValidationMsg").hide().text("");
+
+			if (!id || id <= 0) {
+				alert("Registration session not found. Please try again from Step 1.");
+				return;
+			}
+
+			if (!newPhone || newPhone.length < 8 || newPhone.length > 10) {
+				$("#editPhoneValidationMsg").text("Please enter a valid phone number (8-10 digits).").show();
+				return;
+			}
+
+			// Disable button while processing
+			var $btn = $(this);
+			$btn.prop("disabled", true).text("Updating...");
+
+			$.ajax({
+				type: 'POST',
+				url: '/Home/UpdatePhoneAndResendOtp',
+				data: { id: id, phone: newPhone, countryCode: editCountryCode },
+				dataType: 'json',
+				success: function (response) {
+					if (response.success) {
+						// Update the phone in Step 1 hidden/input field
+						$("#Phone").val(response.phone);
+						// Update the displayed phone label
+						$("#lblphone").html(response.phone);
+						// Hide the edit container
+						$("#editPhoneContainer").slideUp(200);
+						$("#editPhoneBtn").show();
+						// Clear OTP inputs for new OTP
+						$(".otp-input").val("").prop("disabled", true);
+						$("#Pin1").prop("disabled", false).focus();
+						// Show success message and restart timer
+						$("#otpMessage").css("color", "green").text("Phone updated! New OTP sent successfully.");
+						startOTPTimer();
+					} else {
+						$("#editPhoneValidationMsg").text(response.message).show();
+					}
+					$btn.prop("disabled", false).text("Update & Send OTP");
+				},
+				error: function () {
+					$("#editPhoneValidationMsg").text("Failed to update phone. Please try again.").show();
+					$btn.prop("disabled", false).text("Update & Send OTP");
+				}
+			});
+		});
+
+		$(".next").click(function () {
+
+			$('html, body').animate({
+				scrollTop: $(".donee").offset().top
+			}, 1000);
+
+		});
+		$(".previous").click(function () {
+
+			$('html, body').animate({
+				scrollTop: $(".donee").offset().top
+			}, 1000);
+
+		});
+
+		function RegistrationSuccessAlert(registeredUserId) {
+			$.ajax({
+				type: 'GET',
+				url: '/Home/GetUserDetails', // The endpoint in your controller
+				data: { id: registeredUserId },
+				dataType: 'json',
+				timeout: 30000,
+				success: function (response) {
+					if (response.success) {
+						console.log("RegisterNumber: " + response.message);
+						Swal.fire({
+							title: 'Success!',
+							text: "Your profile has been successfully created. Your Profile ID is " + response.message,
+							icon: 'success',
+							background: '#00662d',
+							color: '#ffffff',
+							confirmButtonColor: '#3085d6'
+						}).then((result) => {
+							if (result.isConfirmed) {
+								window.location.href = '/Dashboard'; // Navigate after OK button is clicked
+							}
+						});
+					} else {
+						Swal.fire({
+							title: 'Success!',
+							text: "Your profile has been successfully created.",
+							icon: 'success',
+							background: '#00662d',
+							color: '#ffffff',
+							confirmButtonColor: '#3085d6'
+						}).then((result) => {
+							if (result.isConfirmed) {
+								window.location.href = '/Dashboard'; // Navigate after OK button is clicked
+							}
+						});
+					}
+				}
+				// error: function (error) {
+				// 	console.log("Error occurred:", error);
+				// 	Swal.fire({
+				// 		title: 'Error!',
+				// 		text: 'Something went wrong!',
+				// 		icon: 'error',
+				// 		background: '#f27474',
+				// 		confirmButtonColor: '#d33'
+				// 	});
+				// 	window.location.href = "/user/login";
+				// }
+				// error: function (error) {
+				// 	console.log("Error occurred:", error);
+				// 	Swal.fire({
+				// 		title: 'Error!',
+				// 		text: 'Something went wrong!',
+				// 		icon: 'error',
+				// 		background: '#f27474',
+				// 		confirmButtonColor: '#d33'
+				// 	});
+				// 	window.location.href = "/user/login";
+				// }
+			});
+		}
+
+		$(document).ready(function () {
+			// When Country is changed
+			$('#Country').change(function () {
+				var selectedCountry = $(this).val();
+				if (selectedCountry === 'India') {
+					$('#stateContainer').show();
+				// Show the state dropdown if 'India' is selected
+					$('#districtContainer').hide();
+					$('#cityContainer').hide();
+					 $('#State').val('');
+					 $('#District').val('');
+					 $('#Village').val('');
+					$('#State').trigger('change');
+					$('#District').trigger('change');
+					$('#Village').trigger('change');
+					// $('#State').prop('disabled', false);
+					// $('#District').prop('disabled', true);
+					// $('#Village').prop('disabled', true);
+				} else {
+					$('#stateContainer').hide();
+					
+				// Hide state, district, and village dropdowns if any other country is selected
+					$('#districtContainer').hide();
+					$('#cityContainer').hide();
+					 $('#State').val('');
+					 $('#District').val('');
+					 $('#Village').val('');
+					$('#State').trigger('change');
+					$('#District').trigger('change');
+					$('#Village').trigger('change');
+					// $('#State').prop('disabled', true);
+					// $('#District').prop('disabled', true);
+					// $('#Village').prop('disabled', true);
+				}
+			});
+
+			// When State is changed
+			$('#State').change(function () {
+				var selectedState = $(this).val();
+				var selectedCountry = $('#Country').val();
+				if (selectedCountry === 'India' && selectedState !== '') {
+					$('#districtContainer').show();
+					/* $('#District').prop('disabled', false); */// Show district dropdown if state is selected
+					$('#cityContainer').hide();
+					/* $('#Village').prop('disabled', true); */// Hide village initially
+					 $('#District').val('');
+					 $('#Village').val('');
+					$('#District').trigger('change');
+					$('#Village').trigger('change');
+				} else {
+					$('#districtContainer').hide();
+					/* $('#District').prop('disabled', true); */// Hide district and village if no state is selected
+					$('#cityContainer').hide();
+					// $('#Village').prop('disabled', true);
+					 $('#District').val('');
+					 $('#Village').val('');
+					$('#District').trigger('change');
+					$('#Village').trigger('change');
+				}
+			});
+
+			// When District is changed
+			$('#District').change(function () {
+				var selectedDistrict = $(this).val();
+				var selectedState = $('#State').val();
+				if (selectedState === 'Kerala' && selectedDistrict !== '') {
+					$('#cityContainer').show();
+					/* $('#Village').prop('disabled', false); */// Show village dropdown if state is 'Kerala' and district is selected
+				} else {
+					$('#cityContainer').hide();
+					/* $('#Village').prop('disabled', true); */// Hide village if no district is selected or state is not 'Kerala'
+					 $('#Village').val('');
+					$('#Village').trigger('change');
+				}
+			});
+
+			// Trigger the change event on page load to handle the initial state
+			$('#Country').trigger('change');
+			$('#State').trigger('change');
+			$('#District').trigger('change');
+
+			// Toggle physically challenged details dropdown
+			$('input[name="IsPhysicallyChallenged"]').change(function () {
+				if ($(this).val() === 'Yes') {
+					$('#physicalDisabilityContainer').show();
+				} else {
+					$('#physicalDisabilityContainer').hide();
+					$('#PhysicallyChallengedDetail').val('');
+				}
+			});
+			// Trigger initial state on page load
+			$('input[name="IsPhysicallyChallenged"]:checked').trigger('change');
+		});
+
+		  $(document).ready(function () {
+			var isEmailAvailable = false;
+			var isPhoneAvailable = false;
+
+			window.checkFieldValidation = function(fieldId) {
+				var $el = $('#' + fieldId);
+				if (!$el.length) return;
+				
+				var val = $el.val();
+				var isValid = false;
+				
+				switch (fieldId) {
+					case 'Name':
+					case 'FamilyName':
+					case 'FatherName':
+					case 'Post':
+					case 'About':
+						isValid = (val !== null && val.trim() !== "");
+						break;
+						
+					case 'Phone':
+						var phoneVal = val ? val.trim() : "";
+						isValid = (phoneVal !== "" && /^\d{8,10}$/.test(phoneVal) && isPhoneAvailable);
+						break;
+						
+					case 'Email':
+						var emailVal = val ? val.trim() : "";
+						isValid = (emailVal !== "" && validateEmail(emailVal) && isEmailAvailable);
+						break;
+						
+					case 'Password':
+						isValid = (val !== null && val.length >= 6);
+						break;
+						
+					case 'PinCode':
+						var pinVal = val ? val.trim() : "";
+						isValid = (pinVal !== "" && /^\d{6}$/.test(pinVal));
+						break;
+						
+					case 'LandlineNumber':
+						var landlineVal = val ? val.trim() : "";
+						isValid = (landlineVal !== "" && /^\d{8,10}$/.test(landlineVal));
+						break;
+						
+					case 'ProfileForId':
+					case 'ReligionId':
+					case 'NationalityId':
+					case 'MaritalStatusId':
+					case 'HeightId':
+					case 'WeightId':
+					case 'ComplexionId':
+					case 'BodyTypeId':
+					case 'ProfessionId':
+					case 'MotherTongueId':
+					case 'CommunityId':
+					case 'ReligiousnessId':
+					case 'FinancialStatusId':
+						isValid = (val !== null && val !== "" && val !== "0");
+						break;
+						
+					case 'NumberOfChildrens':
+						var maritalStatus = $('#MaritalStatusId').val();
+						if (maritalStatus === '1') {
+							isValid = true;
+						} else {
+							isValid = (val !== null && val !== "" && val !== "0");
+						}
+						break;
+						
+					case 'PhysicallyChallengedDetail':
+						var physicallyChallenged = $('input[name="IsPhysicallyChallenged"]:checked').val();
+						if (physicallyChallenged === 'No') {
+							isValid = true;
+						} else {
+							isValid = (val !== null && val !== "" && val !== "0");
+						}
+						break;
+						
+					case 'HighestEducation':
+					case 'ProfessionType':
+						isValid = (val !== null && val.trim() !== "");
+						break;
+						
+					case 'EducationType':
+						if (Array.isArray(val)) {
+							isValid = (val.length > 0);
+						} else {
+							isValid = (val !== null && val.trim() !== "");
+						}
+						break;
+						
+					case 'Year':
+					case 'Month':
+					case 'Day':
+						// Do not show green ticks for DOB dropdowns to prevent clutter and text clipping on mobile screens
+						isValid = (val !== null && val !== "" && val !== undefined);
+						break;
+						
+					case 'Country':
+					case 'PresentCountry':
+						isValid = (val !== null && val.trim() !== "");
+						break;
+						
+					case 'State':
+						var country = $('#Country').val();
+						if (country === 'India') {
+							isValid = (val !== null && val.trim() !== "");
+						} else {
+							isValid = true;
+						}
+						break;
+						
+					case 'District':
+						var country = $('#Country').val();
+						if (country === 'India') {
+							isValid = (val !== null && val.trim() !== "");
+						} else {
+							isValid = true;
+						}
+						break;
+						
+					case 'Village':
+						var state = $('#State').val();
+						if (state === 'Kerala') {
+							isValid = (val !== null && val.trim() !== "");
+						} else {
+							isValid = true;
+						}
+						break;
+						
+					default:
+						break;
+				}
+				
+				// Apply classes
+				var wrapper = $el.closest('.custom-select-wrapper');
+				if (wrapper.length) {
+					var trigger = wrapper.find('.custom-select-trigger');
+					if (isValid) {
+						trigger.addClass('is-valid');
+						trigger.removeClass('is-invalid');
+					} else {
+						trigger.removeClass('is-valid');
+					}
+				} 
+				
+				if ($el.hasClass('reg-select-native')) {
+					if (isValid) {
+						$el.addClass('is-valid');
+						$el.removeClass('is-invalid');
+					} else {
+						$el.removeClass('is-valid');
+					}
+				} else if ($el.hasClass('reg-input-custom') || $el.is('textarea')) {
+					if (isValid) {
+						$el.addClass('is-valid');
+						$el.removeClass('is-invalid');
+					} else {
+						$el.removeClass('is-valid');
+					}
+				}
+			};
+ 
+			window.checkDobGroupValidation = function() {
+				var d = $('#Day').val();
+				var m = $('#Month').val();
+				var y = $('#Year').val();
+				var isValid = (d !== "" && d !== null && d !== undefined && m !== "" && m !== null && m !== undefined && y !== "" && y !== null && y !== undefined);
+				if (isValid) {
+					$('#dobSuccessTick').addClass('active');
+				} else {
+					$('#dobSuccessTick').removeClass('active');
+				}
+			};
+ 
+			window.checkGenderGroupValidation = function() {
+				var isValid = ($('input[name="Gender"]:checked').length > 0);
+				if (isValid) {
+					$('#genderSuccessTick').addClass('active');
+					$('.malefemale').addClass('is-valid').removeClass('is-invalid');
+				} else {
+					$('#genderSuccessTick').removeClass('active');
+					$('.malefemale').removeClass('is-valid');
+				}
+			};
+
+			window.checkPhysicalGroupValidation = function() {
+				var isValid = ($('input[name="IsPhysicallyChallenged"]:checked').length > 0);
+				if (isValid) {
+					$('#physicalSuccessTick').addClass('active');
+				} else {
+					$('#physicalSuccessTick').removeClass('active');
+				}
+			};
+
+			// Dynamic validation scan on load and input change
+			window.validateAllFields = function() {
+				$('#msform').find('input, select, textarea').each(function() {
+					if (this.id) {
+						checkFieldValidation(this.id);
+					}
+				});
+				window.checkDobGroupValidation();
+				window.checkGenderGroupValidation();
+				window.checkPhysicalGroupValidation();
+			};
+
+			// Listen for standard input events to show ticks on live insertion
+			$('#msform').on('input change', 'input, select, textarea', function() {
+				if (this.id) {
+					checkFieldValidation(this.id);
+				}
+				window.checkDobGroupValidation();
+				window.checkGenderGroupValidation();
+				window.checkPhysicalGroupValidation();
+			});
+
+			@if (Model.Registration != null && Model.Registration.Id > 0 && !Model.Registration.IsComplete)
+			{
+				<text>
+				// Show the welcome back modal
+				setTimeout(function() {
+					$("#resumeRegistrationModal").addClass("active");
+				}, 500);
+
+				window.hideResumeRegistrationModal = function() {
+					$("#resumeRegistrationModal").removeClass("active");
+				};
+
+				// Populate/pre-fill the values
+				var savedData = {
+					Id: '@Model.Registration.Id',
+					ProfileForId: '@Model.Registration.ProfileForId',
+					Name: '@Html.Raw(Model.Registration.Name)',
+					Email: '@Html.Raw(Model.Registration.Email)',
+					Phone: '@Model.Registration.Phone',
+					Gender: '@Model.Registration.Gender',
+					Password: '', // Don't prefill password
+					Day: '@Model.Registration.Day',
+					Month: '@Model.Registration.Month',
+					Year: '@Model.Registration.Year',
+					ReligionId: '@Model.Registration.ReligionId',
+					NationalityId: '@Model.Registration.NationalityId',
+					MaritalStatusId: '@Model.Registration.MaritalStatusId',
+					NumberOfChildrens: '@Model.Registration.NumberOfChildrens',
+					HeightId: '@Model.Registration.HeightId',
+					WeightId: '@Model.Registration.WeightId',
+					ComplexionId: '@Model.Registration.ComplexionId',
+					BodyTypeId: '@Model.Registration.BodyTypeId',
+					IsPhysicallyChallenged: '@(Model.Registration.IsPhysicallyChallenged ? "Yes" : "No")',
+					PhysicallyChallengedDetail: '@Html.Raw(Model.Registration.PhysicallyChallengedDetail)',
+					HighestEducation: '@Html.Raw(Model.Registration.HighestEducation)',
+					EducationType: '@Html.Raw(Model.Registration.EducationType)',
+					ProfessionId: '@Model.Registration.ProfessionId',
+					ProfessionType: '@Html.Raw(Model.Registration.ProfessionType)',
+					MotherTongueId: '@Model.Registration.MotherTongueId',
+					CommunityId: '@Model.Registration.CommunityId',
+					ReligiousnessId: '@Model.Registration.ReligiousnessId',
+					FinancialStatusId: '@Model.Registration.FinancialStatusId',
+					FamilyName: '@Html.Raw(Model.Registration.FamilyName)',
+					FatherName: '@Html.Raw(Model.Registration.FatherName)',
+					Post: '@Html.Raw(Model.Registration.Post)',
+					PinCode: '@Model.Registration.PinCode',
+					Country: '@Html.Raw(Model.Registration.Country)',
+					State: '@Html.Raw(Model.Registration.State)',
+					District: '@Html.Raw(Model.Registration.District)',
+					Village: '@Html.Raw(Model.Registration.Village)',
+					PresentCountry: '@Html.Raw(Model.Registration.PresentCountry)',
+					LandlineNumber: '@Model.Registration.LandlineNumber',
+					About: '@Html.Raw(Model.Registration.About)'
+				};
+
+				// Prefill text inputs, select dropdowns (except address cascade fields and DOB)
+				var excludedKeys = ['Country', 'State', 'District', 'Village', 'Year', 'Month', 'Day'];
+				Object.keys(savedData).forEach(function(key) {
+					if (excludedKeys.indexOf(key) === -1) {
+						var value = savedData[key];
+						if (value !== null && value !== undefined && value !== '') {
+							var $elem = $('#' + key);
+							if ($elem.length) {
+								if ($elem.is('select') || $elem.attr('type') === 'hidden') {
+									$elem.val(value).trigger('change');
+								} else {
+									$elem.val(value);
+								}
+							}
+						}
+					}
+				});
+
+				// Prefill DOB dropdowns in correct cascade order to build Day options before selecting Day
+				if (savedData.Year) {
+					$('#Year').val(savedData.Year).trigger('change');
+				}
+				if (savedData.Month) {
+					$('#Month').val(savedData.Month).trigger('change');
+				}
+				if (savedData.Day) {
+					$('#Day').val(savedData.Day).trigger('change');
+				}
+
+				// Prefill address dropdowns in cascade order to prevent change triggers from wiping them out
+				if (savedData.Country) {
+					$('#Country').val(savedData.Country).trigger('change');
+					if (savedData.State) {
+						$('#State').val(savedData.State).trigger('change');
+						if (savedData.District) {
+							$('#District').val(savedData.District).trigger('change');
+							if (savedData.Village) {
+								$('#Village').val(savedData.Village).trigger('change');
+							}
+						}
+					}
+				}
+
+				// Prefill radio buttons
+				if (savedData.Gender) {
+					$('input[name="Gender"][value="' + savedData.Gender + '"]').prop('checked', true).trigger('change');
+				}
+				if (savedData.IsPhysicallyChallenged) {
+					$('input[name="IsPhysicallyChallenged"][value="' + savedData.IsPhysicallyChallenged + '"]').prop('checked', true).trigger('change');
+				}
+
+				// Prefill multi-select
+				if (savedData.EducationType) {
+					var selectedCourses = savedData.EducationType.split(',').map(s => s.trim());
+					var multiWrapper = document.querySelector('.custom-select-wrapper.multi-select[data-field="EducationType"]');
+					if (multiWrapper) {
+						multiWrapper.querySelectorAll('.custom-option').forEach(function(opt) {
+							var optVal = opt.getAttribute('data-value') || opt.innerText.trim();
+							if (selectedCourses.indexOf(optVal) !== -1) {
+								opt.classList.add('selected');
+							}
+						});
+						updateMultiSelect(multiWrapper);
+					}
+				}
+
+
+				// Prefill photo visibility checkboxes
+				$('#photoVisibleToAll').prop('checked', @(Model.Registration.PhotoVisibleToAll.ToString().ToLower())).trigger('change');
+				$('#photoVisibleToPremium').prop('checked', @(Model.Registration.PhotoVisibleToPremium.ToString().ToLower())).trigger('change');
+				$('#photoVisibleToAccepted').prop('checked', @(Model.Registration.PhotoVisibleToAccepted.ToString().ToLower())).trigger('change');
+
+				// Mark email and phone as available so uniqueness checks pass and the Next button is enabled
+				isEmailAvailable = true;
+				isPhoneAvailable = true;
+				validateStep1NextButton();
+
+				// Automatically transition stepper wizard to current step
+				var completedStep = '@Model.Registration.CompletedStep';
+				var targetFsId = "s1";
+				var targetProgressIndex = 0;
+
+				if (completedStep === "Step-1") {
+					targetFsId = "s6";
+					targetProgressIndex = 1;
+					// Start OTP timer and populate verified labels since they are on verification step
+					setTimeout(function() {
+						$("#lblphone").html('@Model.Registration.Phone');
+						$("#lblemail").html('@Model.Registration.Email');
+						startOTPTimer();
+					}, 200);
+				} else if (completedStep === "Step-OTP-Verify") {
+					targetFsId = "s2";
+					targetProgressIndex = 2;
+				} else if (completedStep === "Step-2") {
+					targetFsId = "s3";
+					targetProgressIndex = 3;
+				} else if (completedStep === "Step-3") {
+					targetFsId = "s4";
+					targetProgressIndex = 4;
+				} else if (completedStep === "Step-4") {
+					targetFsId = "s5";
+					targetProgressIndex = 5;
+				}
+
+				if (targetFsId !== "s1") {
+					// Hide standard Step 1 fieldset
+					$("#s1").hide();
+					// Show the active step fieldset
+					$("#" + targetFsId).show().css("opacity", 1);
+
+					// Sync progressbar active indicators
+					$("#progressbar li").removeClass("active");
+					for (var i = 0; targetProgressIndex >= i; i++) {
+						$("#progressbar li").eq(i).addClass("active");
+					}
+					current = targetProgressIndex + 1;
+					setProgressBar(current);
+				}
+				</text>
+			}
+
+			function validateStep1NextButton() {
+				var email = $('#Email').val().trim();
+				var phone = $('#Phone').val().trim();
+				var emailFormatValid = validateEmail(email);
+				var phoneFormatValid = phone && /^\d{8,10}$/.test(phone);
+
+				if (emailFormatValid && phoneFormatValid && isEmailAvailable && isPhoneAvailable) {
+					$('#nextButton').prop('disabled', false);
+				} else {
+					$('#nextButton').prop('disabled', true);
+				}
+			}
+
+			$('#Email').on('input', function () {
+				var email = $(this).val().trim();
+				var emailValidationMessage = $('#emailValidationMessage');
+
+				// Call the validateEmail function from validationscript.js
+				if (!validateEmail(email)) {
+					// If the email format is invalid, show a validation message and disable the button
+					emailValidationMessage.text("Invalid email format!").show();
+					isEmailAvailable = false;
+					validateStep1NextButton();
+					checkFieldValidation('Email');
+					return; // Exit the function, do not proceed to AJAX
+				} else {
+					// If the email format is valid, hide the validation message
+					emailValidationMessage.hide();
+				}
+
+				if (email) {
+					// Proceed with AJAX if email is not empty and valid
+					$.ajax({
+						url: '@Url.Action("CheckEmail", "Home")',
+						type: 'GET',
+						data: { email: email },
+						success: function (response) {
+							if (response === true) {
+								isEmailAvailable = true;
+								emailValidationMessage.hide();
+							} else {
+								isEmailAvailable = false;
+								emailValidationMessage.text("Email already exists!").show();
+							}
+							validateStep1NextButton();
+							checkFieldValidation('Email');
+						},
+						error: function () {
+							isEmailAvailable = false;
+							emailValidationMessage.text("An error occurred. Please try again.").show();
+							validateStep1NextButton();
+							checkFieldValidation('Email');
+						}
+					});
+				} else {
+					isEmailAvailable = false;
+					emailValidationMessage.hide();
+					validateStep1NextButton();
+					checkFieldValidation('Email');
+				}
+			});
+
+			$('#Phone').on('input', function () {
+				var phone = $(this).val().trim();
+				var phoneValidationMessage = $('#phoneValidationMessage');
+
+				if (phone === "") {
+					isPhoneAvailable = false;
+					phoneValidationMessage.hide();
+					validateStep1NextButton();
+					checkFieldValidation('Phone');
+					return;
+				}
+
+				if (!/^\d{8,10}$/.test(phone)) {
+					isPhoneAvailable = false;
+					validateStep1NextButton();
+					checkFieldValidation('Phone');
+					return;
+				}
+
+				if (phone) {
+					$.ajax({
+						url: '@Url.Action("CheckPhone", "Home")',
+						type: 'GET',
+						data: { phone: phone },
+						success: function (response) {
+							if (response === true) {
+								isPhoneAvailable = true;
+								phoneValidationMessage.hide();
+							} else {
+								isPhoneAvailable = false;
+								phoneValidationMessage.text("Phone number already exists!").show();
+							}
+							validateStep1NextButton();
+							checkFieldValidation('Phone');
+						},
+						error: function () {
+							isPhoneAvailable = false;
+							phoneValidationMessage.text("An error occurred. Please try again.").show();
+							validateStep1NextButton();
+							checkFieldValidation('Phone');
+						}
+					});
+				} else {
+					isPhoneAvailable = false;
+					phoneValidationMessage.hide();
+					validateStep1NextButton();
+					checkFieldValidation('Phone');
+				}
+			});
+
+			// Validate all pre-filled fields on load
+			setTimeout(function() {
+				validateAllFields();
+			}, 300);
+		});
+
+	</script>
+
+	<script type="text/javascript">
+		$(document).ready(function () {
+			$('#State').change(function () {
+				var stateName = $(this).val();  // Get the selected state's name
+
+				// Make an AJAX call to fetch districts based on the selected state name
+				$.ajax({
+					url: '/Home/GetDistrictsByStateName', // Action method to fetch districts by state name
+					type: 'GET',
+					data: { stateName: stateName },
+					dataType: 'json',
+					xhr: function () {
+						var xhr = new window.XMLHttpRequest();
+						xhr.open("GET", '/Home/GetDistrictsByStateName?stateName=' + encodeURIComponent(stateName), true);
+						xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+						return xhr;
+					},
+					success: function (response) {
+						if (response.success) {
+							// Clear existing options in the district dropdown
+							$('#District').empty();
+							$('#District').append('<option value="">District*</option>');
+
+							// Populate the district dropdown with new options
+							$.each(response.message, function (index, item) {
+								$('#District').append('<option value="' + item.name + '">' + item.name + '</option>');
+							});
+						}
+						else {
+
+						}
+					},
+					error: function () {
+					}
+				});
+			});
+			$('#State').trigger('change');
+
+		});
+
+		$(document).ready(function () {
+			$('#District').change(function () {
+				var districtName = $(this).val();  // Get the selected state's name
+
+				// Make an AJAX call to fetch districts based on the selected state name
+				$.ajax({
+					url: '/Home/GetCityByDistictName', // Action method to fetch districts by state name
+					type: 'GET',
+					data: { districtName: districtName },
+					dataType: 'json',
+					xhr: function () {
+						var xhr = new window.XMLHttpRequest();
+						xhr.open("GET", '/Home/GetCityByDistictName?districtName=' + encodeURIComponent(districtName), true);
+						xhr.setRequestHeader("Upgrade-Insecure-Requests", "1"); // Hint at HTTP/1.1
+						return xhr;
+					},
+					success: function (response) {
+						if (response.success) {
+							// Clear existing options in the district dropdown
+							$('#Village').empty();
+							$('#Village').append('<option value="">City*</option>');
+
+							// Populate the district dropdown with new options
+							$.each(response.message, function (index, item) {
+								$('#Village').append('<option value="' + item.name + '">' + item.name + '</option>');
+							});
+						}
+						else {
+
+						}
+					},
+					error: function () {
+					}
+				});
+			});
+			$('#District').trigger('change');
+		});
+
+		$(document).ready(function () {
+			$('#Country').on('change', function () {
+				removeCustomValidation('Country');
+			});
+			$('#State').on('change', function () {
+				removeCustomValidation('State');
+			});
+			$('#District').on('change', function () {
+				removeCustomValidation('District');
+			});
+			$('#Village').on('change', function () {
+				removeCustomValidation('Village');
+			});
+			$('#EducationType').on('change', function () {
+				removeCustomValidation('EducationType');
+			});
+			$('#PresentCountry').on('change', function () {
+				removeCustomValidation('PresentCountry');
+			});
+		});
+			// Initialize Select2 for State
+		// 	$('#PresentState').select2({
+		// 		placeholder: 'Present State',
+		// 		allowClear: false
+		// 	}).on('change', function () {
+		// 		removeCustomValidation('PresentState');
+		// 	});
+
+		// 	// Initialize Select2 for District
+		// 	$('#PresentDistrict').select2({
+		// 		placeholder: 'Present District',
+		// 		allowClear: false
+		// 	}).on('change', function () {
+		// 		removeCustomValidation('PresentDistrict');
+		// 	});
+
+		// 	// Initialize Select2 for Village
+		// 	$('#PresentCity').select2({
+		// 		placeholder: 'Present City',
+		// 		allowClear: false
+		// 	}).on('change', function () {
+		// 		removeCustomValidation('PresentCity');
+		// 	});
+		// });
+	
+		// Gender change listener for profile image preview
+		$('input[name="Gender"]').change(function() {
+			var gender = $(this).val();
+			var profileImg = $('#profile-img');
+			// Only change if it's currently showing a default image
+			if (profileImg.attr('src').includes('default-user')) {
+				if (gender === 'Female') {
+					profileImg.attr('src', '/assets/images/default-user-women.png');
+				} else {
+					profileImg.attr('src', '/assets/images/default-user-men.png');
+				}
+			}
+		});
+	</script>
+
+
+	@* <script src="~/js/site.js"></script> *@
+	<script src="~/Scripts//validationscript.js"></script>
+
+	<!-- Cropper.js JS -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+	<!-- Image Validator JS -->
+	<script src="/js/image-validator.js"></script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// Initialize Image Validator for SignUp
+			if (typeof ImageValidator !== 'undefined') {
+				ImageValidator.initSignup();
+			}
+		});
+	</script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// Password visibility toggle logic
+			var toggleButtons = document.querySelectorAll(".password-toggle-btn");
+			toggleButtons.forEach(function (btn) {
+				btn.addEventListener("click", function () {
+					var container = btn.closest(".password-field-container");
+					if (!container) return;
+					var input = container.querySelector("input");
+					if (!input) return;
+					var icon = btn.querySelector("i");
+					if (!icon) return;
+
+					if (input.type === "password") {
+						input.type = "text";
+						icon.classList.remove("uil-eye");
+						icon.classList.add("uil-eye-slash");
+					} else {
+						input.type = "password";
+						icon.classList.remove("uil-eye-slash");
+						icon.classList.add("uil-eye");
+					}
+				});
+			});
+		});
+	</script>
+
+	<!-- Red Asterisk Styling Script & Styles -->
+	<style>
+		.mandatory-star {
+			color: #e43f52 !important;
+			font-weight: bold;
+			margin-left: 2px;
+		}
+		.placeholder-red-star {
+			color: #e43f52 !important;
+			font-weight: bold;
+			font-family: inherit;
+			pointer-events: none;
+			position: absolute;
+			transition: opacity 0.15s ease;
+			z-index: 5;
+		}
+	</style>
+	<script>
+		(function() {
+			var inputsWithStars = [];
+
+			function positionStar(el, star, cleanPlaceholder) {
+				var canvas = document.createElement('canvas');
+				var context = canvas.getContext('2d');
+				var style = window.getComputedStyle(el);
+				context.font = style.fontSize + ' ' + style.fontFamily;
+				var textWidth = context.measureText(cleanPlaceholder).width;
+
+				var paddingLeft = parseFloat(style.paddingLeft) || 0;
+				
+				// Position relative to input boundary
+				var starLeft = el.offsetLeft + paddingLeft + textWidth + 4;
+				star.style.left = starLeft + 'px';
+
+				if (el.tagName.toLowerCase() === 'textarea') {
+					var paddingTop = parseFloat(style.paddingTop) || 0;
+					star.style.top = (el.offsetTop + paddingTop + 2) + 'px';
+					star.style.transform = 'none';
+				} else {
+					var starTop = el.offsetTop + (el.offsetHeight / 2);
+					star.style.top = starTop + 'px';
+					star.style.transform = 'translateY(-50%)';
+				}
+			}
+
+			function repositionAllStars() {
+				inputsWithStars.forEach(function(item) {
+					if (item.el.offsetHeight > 0) {
+						positionStar(item.el, item.star, item.cleanPlaceholder);
+					}
+				});
+			}
+
+			function initMandatoryStars() {
+				// 1. Handle red asterisks in labels, spans, paragraphs inside the multi-step form
+				document.querySelectorAll('#msform span, #msform p, #msform label, #msform div.genderr').forEach(function(el) {
+					if (el.innerHTML && el.innerHTML.includes('*') && !el.querySelector('.mandatory-star')) {
+						if (el.closest('.custom-option') || el.closest('.reg-select-native') || el.closest('select')) return;
+						el.innerHTML = el.innerHTML.replace(/\s*\*/g, ' <span class="mandatory-star">*</span>');
+					}
+				});
+
+				// 2. Handle red asterisks in input and textarea placeholders
+				document.querySelectorAll('#msform input[placeholder*="*"], #msform textarea[placeholder*="*"]').forEach(function(el) {
+					if (el.getAttribute('data-star-initialized')) return;
+					el.setAttribute('data-star-initialized', 'true');
+
+					var parent = el.parentElement;
+					if (parent) {
+						if (window.getComputedStyle(parent).position === 'static') {
+							parent.style.position = 'relative';
+						}
+
+						var origPlaceholder = el.getAttribute('placeholder');
+						var cleanPlaceholder = origPlaceholder.replace(/\s*\*/, '');
+						el.setAttribute('placeholder', cleanPlaceholder);
+
+						var star = document.createElement('span');
+						star.className = 'placeholder-red-star';
+						star.innerText = '*';
+						parent.appendChild(star);
+
+						// Save to tracking list
+						inputsWithStars.push({
+							el: el,
+							star: star,
+							cleanPlaceholder: cleanPlaceholder
+						});
+
+						function toggleStar() {
+							if (el.value.length > 0 || document.activeElement === el) {
+								star.style.opacity = '0';
+							} else {
+								star.style.opacity = '1';
+							}
+						}
+
+						el.addEventListener('input', toggleStar);
+						el.addEventListener('focus', toggleStar);
+						el.addEventListener('blur', toggleStar);
+
+						toggleStar();
+					}
+				});
+
+				// Initial position calculation
+				repositionAllStars();
+				
+				// Reposition after styles, fonts and stepper visibility initialize
+				setTimeout(repositionAllStars, 100);
+				setTimeout(repositionAllStars, 300);
+				setTimeout(repositionAllStars, 600);
+			}
+
+			// Run when DOM is ready
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', initMandatoryStars);
+			} else {
+				initMandatoryStars();
+			}
+
+			// Window listeners for responsive updates
+			window.addEventListener('load', repositionAllStars);
+			window.addEventListener('resize', repositionAllStars);
+
+			// Listen for step transitions (button clicks inside form) to reposition stars
+			$(document).on('click', '#msform button, #msform input[type="button"]', function() {
+				setTimeout(repositionAllStars, 150);
+				setTimeout(repositionAllStars, 300);
+			});
+		})();
+	</script>
+
+	@if (Model.SuccessStories != null && Model.SuccessStories.Any())
+	{
+	    <!-- ===== TESTIMONIALS SLIDER SCRIPT ===== -->
+	    <script>
+	        (function () {
+	            var track       = document.getElementById('testiTrack');
+	            var dots        = document.querySelectorAll('.testi-dot');
+	            var totalSlides = document.querySelectorAll('.testi-slide').length;
+	            var current     = 0;
+	            var perView     = 1;          // updated on resize
+	            var autoTimer   = null;
+	            var touchStartX = 0;
+	            var touchEndX   = 0;
+	
+	            /* ── Determine how many slides are visible at once ── */
+	            // function getPerView() {
+	            //     return window.innerWidth >= 992 ? 2 : 1;
+	            // }
+	            function getPerView() {
+	                        return 1;
+	                     }
+	
+	            /* ── Max index we can scroll to ── */
+	            function maxIndex() {
+	                return Math.max(0, totalSlides - perView);
+	            }
+	
+	            /* ── Move the track ── */
+	            function goToSlide(index) {
+	                perView  = getPerView();
+	                current  = Math.max(0, Math.min(index, maxIndex()));
+	
+	                /* slide width = 100% / perView */
+	                var slideWidthPct = 100 / perView;
+	                track.style.transform = 'translateX(-' + (current * slideWidthPct) + '%)';
+	
+	                /* update dots — we always show 4 dots regardless of perView */
+	                dots.forEach(function (d, i) {
+	                    d.classList.toggle('active', i === current);
+	                });
+	            }
+	
+	            /* ── Exposed to onclick on arrows / dots ── */
+	            window.goToSlide = goToSlide;
+	            window.prevSlide = function () { goToSlide(current - 1); resetAuto(); };
+	            window.nextSlide = function () {
+	                goToSlide(current >= maxIndex() ? 0 : current + 1);
+	                resetAuto();
+	            };
+	
+	            /* ── Auto-play every 4 s ── */
+	            function startAuto() {
+	                autoTimer = setInterval(function () {
+	                    goToSlide(current >= maxIndex() ? 0 : current + 1);
+	                }, 4000);
+	            }
+	            function resetAuto() {
+	                clearInterval(autoTimer);
+	                startAuto();
+	            }
+	
+	            /* ── Touch / swipe support ── */
+	            var wrapper = document.querySelector('.testi-slider-wrapper');
+	            if (wrapper) {
+	                wrapper.addEventListener('touchstart', function (e) {
+	                    touchStartX = e.changedTouches[0].clientX;
+	                }, { passive: true });
+	                wrapper.addEventListener('touchend', function (e) {
+	                    touchEndX = e.changedTouches[0].clientX;
+	                    var diff  = touchStartX - touchEndX;
+	                    if (Math.abs(diff) > 40) {
+	                        if (diff > 0) { window.nextSlide(); }
+	                        else          { window.prevSlide(); }
+	                    }
+	                }, { passive: true });
+	            }
+	
+	            /* ── Re-calculate on resize (perView changes at 992px) ── */
+	            window.addEventListener('resize', function () {
+	                goToSlide(current);   // recalculates perView & offset
+	            });
+	
+	            /* ── Init ── */
+	            goToSlide(0);
+	            startAuto();
+	        })();
+	    </script>
+	    <!-- ===== END TESTIMONIALS SLIDER SCRIPT ===== -->
+	}
+}

@@ -1,0 +1,365 @@
+@model BillHistoryViewModel
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+<style>
+    /* Premium spinner loader circle */
+    .spinner-circle {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin-loader 0.8s linear infinite;
+        vertical-align: middle;
+    }
+    @@keyframes spin-loader {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Ensure the button matches the brand green color #0b6b2e in all states and doesn't fall back to Bootstrap blue */
+    .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active,
+    .btn-primary.active,
+    .btn-primary:disabled,
+    .btn-primary[disabled],
+    .btn-primary:not(:disabled):not(.disabled):active {
+        background-color: #0b6b2e !important;
+        border-color: #0b6b2e !important;
+        color: #fff !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+</style>
+<main class="flex-fill" style="min-width: 0;">
+    <div class="container" style="max-width: 960px;">
+        <div class="p-4">
+            <!-- Manage Alert Section -->
+            <div class="mb-4">
+                <h5 class="settings-title">Payment Details</h5>
+                <div class="mt-5">
+
+                    <!-- Summary -->
+                    <div class="order-summary" id="latest-summary" style="display: none;">
+                        <div class="summary-item">
+                            <span>Total Amount</span>
+                            <div class="amount" id="summary-amount">₹0</div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <span>Payment Method</span>
+                            <h4 id="summary-method">N/A</h4>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Purchase Date</span>
+                            <h4 id="summary-purchase-date">N/A</h4>
+                        </div>
+
+                        <div class="summary-item">
+                            <span>Expiry Date</span>
+                            <h4 id="summary-expiry-date">N/A</h4>
+                        </div>
+                    </div>
+
+                    <!-- Order History -->
+                    <h5>Payment History</h5>
+
+                    <div class="order-head">
+                        <div>Profile ID :</div>
+                        <div>Mode :</div>
+                        <div>Purchase Date :</div>
+                        <div>Expiry Date :</div>
+                        <div>Invoice :</div>
+                    </div>
+
+                    <!-- Dynamic List Container -->
+                    <div id="transaction-list">
+                    </div>
+
+                    <!-- No results message -->
+                    <div id="no-results" class="text-center py-5" style="display:none;">
+                        <h6 class="text-muted">No transactions found.</h6>
+                    </div>
+
+                    <!-- Loader spinner -->
+                    <div id="scroll-loader" class="mt-4 text-center" style="display:none;">
+                        <span class="h6 mb-0 text-muted">Loading.. <i class="mdi mdi-loading mdi-spin h4 mb-0 align-middle"></i></span>
+                    </div>
+
+                    <!-- Invisible trigger for IntersectionObserver -->
+                    <div id="scroll-sentinel" style="height:1px; display:none;"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+    <script>
+    (function () {
+        const registerNumber = '@Model.Registration.RegisterNumber';
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMore = true;
+
+        const listContainer = document.getElementById('transaction-list');
+        const sentinel = document.getElementById('scroll-sentinel');
+        const loader = document.getElementById('scroll-loader');
+        const noResults = document.getElementById('no-results');
+        const latestSummary = document.getElementById('latest-summary');
+
+        async function fetchTransactions() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            currentPage++;
+
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/user/transactions?page=${currentPage}&pageSize=30`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error('API error:', result);
+                    isLoading = false;
+                    loader.style.display = 'none';
+                    return;
+                }
+
+                hasMore = result.hasMore;
+                const transactions = result.data;
+
+                if (transactions.length === 0 && currentPage === 1) {
+                    noResults.style.display = 'block';
+                    loader.style.display = 'none';
+                    sentinel.style.display = 'none';
+                    latestSummary.style.display = 'none';
+                    isLoading = false;
+                    return;
+                }
+
+                // Populate summary from the latest transaction (if on first page)
+                if (currentPage === 1 && transactions.length > 0) {
+                    const latest = transactions[0];
+                    document.getElementById('summary-amount').textContent = '₹' + latest.amount;
+                    document.getElementById('summary-method').textContent = latest.paymentType;
+                    
+                    // Format dates
+                    document.getElementById('summary-purchase-date').textContent = latest.createdOn.split(' ')[0];
+                    
+                    // Expiry date calculation (Purchase Date + 180 Days)
+                    try {
+                        const parts = latest.createdOn.split(' ')[0].split('-');
+                        const purchaseDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        purchaseDate.setDate(purchaseDate.getDate() + 180);
+                        
+                        const expDay = String(purchaseDate.getDate()).padStart(2, '0');
+                        const expMonth = String(purchaseDate.getMonth() + 1).padStart(2, '0');
+                        const expYear = purchaseDate.getFullYear();
+                        document.getElementById('summary-expiry-date').textContent = `${expDay}-${expMonth}-${expYear}`;
+                    } catch (e) {
+                        document.getElementById('summary-expiry-date').textContent = 'N/A';
+                    }
+
+                    latestSummary.style.display = '';
+                }
+
+                transactions.forEach(t => renderTransactionItem(t));
+                loader.style.display = 'none';
+
+                if (!hasMore) {
+                    sentinel.style.display = 'none';
+                } else {
+                    sentinel.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function renderTransactionItem(t) {
+            // Calculate expiry date (Purchase Date + 180 days)
+            let expiryStr = 'N/A';
+            try {
+                const parts = t.createdOn.split(' ')[0].split('-');
+                const purchaseDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                purchaseDate.setDate(purchaseDate.getDate() + 180);
+                const expDay = String(purchaseDate.getDate()).padStart(2, '0');
+                const expMonth = String(purchaseDate.getMonth() + 1).padStart(2, '0');
+                const expYear = purchaseDate.getFullYear();
+                expiryStr = `${expDay}-${expMonth}-${expYear}`;
+            } catch (e) {}
+
+            const purchaseStr = t.createdOn.split(' ')[0];
+
+            let buttonHtml = 'N/A';
+            if (t.status && t.status.toLowerCase() === 'success') {
+                buttonHtml = `
+                    <button onclick="downloadInvoice(this, ${t.id})" class="btn btn-primary btn-sm rounded px-3">
+                        Invoice
+                    </button>
+                `;
+            } else {
+                buttonHtml = `<span class="badge rounded-pill bg-light text-muted border px-2 py-1">${t.status || 'Pending'}</span>`;
+            }
+
+            const itemHtml = `
+                <div class="order-item">
+                    <div class="product-info">
+                        <div class="product-title">${registerNumber}</div>
+                    </div>
+                    <div class="order-number delivered">${t.paymentType}</div>
+                    <div class="status">${purchaseStr}</div>
+                    <div class="status">${expiryStr}</div>
+                    <div>
+                        ${buttonHtml}
+                    </div>
+                </div>
+            `;
+
+            listContainer.insertAdjacentHTML('beforeend', itemHtml);
+        }
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !isLoading && hasMore) {
+                    fetchTransactions();
+                }
+            });
+        }, {
+            rootMargin: '100px'
+        });
+
+        observer.observe(sentinel);
+        fetchTransactions();
+
+        async function downloadInvoice(btn, transactionId) {
+            if (btn.disabled) return;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.style.width = btn.offsetWidth + 'px'; // Freeze width to prevent shrinking
+            btn.innerHTML = '<span class="spinner-circle"></span>';
+            
+            try {
+                if (typeof html2pdf === 'undefined') {
+                    throw new Error('html2pdf library is not loaded. Please verify your internet connection or check if the script is blocked.');
+                }
+
+                const response = await fetch(`/user/invoice/${transactionId}`);
+                if (!response.ok) throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
+                const htmlText = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const element = doc.querySelector('.invoice-wrapper');
+                if (!element) {
+                    // Check if redirect to login occurred
+                    if (doc.querySelector('form[action*="login"]') || doc.title.toLowerCase().includes('login')) {
+                        throw new Error('User session expired. Please log in again.');
+                    }
+                    throw new Error('Invoice container (.invoice-wrapper) was not found in the response.');
+                }
+                
+                // Set margins and shadow overrides on the cloned wrapper element to fit exactly on a single page
+                element.style.margin = '0';
+                element.style.boxShadow = 'none';
+                element.style.overflow = 'visible'; // Prevent layout clipping on the wrapper itself
+
+                // Compact spacing of interior sections to guarantee fit on a single A4 sheet
+                const compactStyle = (selector, stylesObj) => {
+                    element.querySelectorAll(selector).forEach(el => {
+                        Object.assign(el.style, stylesObj);
+                    });
+                };
+                compactStyle('.invoice-header', { padding: '15px 30px' });
+                compactStyle('.invoice-info', { padding: '8px 15px' });
+                compactStyle('.billing', { padding: '10px 15px' });
+                compactStyle('.invoice-table', { marginBottom: '10px' });
+                compactStyle('.invoice-table th', { paddingTop: '10px', paddingBottom: '10px' });
+                compactStyle('.invoice-tablecolor1', { marginTop: '5px', marginBottom: '5px' });
+                compactStyle('.summary-section', { padding: '10px 15px', gap: '20px' });
+                compactStyle('.payment-box', { padding: '10px' });
+                compactStyle('.signature', { padding: '0px 15px 15px' });
+                compactStyle('.footer', { padding: '15px 30px' });
+                
+                const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+                
+                // Create a temporary hidden container to render and measure the invoice correctly
+                const tempDiv = document.createElement('div');
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-9999px';
+                tempDiv.style.top = '-9999px';
+                tempDiv.style.width = '900px';
+                tempDiv.style.overflow = 'visible'; // Ensure wrapper overflow doesn't clip children
+                
+                // Clone all style elements from the fetched page to match styling exactly
+                styles.forEach(style => {
+                    tempDiv.appendChild(style.cloneNode(true));
+                });
+                
+                tempDiv.appendChild(element);
+                document.body.appendChild(tempDiv);
+
+                // Wait for all images inside the cloned wrapper to load completely
+                const images = tempDiv.querySelectorAll('img');
+                const imagePromises = Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                });
+                await Promise.all(imagePromises);
+
+                // Wait for any web fonts (like Poppins) to load
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                }
+                
+                // Wait an extra layout reflow frame to guarantee correct style and dimension calculation
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const titleText = doc.title || `Invoice_${transactionId}`;
+                const filename = titleText.replace(/[^a-z0-9_-]/gi, '_') + '.pdf';
+                
+                const opt = {
+                    margin:       0, // Force 0 margins to prevent page overflow
+                    filename:     filename,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        logging: false,
+                        scrollY: 0, // Prevent scroll offset from shifting the capture window
+                        scrollX: 0 
+                    },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // Fallback to avoid breaking elements awkwardly
+                };
+                
+                await html2pdf().set(opt).from(element).save();
+                document.body.removeChild(tempDiv);
+            } catch (err) {
+                console.error('Download error:', err);
+                alert('Failed to download invoice: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.style.width = ''; // Reset width
+                btn.innerHTML = originalHtml;
+                btn.blur(); // Remove active/focus state and outline
+            }
+        }
+        
+        window.downloadInvoice = downloadInvoice;
+    })();
+    </script>
+}

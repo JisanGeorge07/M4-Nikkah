@@ -1,0 +1,381 @@
+@model URMARRY.Areas.Admin.Models.PremiumAnalyticsViewModel
+@{
+    var user = Model.User;
+    var plan = Model.LatestPlan;
+    ViewData["Title"] = user.IsPremiumMember ? "Premium User Analytics" : "User Analytics";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title">@(user.IsPremiumMember ? "Premium User Analytics" : "User Analytics"): @user.Name (@user.RegisterNumber)</h4>
+                <a asp-action="MemberList" class="btn btn-secondary btn-sm">Back to List</a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="@(user.IsPremiumMember ? "col-md-6" : "col-md-12")">
+                        <div class="p-3 border rounded bg-light">
+                            <h5 class="text-primary"><i class="fas fa-user-circle me-2"></i>User Summary</h5>
+                            <hr />
+                            <p><strong>Name:</strong> @user.Name</p>
+                            <p><strong>Profile ID:</strong> @user.RegisterNumber</p>
+                            <p><strong>Gender:</strong> @user.Gender</p>
+                            <p><strong>Phone:</strong> @user.Phone</p>
+                            <p><strong>Email:</strong> @user.Email</p>
+                        </div>
+                    </div>
+                    @if (user.IsPremiumMember)
+                    {
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-soft-info" style="background-color: #e0f7fa;">
+                                <h5 class="text-info"><i class="fas fa-gem me-2"></i>Membership Details</h5>
+                                <hr />
+                                @if (plan != null)
+                                {
+                                    <p><strong>Contacts Purchased:</strong> <span class="badge bg-primary">@plan.ViewCreditsPurchased</span></p>
+                                    <p><strong>Contacts Used:</strong> <span class="badge bg-warning">@plan.ViewCreditsUsed</span></p>
+                                    <p><strong>Contacts Remaining:</strong> <span class="badge bg-success">@(plan.ViewCreditsPurchased - plan.ViewCreditsUsed)</span></p>
+                                    <p><strong>Expiry Date:</strong> <span class="text-danger">@plan.ExpiresAt.ToString("dd-MMM-yyyy")</span></p>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No active plan found.</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <ul class="nav nav-tabs nav-bordered" id="analyticsTabs" role="tablist">
+                    @if (user.IsPremiumMember)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+                                <i class="fas fa-phone-alt me-1"></i> Contact Viewed (@Model.ContactViews.Count)
+                            </button>
+                        </li>
+                    }
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link @(user.IsPremiumMember ? "" : "active")" id="shortlisted-tab" data-bs-toggle="tab" data-bs-target="#shortlisted" type="button" role="tab">
+                            <i class="fas fa-star me-1"></i> Shortlisted (@Model.Shortlisted.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="liked-tab" data-bs-toggle="tab" data-bs-target="#liked" type="button" role="tab">
+                            <i class="fas fa-heart me-1"></i> Liked (@Model.Liked.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notliked-tab" data-bs-toggle="tab" data-bs-target="#notliked" type="button" role="tab">
+                            <i class="fas fa-times-circle me-1"></i> Not Liked (@Model.NotLiked.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reported-tab" data-bs-toggle="tab" data-bs-target="#reported" type="button" role="tab">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Reported (@Model.Reported.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="photoprivacy-tab" data-bs-toggle="tab" data-bs-target="#photoprivacy" type="button" role="tab">
+                            <i class="fas fa-lock me-1"></i> Photo Privacy
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="uploadedimages-tab" data-bs-toggle="tab" data-bs-target="#uploadedimages" type="button" role="tab">
+                            <i class="fas fa-images me-1"></i> Uploaded Images
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-3" id="analyticsTabsContent">
+                    <!-- Contact Viewed -->
+                    @if (user.IsPremiumMember)
+                    {
+                        <div class="tab-pane fade show active" id="contacts" role="tabpanel">
+                            @await Html.PartialAsync("_ActivityTable", Model.ContactViews)
+                        </div>
+                    }
+
+                    <!-- Shortlisted -->
+                    <div class="tab-pane fade @(user.IsPremiumMember ? "" : "show active")" id="shortlisted" role="tabpanel">
+                        @await Html.PartialAsync("_ActivityTable", Model.Shortlisted)
+                    </div>
+
+                    <!-- Liked -->
+                    <div class="tab-pane fade" id="liked" role="tabpanel">
+                        @await Html.PartialAsync("_ActivityTable", Model.Liked, new ViewDataDictionary(ViewData) { { "TabType", "Liked" }, { "CurrentUserId", Model.User.Id } })
+                    </div>
+
+                    <!-- Not Liked -->
+                    <div class="tab-pane fade" id="notliked" role="tabpanel">
+                        @await Html.PartialAsync("_ActivityTable", Model.NotLiked)
+                    </div>
+
+                    <!-- Reported -->
+                    <div class="tab-pane fade" id="reported" role="tabpanel">
+                        <table class="table table-striped dt-responsive nowrap w-100 datatable-analytics">
+                            <thead>
+                                <tr>
+                                    <th>Profile Name</th>
+                                    <th>ID</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Reported)
+                                {
+                                    <tr>
+                                        <td>@item.ProfileName</td>
+                                        <td>@item.RegisterNumber</td>
+                                        <td>@item.Details</td>
+                                        <td>@item.ActionDate.ToString("dd-MM-yyyy HH:mm")</td>
+                                        <td>
+                                            <a asp-action="Get" asp-route-id="@item.ProfileId" class="btn btn-soft-primary btn-xs" target="_blank">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Photo Privacy -->
+                    <div class="tab-pane fade" id="photoprivacy" role="tabpanel">
+                        <div class="p-3 border rounded bg-light mt-3" style="max-width: 600px;">
+                            <h5 class="text-primary mb-3"><i class="fas fa-user-shield me-2"></i>Photo Privacy Settings</h5>
+                            <hr />
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <strong>Visible to All Users</strong>
+                                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Allow all registered users to view photos</p>
+                                </div>
+                                <div>
+                                    @if (user.PhotoVisibleToAll)
+                                    {
+                                        <span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-check-circle me-1"></i> Enabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-times-circle me-1"></i> Disabled</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <strong>Visible to Premium Users Only</strong>
+                                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Only allow premium users to view photos</p>
+                                </div>
+                                <div>
+                                    @if (user.PhotoVisibleToPremium)
+                                    {
+                                        <span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-check-circle me-1"></i> Enabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-times-circle me-1"></i> Disabled</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <strong>Visible to Accepted Profiles Only</strong>
+                                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Only show photos to users whose interests have been accepted</p>
+                                </div>
+                                <div>
+                                    @if (user.PhotoVisibleToAccepted)
+                                    {
+                                        <span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-check-circle me-1"></i> Enabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-times-circle me-1"></i> Disabled</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uploaded Images -->
+                    <div class="tab-pane fade" id="uploadedimages" role="tabpanel">
+                        <div class="p-3 border rounded bg-light mt-3">
+                            <h5 class="text-primary mb-3"><i class="fas fa-images me-2"></i>Uploaded Images</h5>
+                            <hr />
+                            @{
+                                var userImages = Model.UserImages;
+                            }
+                            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+                                <!-- Main Profile Image -->
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm border-primary">
+                                        <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                            @if (!string.IsNullOrEmpty(user.ImagePath))
+                                            {
+                                                <a href="@Html.Raw("/" + user.ImagePath)" target="_blank">
+                                                    <img src="@Html.Raw("/" + user.ImagePath)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Main Profile Photo" />
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-muted">
+                                                    <i class="fas fa-user-alt fa-3x mb-2"></i>
+                                                    <span style="font-size: 0.8rem;">No Photo</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="card-footer bg-primary text-white text-center py-2">
+                                            <small class="font-weight-bold">Profile Photo (Main)</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Image 1 -->
+                                @if (userImages != null && !string.IsNullOrEmpty(userImages.Image1Path))
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                                <a href="@Html.Raw("/" + userImages.Image1Path)" target="_blank">
+                                                    <img src="@Html.Raw("/" + userImages.Image1Path)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Image 1" />
+                                                </a>
+                                            </div>
+                                            <div class="card-footer text-center py-2">
+                                                <small class="text-muted">Image 1</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Additional Image 2 -->
+                                @if (userImages != null && !string.IsNullOrEmpty(userImages.Image2Path))
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                                <a href="@Html.Raw("/" + userImages.Image2Path)" target="_blank">
+                                                    <img src="@Html.Raw("/" + userImages.Image2Path)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Image 2" />
+                                                </a>
+                                            </div>
+                                            <div class="card-footer text-center py-2">
+                                                <small class="text-muted">Image 2</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Additional Image 3 -->
+                                @if (userImages != null && !string.IsNullOrEmpty(userImages.Image3Path))
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                                <a href="@Html.Raw("/" + userImages.Image3Path)" target="_blank">
+                                                    <img src="@Html.Raw("/" + userImages.Image3Path)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Image 3" />
+                                                </a>
+                                            </div>
+                                            <div class="card-footer text-center py-2">
+                                                <small class="text-muted">Image 3</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Additional Image 4 -->
+                                @if (userImages != null && !string.IsNullOrEmpty(userImages.Image4Path))
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                                <a href="@Html.Raw("/" + userImages.Image4Path)" target="_blank">
+                                                    <img src="@Html.Raw("/" + userImages.Image4Path)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Image 4" />
+                                                </a>
+                                            </div>
+                                            <div class="card-footer text-center py-2">
+                                                <small class="text-muted">Image 4</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Additional Image 5 -->
+                                @if (userImages != null && !string.IsNullOrEmpty(userImages.Image5Path))
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="position-relative" style="padding-top: 125%; background-color: #f8f9fa;">
+                                                <a href="@Html.Raw("/" + userImages.Image5Path)" target="_blank">
+                                                    <img src="@Html.Raw("/" + userImages.Image5Path)" class="position-absolute top-0 start-0 w-100 h-100 rounded-top" style="object-fit: cover;" alt="Image 5" />
+                                                </a>
+                                            </div>
+                                            <div class="card-footer text-center py-2">
+                                                <small class="text-muted">Image 5</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.datatable-analytics').DataTable({
+                "order": [[3, "desc"]]
+            });
+        });
+
+        function triggerTestimonialPrompt(buttonEl) {
+            var favId = $(buttonEl).data('fav-id');
+            if (!favId) return;
+
+            Swal.fire({
+                title: 'Trigger Testimonial Prompt?',
+                text: 'This will manually show the relationship status/testimonial prompt to both matched users.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3a6f',
+                cancelButtonColor: '#777',
+                confirmButtonText: 'Yes, Trigger it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $(buttonEl).prop('disabled', true).text('Triggering...');
+
+                    var formData = new FormData();
+                    formData.append('userFavouriteProfileId', favId);
+
+                    fetch('/api/testimonial/trigger-prompt-manual', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Triggered!',
+                                text: data.message || 'Testimonial prompt triggered successfully.',
+                                icon: 'success',
+                                confirmButtonColor: '#00662d'
+                            });
+                            $(buttonEl).removeClass('btn-soft-danger').addClass('btn-secondary').text('Triggered').prop('disabled', true).removeAttr('onclick');
+                        } else {
+                            $(buttonEl).prop('disabled', false).html('Trigger Prompt');
+                            Swal.fire('Error', data.message || 'Failed to trigger prompt.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        $(buttonEl).prop('disabled', false).html('Trigger Prompt');
+                        Swal.fire('Error', 'An error occurred while triggering the prompt.', 'error');
+                    });
+                }
+            });
+        }
+    </script>
+}

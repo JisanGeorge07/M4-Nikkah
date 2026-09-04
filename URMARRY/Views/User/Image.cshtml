@@ -1,0 +1,854 @@
+@model UserImageEditViewModel
+@{
+	Layout = "/Views/Shared/_LayoutAccount.cshtml";
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+}
+<style>
+.photo-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    position: absolute;
+    inset: 0;
+}
+
+.preview-img.d-none {
+    display: none !important;
+}
+
+/* Placeholder image FIX */
+.placeholder-img {
+    width: 28px !important;
+    height: 28px !important;
+    object-fit: contain !important;
+    position: relative !important;
+    margin-bottom: 10px;
+}
+
+/* Show placeholder only when no image */
+.photo-box.has-image .placeholder-img {
+    display: none !important;
+}
+
+/* Hide text when image exists */
+.photo-box.has-image .upload-text {
+    display: none;
+}
+
+/* Hide overlay until hover */
+.upload-overlay {
+    opacity: 0;
+    transition: 0.3s ease;
+}
+
+.photo-box.has-image:hover .upload-overlay {
+    opacity: 1;
+}
+.upload-text {
+    display: block;
+    position: relative;
+    z-index: 2;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 6px;
+    word-break: break-word;
+}
+
+.photo-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Mobile fix */
+@@media (max-width: 576px) {
+
+    .upload-text {
+        font-size: 11px;
+        display: block !important;
+    }
+
+    .placeholder-img {
+        width: 22px !important;
+        height: 22px !important;
+    }
+}
+.upload-overlay {
+    z-index: 5;
+}
+
+.upload-text,
+.placeholder-img {
+    z-index: 2;
+}
+
+/* Premium lock & blur styling for Manage Photos page */
+.premium-blur-overlay {
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.premium-lock-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+    padding: 6px 12px;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+.premium-lock-overlay i {
+    font-size: 16px !important;
+    color: #a5be25 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+}
+
+.premium-lock-overlay span {
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+</style>
+
+@*
+<style>
+	.cancel-icon {
+		display: flex !important;
+		height: 28px !important;
+		width: 28px !important;
+		border-radius: 50% !important;
+		justify-content: center !important;
+		align-items: center !important;
+		position: absolute !important;
+		top: 8px !important;
+		right: 8px !important;
+		background: #ffffff !important;
+		color: #555555 !important;
+		border: 1px solid #e0e0e0 !important;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+		font-size: 13px !important;
+		z-index: 10 !important;
+		cursor: pointer !important;
+		transition: all 0.2s ease-in-out !important;
+	}
+
+	.cancel-icon:hover {
+		background: #fff5f5 !important;
+		color: #e53935 !important;
+		border-color: #ffcdd2 !important;
+		box-shadow: 0 4px 10px rgba(229, 57, 53, 0.15) !important;
+		transform: scale(1.08) !important;
+	}
+
+	.cancel-icon:active {
+		transform: scale(0.95) !important;
+	}
+</style>
+
+
+
+<main class="flex-fill">
+	<div class="container" style="max-width: 960px;">
+		<div class="p-4">
+			<!-- Manage Photos Section -->
+			<div class="upload-header-box">
+				<h2>Upload Your Photo</h2>
+				<p>Increase the response to your profile by uploading photos</p>
+			</div>
+
+			<form asp-action="Image" asp-controller="User" enctype="multipart/form-data">
+				<div class="photo-grid">
+					<!-- Profile Picture (Image 6) -->
+					<label class="photo-box" style="position: relative;">
+						<input type="hidden" asp-for="ImagePath" />
+						<input asp-for="Image" type="file" data-input-id="6" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.ImagePath))
+						{
+							<img data-img-id="6" src="@Html.Raw("/" + Model.ImagePath)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-6"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('6')"></i>
+						}
+						else
+						{
+							<img data-img-id="6" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-6"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('6')"></i>
+						}
+						<span data-span-id="6">Select file</span>
+					</label>
+
+					<!-- Image 1 -->
+					<div class="photo-box-wrapper">
+					<label class="photo-box">
+						<input type="hidden" id="userId-1" value="@Model.UserId" asp-for="Image1Path" />
+						<input asp-for="Image1" type="file" data-input-id="1" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.Image1Path))
+						{
+							<img data-img-id="1" src="@Html.Raw("/" + Model.Image1Path)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-1"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('1')"></i>
+						}
+						else
+						{
+							<img data-img-id="1" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-1"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('1')"></i>
+						}
+						<span data-span-id="1">Select file</span>
+					</label>
+					</div>
+
+					<!-- Image 2 -->
+					<div class="photo-box-wrapper">
+					<label class="photo-box" >
+						<input type="hidden" id="userId-2" value="@Model.UserId" asp-for="Image2Path" />
+						<input asp-for="Image2" type="file" data-input-id="2" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.Image2Path))
+						{
+							<img data-img-id="2" src="@Html.Raw("/" + Model.Image2Path)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-2"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('2')"></i>
+						}
+						else
+						{
+							<img data-img-id="2" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-2"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('2')"></i>
+						}
+						<span data-span-id="2">Select file</span>
+					</label>
+					</div>
+
+					<!-- Image 3 -->
+					<div class="photo-box-wrapper">
+					<label class="photo-box" >
+						<input type="hidden" id="userId-3" value="@Model.UserId" asp-for="Image3Path" />
+						<input asp-for="Image3" type="file" data-input-id="3" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.Image3Path))
+						{
+							<img data-img-id="3" src="@Html.Raw("/" + Model.Image3Path)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-3"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('3')"></i>
+						}
+						else
+						{
+							<img data-img-id="3" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-3"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('3')"></i>
+						}
+						<span data-span-id="3">Select file</span>
+					</label>
+					</div>
+
+					<!-- Image 4 -->
+					<div class="photo-box-wrapper">
+					<label class="photo-box" >
+						<input type="hidden" id="userId-4" value="@Model.UserId" asp-for="Image4Path" />
+						<input asp-for="Image4" type="file" data-input-id="4" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.Image4Path))
+						{
+							<img data-img-id="4" src="@Html.Raw("/" + Model.Image4Path)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-4"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('4')"></i>
+						}
+						else
+						{
+							<img data-img-id="4" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-4"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('4')"></i>
+						}
+						<span data-span-id="4">Select file</span>
+					</label>
+					</div>
+
+					<!-- Image 5 -->
+					<div class="photo-box-wrapper">
+					<label class="photo-box">
+						<input type="hidden" id="userId-5" value="@Model.UserId" asp-for="Image5Path" />
+						<input asp-for="Image5" type="file" data-input-id="5" accept="image/*" style="display: none;">
+						@if (!string.IsNullOrEmpty(Model.Image5Path))
+						{
+							<img data-img-id="5" src="@Html.Raw("/" + Model.Image5Path)" alt="Upload Photo"
+								 style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+							<i class="fa fa-times cancel-icon" id="close-icon-5"
+							   style="display: flex;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('5')"></i>
+						}
+						else
+						{
+							<img data-img-id="5" src="../../../../assets/images/icon/upload-placeholder.png"
+								 alt="Upload Photo">
+							<i class="fa fa-times cancel-icon" id="close-icon-5"
+							   style="display: none;"
+							   onclick="event.preventDefault(); event.stopPropagation(); clearImage('5')"></i>
+						}
+						<span data-span-id="5">Select file</span> 
+					</label>
+					</div>
+				</div>
+
+				<div class="mt-4 mb-5">
+						<button class="btn save-changes-btn">Save Changes</button>
+				</div>
+
+				<!-- <div class="privacy-section">
+					<div class="password-section">
+						<button class="btn save-changes-btn">Save Changes</button>
+					</div>
+				</div> -->
+			</form>
+		</div>
+
+</main>
+*@
+
+<main class="flex-fill">
+                <div class="container" style="max-width: 960px;">
+                    <div class="p-4">
+                        <!-- Manage Photos Section -->
+                        <div class="upload-header-box">
+                            <h2>Upload Your Photo</h2>
+                            <p>Increase the response to your profile by uploading photos</p>
+                            <div class="img-size-info-banner">
+                                <i data-lucide="info"></i>
+                                <span>Image must be exactly 630×800 pixels for the best display.</span>
+                            </div>
+                        </div>
+
+                        <form asp-action="Image" asp-controller="User" enctype="multipart/form-data" id="imageForm">
+
+    <div class="photo-grid">
+
+        <!-- Main Profile Image -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="ImagePath" class="path-input">
+
+                <input asp-for="Image"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.ImagePath) ? "/" + Model.ImagePath : "../../../../assets/images/icon/upload-placeholder.png")"
+                     alt="Upload Photo"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.ImagePath) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.ImagePath) ? "/" + Model.ImagePath : "")"
+                     alt="Preview"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.ImagePath) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.ImagePath) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ImagePath) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.ImagePath) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+        <!-- Image 1 -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="Image1Path" class="path-input">
+
+                <input asp-for="Image1"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image1Path) ? "/" + Model.Image1Path : "../../../../assets/images/icon/upload-placeholder.png")"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.Image1Path) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image1Path) ? "/" + Model.Image1Path : "")"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.Image1Path) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.Image1Path) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Image1Path) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.Image1Path) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+                <!-- Image 2 -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="Image2Path" class="path-input">
+
+                <input asp-for="Image2"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image2Path) ? "/" + Model.Image2Path : "../../../../assets/images/icon/upload-placeholder.png")"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.Image2Path) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image2Path) ? "/" + Model.Image2Path : "")"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.Image2Path) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.Image2Path) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Image2Path) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.Image2Path) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+        <!-- Image 3 -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="Image3Path" class="path-input">
+
+                <input asp-for="Image3"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image3Path) ? "/" + Model.Image3Path : "../../../../assets/images/icon/upload-placeholder.png")"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.Image3Path) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image3Path) ? "/" + Model.Image3Path : "")"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.Image3Path) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.Image3Path) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Image3Path) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.Image3Path) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+        <!-- Image 4 -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="Image4Path" class="path-input">
+
+                <input asp-for="Image4"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image4Path) ? "/" + Model.Image4Path : "../../../../assets/images/icon/upload-placeholder.png")"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.Image4Path) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image4Path) ? "/" + Model.Image4Path : "")"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.Image4Path) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.Image4Path) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Image4Path) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.Image4Path) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+        <!-- Image 5 -->
+        <div class="photo-box-wrapper">
+            <label class="photo-box">
+
+                <input type="hidden" asp-for="Image5Path" class="path-input">
+
+                <input asp-for="Image5"
+                       type="file"
+                       accept="image/*"
+                       class="photo-input">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image5Path) ? "/" + Model.Image5Path : "../../../../assets/images/icon/upload-placeholder.png")"
+                     class="placeholder-img @(!string.IsNullOrEmpty(Model.Image5Path) ? "d-none" : "")">
+
+                <img src="@(!string.IsNullOrEmpty(Model.Image5Path) ? "/" + Model.Image5Path : "")"
+                     class="preview-img @(!string.IsNullOrEmpty(Model.Image5Path) ? "" : "d-none")">
+
+                <span class="upload-text">
+                    @(!string.IsNullOrEmpty(Model.Image5Path) ? "Photo Added" : "Select file")
+                </span>
+
+                <div class="upload-overlay">
+                    <i data-lucide="camera"></i>
+                    <span>Change Photo</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Image5Path) && (Model.PhotoVisibleToAll == false || Model.PhotoVisibleToAccepted == true))
+                {
+                    <div class="premium-blur-overlay"></div>
+                    <div class="premium-lock-overlay">
+                        <i class="uil uil-lock"></i>
+                        <span>Locked</span>
+                    </div>
+                }
+            </label>
+
+            <button type="button" class="remove-btn @(!string.IsNullOrEmpty(Model.Image5Path) ? "visible" : "")">
+                <i data-lucide="trash-2" style="width:18px;height:18px;"></i>
+            </button>
+            <div class="img-dimension-badge"></div>
+        </div>
+
+    </div>
+
+    <!-- Commented out to use the bottom Save Changes button for the entire form -->
+    <!--
+    <div class="mt-4 mb-5">
+        <button type="submit" class="btn save-changes-btn">
+            Save Changes
+        </button>
+    </div>
+    -->
+
+                        <!-- Commented Privacy Section -->
+                        
+                        <div class="privacy-section">
+                            <h3 class="privacy-title">Photo Privacy</h3>
+
+                            <div class="privacy-item">
+                                <label>Visible to all</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="photoVisibleToAll" name="PhotoVisibleToAll" value="true" @(Model.PhotoVisibleToAll == true ? "checked" : "")>
+                                    <input type="hidden" name="PhotoVisibleToAll" value="false" />
+                                </div>
+                            </div>
+
+                            <div class="privacy-item">
+                                <label>Visible to premium members only</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="photoVisibleToPremium" name="PhotoVisibleToPremium" value="true" @(Model.PhotoVisibleToPremium == true ? "checked" : "")>
+                                    <input type="hidden" name="PhotoVisibleToPremium" value="false" />
+                                </div>
+                            </div>
+                            <div class="privacy-item">
+                                <label>Visible to accepted interest users only</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="photoVisibleToAccepted" name="PhotoVisibleToAccepted" value="true" @(Model.PhotoVisibleToAccepted == true ? "checked" : "")>
+                                    <input type="hidden" name="PhotoVisibleToAccepted" value="false" />
+                                </div>
+                            </div>
+
+                            <div class="mt-4 mb-5">
+                                <button type="submit" id="btnSavePrivacy" class="btn save-changes-btn">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+
+</form>
+            </main>
+
+<!-- Image Crop/Resize Modal -->
+<style>
+    .img-crop-modal-overlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        opacity: 0;
+        visibility: hidden;
+    }
+</style>
+<div id="imgCropModal" class="img-crop-modal-overlay">
+    <div class="img-crop-modal-card">
+        <button type="button" id="imgCropBtnClose" class="img-crop-modal-close">
+            <i class="uil uil-times"></i>
+        </button>
+        <div class="img-crop-modal-header">
+            <h5>Crop & Resize Image</h5>
+            <p>Adjust the crop area to fit the required 630×800 dimensions</p>
+        </div>
+        <div class="img-crop-modal-body">
+            <img id="imgCropImage" src="" alt="Crop preview">
+        </div>
+        <div class="img-crop-dim-info">
+            <span class="dim-original">Original: <strong id="imgCropDimOriginal">—</strong></span>
+            <span class="dim-target">Target: <strong id="imgCropDimTarget">630×800</strong></span>
+        </div>
+        <div class="img-crop-modal-footer">
+            <button type="button" id="imgCropBtnCancel" class="img-crop-btn-cancel">Cancel</button>
+            <button type="button" id="imgCropBtnApply" class="img-crop-btn-crop">Crop & Resize</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <!-- Image Validator CSS -->
+    <link rel="stylesheet" href="/css/image-validator.css" />
+    <!-- Cropper.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <!-- Image Validator JS -->
+    <script src="/js/image-validator.js"></script>
+
+	<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        const photoWrappers = document.querySelectorAll('.photo-box-wrapper');
+
+        photoWrappers.forEach(wrapper => {
+
+            const fileInput = wrapper.querySelector('.photo-input');
+            const previewImg = wrapper.querySelector('.preview-img');
+            const placeholderImg = wrapper.querySelector('.placeholder-img');
+            const removeBtn = wrapper.querySelector('.remove-btn');
+            const photoBox = wrapper.querySelector('.photo-box');
+            const uploadText = wrapper.querySelector('.upload-text');
+            const pathInput = wrapper.querySelector('.path-input');
+
+            // Existing image check
+            if (previewImg.getAttribute('src')) {
+                photoBox.classList.add('has-image');
+            }
+
+            // Upload image
+            fileInput.addEventListener('change', function (e) {
+
+                // Skip if this change was triggered by the cropper
+                if (fileInput._croppedUpdate) {
+                    fileInput._croppedUpdate = false;
+                    return;
+                }
+
+                const file = e.target.files[0];
+
+                if (file) {
+
+                    const objectUrl = URL.createObjectURL(file);
+
+                    previewImg.src = objectUrl;
+
+                    previewImg.classList.remove('d-none');
+
+                    placeholderImg.classList.add('d-none');
+
+                    removeBtn.classList.add('visible');
+
+                    photoBox.classList.add('has-image');
+
+                    uploadText.innerText = file.name;
+                }
+            });
+
+            // Remove image
+            removeBtn.addEventListener('click', function (e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                fileInput.value = '';
+
+                previewImg.src = '';
+                previewImg.removeAttribute('src');
+                previewImg.classList.add('d-none');
+
+                placeholderImg.src = '../../../../assets/images/icon/upload-placeholder.png';
+                placeholderImg.classList.remove('d-none');
+
+                removeBtn.classList.remove('visible');
+
+                photoBox.classList.remove('has-image');
+
+                placeholderImg.style.display = 'block';
+                uploadText.style.display = 'block';
+
+                uploadText.innerText = 'Select file';
+                uploadText.style.display = 'block';
+
+                const overlay = wrapper.querySelector('.upload-overlay');
+
+                if (overlay) {
+                    overlay.style.opacity = '';
+                }
+
+                if (pathInput) {
+                    pathInput.value = '';
+                }
+
+                // Hide dimension badge on remove
+                const badge = wrapper.querySelector('.img-dimension-badge');
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.className = 'img-dimension-badge';
+                    badge.innerHTML = '';
+                }
+            });
+ 
+        });
+
+        // Initialize Image Validator for Manage Photos
+        if (typeof ImageValidator !== 'undefined') {
+            ImageValidator.initManagePhotos();
+        }
+
+        // Photo Privacy Toggle Combinability Logic
+        const toggleAll = document.getElementById('photoVisibleToAll');
+        const togglePremium = document.getElementById('photoVisibleToPremium');
+        const toggleAccepted = document.getElementById('photoVisibleToAccepted');
+
+        if (toggleAll && togglePremium && toggleAccepted) {
+            toggleAll.addEventListener('change', function() {
+                if (this.checked) {
+                    togglePremium.checked = false;
+                    toggleAccepted.checked = false;
+                }
+            });
+
+            const onRestrictionToggle = function() {
+                if (this.checked) {
+                    toggleAll.checked = false;
+                }
+                if (!togglePremium.checked && !toggleAccepted.checked) {
+                    toggleAll.checked = true;
+                }
+            };
+
+            togglePremium.addEventListener('change', onRestrictionToggle);
+            toggleAccepted.addEventListener('change', onRestrictionToggle);
+        }
+
+    });
+</script>
+}

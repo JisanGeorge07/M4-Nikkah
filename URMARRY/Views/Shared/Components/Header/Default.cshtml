@@ -1,0 +1,127 @@
+﻿@using Application.Constants
+@model HeaderViewModel
+
+@*@{
+	var cultureCode = Context.Request.Cookies["CultureCode"] ?? "en";
+	var cultureIsArabic = cultureCode == CultureCode.Arabic;
+	var pages = Model.Pages!;
+	var socialmedia = Model.SocialMedia!;
+}
+
+<header class="header header-layout1">
+	<div class="header-topbar">
+		<div class="container-fluid">
+			<div class="row align-items-center">
+				<div class="col-12">
+					<div class="d-flex align-items-center justify-content-between">
+						<ul class="social-icons list-unstyled mb-0 mr-30">
+							@foreach(var item in socialmedia)
+							{
+								<li><a href="@item.Url" target="_blank"><i class="fab fa-@item.Name"></i></a></li>
+							}
+						</ul>
+						<div class="d-flex">
+							<ul class="contact__list d-flex flex-wrap align-items-center list-unstyled mb-0">
+								@if (Model.Pages.FirstOrDefault(x => x.Id == 12) != null)
+								{
+									var page = Model.Pages.FirstOrDefault(x => x.Id == 12);
+									<li> <a href="@Html.Raw("/" + page.Name)">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a> </li>
+								}
+								@if (Model.Pages.FirstOrDefault(x => x.Id == 13) != null)
+								{
+									var page = Model.Pages.FirstOrDefault(x => x.Id == 13);
+									<li> <a href="@Html.Raw("/" + page.Name)">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a> </li>
+								}
+								@if (Model.Pages.FirstOrDefault(x => x.Id == 14) != null)
+								{
+									var page = Model.Pages.FirstOrDefault(x => x.Id == 14);
+									<li> <a href="@Html.Raw(page.Name)" target="_blank">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a> </li>
+								}
+								<li>
+									@if (cultureCode == CultureCode.English)
+                    {
+										<a asp-action="Language"
+									   asp-controller="Home" asp-route-code="@CultureCode.Arabic"
+									   asp-route-returnUrl="@Context.Request.Path">
+										<p class="parabic">العربية</p>
+										</a>
+									}
+									else
+									{
+										<a asp-action="Language"
+									   asp-controller="Home" asp-route-code="@CultureCode.English"
+									   asp-route-returnUrl="@Context.Request.Path">
+											<p class="parabic">English</p>
+										</a>
+									}
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<nav class="navbar navbar-expand-lg sticky-navbar">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="~/"> <img src="/assets/images/logo.png" class="logo-light" alt="logo"> <img src="/assets/images/logo.png" class="logo-dark" alt="logo"> </a>
+			<button class="navbar-toggler" type="button">
+				<span class="menu-lines"><span></span></span>
+			</button>
+			<div class="collapse navbar-collapse" id="mainNavigation">
+				<ul class="navbar-nav ml-auto">
+					@foreach (var page in pages)
+					{
+						@switch (page.Name)
+						{
+							case "index":
+							case "error":
+							case "result":
+							case "press-release":
+							case "video-gallery":
+							case "appointment":
+							case "insurance-coverage":
+							case "patient-rights":
+								break;
+
+							case "doctors":
+								<li class="nav__item">
+									<a asp-action="Index" asp-controller="Doctors" asp-route-url="all" class="nav__item-link">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a>
+								</li>
+								break;
+
+								case "media":
+								<li class="nav__item has-dropdown">
+									<a href="#" data-toggle="dropdown" class="dropdown-toggle nav__item-link">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a>
+									<ul class="dropdown-menu">
+										@foreach (var abt in pages.Where(x => x.ParentName == "media"))
+										{
+											<li class="nav__item"><a href="@Html.Raw("/" + abt.Name)" class="nav__item-link">@Html.Raw(cultureIsArabic ? abt.TitleArabic : abt.TitleEnglish)</a></li>
+										}
+									</ul>
+								</li>
+								break;
+
+							default:
+							if(page.Id != 14)
+							{
+								<li class="nav__item">
+									<a href="@Html.Raw("/" + page.Name)" class="nav__item-link">@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</a>
+								</li>
+							}
+								break;
+						}
+					}
+				</ul>
+				<button class="close-mobile-menu d-block d-lg-none"><i class="fas fa-times"></i></button>
+			</div>
+			<div class="d-none d-xl-flex align-items-center position-relative ml-10">
+				@if (Model.Pages.FirstOrDefault(x => x.Id == 11) != null)
+				{
+					var page = Model.Pages.FirstOrDefault(x => x.Id == 11);
+					<a href="@Html.Raw("/" + page.Name)" class="btn btn__primary btn__rounded ml-30"> <i class="icon-calendar"></i> <span>@Html.Raw(cultureIsArabic ? page.TitleArabic : page.TitleEnglish)</span> </a>					
+				}
+			</div>
+		</div>
+	</nav>
+</header>*@

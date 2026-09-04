@@ -1,0 +1,341 @@
+@using Application.Constants
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    @* <title>Control Panel</title> *@
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+    <meta content="Themesbrand" name="author" />
+    <link rel="shortcut icon" href="~/admin/assets/images/favicon.ico">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <link href="~/admin/assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/libs/alertifyjs/build/css/alertify.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/libs/alertifyjs/build/css/themes/default.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="~/admin/assets/css/preloader.min.css" type="text/css" />
+    <link href="~/admin/assets/css/bootstrap.min.css" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/admin/assets/css/app.min.css" id="app-style" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    <script src="~/admin/tinymce/tinymce.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @await RenderSectionAsync("css", false)
+</head>
+<body>
+    <div id="layout-wrapper">
+        <header id="page-topbar">
+            <div class="navbar-header">
+                <div class="d-flex">
+                    <div class="navbar-brand-box">
+                        <a asp-action="Index" asp-controller="Admin" class="logo logo-dark">
+                            <span class="logo-sm">
+                                <span class="logo-txt"></span>
+                            </span>
+                            <span class="logo-lg">
+                                <span class="logo-txt">M4 NIKAH</span>
+                            </span>
+                        </a>
+                    </div>
+                    <button type="button" class="btn btn-sm px-3 font-size-16 header-item" id="vertical-menu-btn">
+                        <i class="fa fa-fw fa-bars"></i>
+                    </button>
+                </div>
+                <div class="d-flex">
+                    <div class="dropdown d-inline-block">
+                        <button type="button" class="btn header-item bg-soft-light border-start border-end" id="page-header-user-dropdown"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="d-none d-xl-inline-block ms-1 fw-medium">Admin.</span>
+                            <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" asp-controller="Admin" asp-action="Get"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Change Password</a>
+                            <a class="dropdown-item" asp-controller="Admin" asp-action="ChangePhone"><i class="mdi mdi-phone font-size-16 align-middle me-1"></i> Change Phone Number</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" asp-action="Logout" asp-controller="Account"><i class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="vertical-menu">
+            <div data-simplebar class="h-100">
+                <div id="sidebar-menu">
+                    <ul class="metismenu list-unstyled" id="side-menu">
+                        <li class="menu-title" data-key="t-menu">Menu</li>
+                        <li>
+                            <a asp-action="Index" asp-controller="Admin">
+                                <i class="fas fa-bahai"></i>
+                                <span data-key="t-dashboard">Dashboard</span>
+                            </a>
+                        </li>
+
+                        @*<li>
+                            <a asp-action="GetAll" asp-controller="PageSettings">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Page Settings</span>
+                            </a>
+                        </li>*@
+
+                        <li>
+                            <a asp-action="GetAllBanner" asp-controller="Home">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Home Banner</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="GetContent" asp-controller="Home">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Home Content</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="GetAbout" asp-controller="Home">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">About</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="GetContact" asp-controller="Home">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Contact</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void 0;" class="has-arrow">
+                                <i class="bx bx-info-circle"></i>
+                                <span data-key="t-pages">Settings</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a asp-action="GetAll" asp-controller="ProfileFor">Profile For</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Nationality">Nationality</a></li>
+                                <li><a asp-action="GetAll" asp-controller="MaritalStatus">Marital Status</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.Height">Height</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.Weight">Weight</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.Complexion">Complexion</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.BodyType">Body Type</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.Education">Education</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.Course">Course</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.ProfessionType">Profession Type</a></li>
+                                <li><a asp-action="GetAll" asp-controller="BodyFeatures" asp-route-type="@BodyFeature.PhysicalDisability">Physical Disability</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Profession">Profession</a></li>
+                                <li><a asp-action="GetAll" asp-controller="MotherTongue">Mother Tongue</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Religion">Religion</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Caste">Caste</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Community">Community</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Religiousness">Religiousness</a></li>
+                                <li><a asp-action="GetAll" asp-controller="FinancialStatus">Financial Status</a></li>
+                            </ul>
+                        </li>
+
+                        
+                        <li>
+                            <a asp-action ="MemberList" asp-controller="Enquiry">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Members List</span>
+                            </a>
+                            @*  <ul class="sub-menu" aria-expanded="false">
+                                <li><a asp-action="GetAllPremium" asp-controller="Enquiry">Premium List</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Enquiry">Active List</a></li>
+                                <li><a asp-action="GetAllPending" asp-controller="Enquiry">Pending List</a></li>
+                            </ul> *@
+                        </li>
+                        
+                        <li>
+                            <a asp-action ="GetAll" asp-controller="UserReports">
+                                <i class="fas fa-ban"></i>
+                                <span data-key="t-dashboard">User Reports</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="UserReportReasonGetAll" asp-controller="UserReports">
+                                <i class="fas fa-ban"></i>
+                                <span data-key="t-dashboard">User Report Reasons</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="GetAll" asp-controller="DeleteReasons">
+                                <i class="fas fa-trash-alt"></i>
+                                <span data-key="t-dashboard">Delete Reasons</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="GetAll" asp-controller="SuccessStories">
+                                <i class="fas fa-heart"></i>
+                                <span data-key="t-dashboard">Success Stories</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="GetTestimonialSettings" asp-controller="Home">
+                                <i class="fas fa-cog"></i>
+                                <span data-key="t-dashboard">Testimonial Settings</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void 0;" class="has-arrow">
+                                <i class="bx bx-info-circle"></i>
+                                <span data-key="t-pages">Payment Details</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a asp-action="GetAllTransaction" asp-controller="Enquiry">Transaction Details</a></li>
+                                <!-- <li><a asp-action="Index" asp-controller="PremiumPackage">Premium Packages</a></li> -->
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a asp-action="GetAll" asp-controller="ContactEnquiry">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Contact Enquiry</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="GetAll" asp-controller="SupportRequests">
+                                <i class="fas fa-question-circle"></i>
+                                <span data-key="t-dashboard">Help & Support</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-action="GetAll" asp-controller="SocialMedia">
+                                <i class="fas fa-file"></i>
+                                <span data-key="t-dashboard">Social Media</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void 0;" class="has-arrow">
+                                <i class="fas fa-users-cog"></i>
+                                <span data-key="t-dashboard">Staff CRM</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a asp-action="PerformanceDashboard" asp-controller="Staff">Staffs Performance Dashboard</a></li>
+                                <li><a asp-action="Index" asp-controller="CrossStaffComparison">Cross-Staff Comparison</a></li>
+                                <li><a asp-action="LeaveAndComplaints" asp-controller="Staff">Leaves & Complaints</a></li>
+                                <li><a asp-action="GetAll" asp-controller="Staff">Staff Management</a></li>
+                                <li><a asp-action="AssignProfiles" asp-controller="Staff">Assign Profiles</a></li>
+                                <li><a asp-action="ProfileVerifications" asp-controller="Staff">Profile Verification</a></li>
+                                <li><a asp-action="PremiumFollowups" asp-controller="Staff">Premium Follow-up</a></li>
+                                <li><a asp-action="RenewalFollowups" asp-controller="Staff">Renewal Follow-up</a></li>
+                                <li><a asp-action="AdminReviewPanel" asp-controller="Staff">Admin Review Panel</a></li>
+                                <li><a asp-action="Index" asp-controller="ColdLead">Cold Leads</a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- <li>
+                            <a asp-action="GetAll" asp-controller="Staff">
+                                <i class="fas fa-users-cog"></i>
+                                <span data-key="t-dashboard">Staff Management</span>
+                            </a>
+                        </li> -->
+
+                    </ul>
+                </div> 
+            </div>
+        </div>
+
+        <div class="main-content" style="min-height: 512px;">
+            <div class="page-content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                                    <h4 class="mb-sm-0 font-size-18">@await RenderSectionAsync("Title", required: false)</h4>
+                            </div>
+                        </div>
+                    </div>
+                    @RenderBody()
+                </div>
+            </div>
+
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="text-sm-end d-none d-sm-block">
+                                © @DateTime.Now.Year <a href="https://uniwebonline.com/" target="_blank" class="text-decoration-underline">Uniweb IT Solutions</a>. All rights reserved.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/admin/assets/libs/jquery/jquery.min.js"></script>
+    <script src="~/admin/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/admin/assets/libs/metismenu/metisMenu.min.js"></script>
+    <script src="~/admin/assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="~/admin/assets/libs/node-waves/waves.min.js"></script>
+    <script src="~/admin/assets/libs/feather-icons/feather.min.js"></script>
+    <script src="~/admin/assets/libs/pace-js/pace.min.js"></script>
+    <script src="~/admin/assets/js/app.js"></script>
+    <script src="~/admin/assets/libs/alertifyjs/build/alertify.min.js"></script>
+    <script src="~/Scripts/Page/Admin.Tinymce.js"></script>
+    <script type="text/javascript">
+        //$(document).on('focusin', function (e) {
+        //    if ($(e.target).closest(".mce-window").length) {
+        //        e.stopImmediatePropagation();
+        //    }
+        //});
+        $(document).on('focusin', function (e) {
+            if ($(e.target).closest(".tox-tinymce, .tox-tinymce-aux, .moxman-window, .tam-assetmanager-root, .mce-window").length) {
+                e.stopImmediatePropagation();
+            }
+        });
+        document.addEventListener('focusin', e => {
+            if (e.target.closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root, .mce-window") !== null) {
+                e.stopImmediatePropagation();
+            }
+        });
+        $(document).ready(function () {
+            const url = window.location;
+            const element = $('ul.menu-aside li a').filter(function () {
+                return this.href === url.href || url.href.indexOf(this.href) === 0;
+            }
+            ).parent().addClass('active');
+
+            if (element.parent().is('li')) {
+                element.parent().addClass('active')
+            }
+        });
+
+        /*alertify.set('notifier', 'position', 'top-right');
+        //override defaults
+        alertify.defaults.transition = "slide";
+        alertify.defaults.theme.ok = "btn btn-primary";
+        alertify.defaults.theme.cancel = "btn btn-danger";
+        alertify.defaults.theme.input = "form-control";*/
+    </script>
+    <script src="~/admin/assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-buttons-bs4/js/buttons.bootstrap4.min.js"></script>
+    <script src="~/admin/assets/libs/jszip/jszip.min.js"></script>
+    <script src="~/admin/assets/libs/pdfmake/build/pdfmake.min.js"></script>
+    <script src="~/admin/assets/libs/pdfmake/build/vfs_fonts.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-buttons/js/buttons.html5.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-buttons/js/buttons.print.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-buttons/js/buttons.colVis.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="~/admin/assets/libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js"></script>
+    <script src="~/admin/assets/js/pages/fontawesome.init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+
+
+    @await RenderSectionAsync("Scripts", false)
+
+</body>
+</html>

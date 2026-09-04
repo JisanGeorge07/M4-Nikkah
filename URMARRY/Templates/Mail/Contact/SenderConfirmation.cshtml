@@ -1,0 +1,186 @@
+﻿@model URMARRY.Models.HomeViewModel
+@{
+    var enquiry = Model.ContactEnquiry;
+    var contact = Model.Contact;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <style type="text/css">
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+        }
+
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        @@media screen and (max-width: 480px) {
+            .mobile-hide {
+                display: none !important;
+            }
+
+            .mobile-center {
+                text-align: center !important;
+            }
+        }
+
+        div[style*="margin: 16px 0;"] {
+            margin: 0 !important;
+        }
+    </style>
+</head>
+
+<body style="margin: 0 !important; padding: 0 !important; background-color: #fff;" bgcolor="#fff">
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center" style="background-color: #fff;" bgcolor="#fff">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                <tr>
+                    <td align="center" style="padding:10px 35px 30px 35px; background-color: #f3f3f3; -webkit-border-top-left-radius: 40px;
+-webkit-border-top-right-radius: 40px;
+-moz-border-radius-topleft: 40px;
+-moz-border-radius-topright: 40px;
+border-top-left-radius: 40px;
+border-top-right-radius: 40px;" bgcolor="#f3f3f3">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                            <tr>
+                                <td align="center" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding-top: 25px;">
+                                        <h2 style="font-size:24px; font-weight: bolder; line-height: 36px; color: #a08011; margin: 0;"> Thank you for contacting M4NIKAH </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 20px; padding-top: 5px;">
+                                    <p style="font-size:14px; font-weight: 400; line-height: 24px; color: #777777; text-align: center; margin: 0;"> We will get back to you shortly. </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="padding-top: 20px;">
+                                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        @if (!string.IsNullOrWhiteSpace(enquiry!.Name))
+                                        {
+                                            <tr>
+                                                <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Name </td>
+                                                <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Name) </td>
+                                            </tr>
+                                        }
+
+                                        <tr>
+                                            <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 2px 10px;"> Date </td>
+                                            <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 2px 10px;">@Html.Raw(enquiry.CreatedOn) </td>
+                                        </tr>
+
+                                        @if (!string.IsNullOrWhiteSpace(enquiry.Email))
+                                        {
+                                            <tr>
+                                                <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Email ID </td>
+                                                <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Email) </td>
+                                            </tr>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(enquiry.Subject))
+                                        {
+                                            <tr>
+                                                <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Subject </td>
+                                                <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> @Html.Raw(enquiry.Subject) </td>
+                                            </tr>
+                                        }
+
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="padding-top: 20px;">
+                                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <p>@Html.Raw(enquiry.Message)</p>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" style="padding:20px 35px; background-color: #ffffff;" bgcolor="#ffffff">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+                            <tr>
+                                <td align="center" style="font-size: 15px; font-family: Open Sans, Helvetica, Arial, sans-serif;">
+                                    @if (!string.IsNullOrEmpty(contact!.Phone))
+                                    {
+                                        <text>
+                                            Call : <a href="" style="color: #000;"> @Html.Raw(contact!.Phone) </a>
+                                        </text>
+                                    }
+                                    @if (!string.IsNullOrEmpty(contact!.Phone) || !string.IsNullOrEmpty(Model.SenderEmail))
+                                    {
+                                        <text>
+                                            |
+                                        </text>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.SenderEmail))
+                                    {
+                                        <text>
+                                            Email : <a href="" style="color: #000;">@Model.SenderEmail</a><br>
+                                        </text>
+                                    }
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px;">
+                                        <p style="font-size: 14px; font-weight: 400; line-height: 20px; color: #777777;"> © @DateTime.Now.Year | M4NIKAH | All Rights Reserved</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+
+</html>

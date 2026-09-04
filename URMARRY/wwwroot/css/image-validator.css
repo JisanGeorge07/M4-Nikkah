@@ -1,0 +1,373 @@
+/* ============================================
+   IMAGE VALIDATOR — Shared Styles
+   Used by: Manage Photos (Image.cshtml)
+             Registration Step 5 (SignUp.cshtml)
+   ============================================ */
+
+/* ---------- Info Banner ---------- */
+.img-size-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--light-bg, #e8f5ee);
+    border-left: 4px solid var(--primary-green, #00662d);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 18px;
+    margin-top: 14px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-green, #00662d);
+    line-height: 1.5;
+}
+
+.img-size-info-banner i,
+.img-size-info-banner svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--primary-green, #00662d);
+}
+
+/* ---------- Dimension Badge (on each photo box) ---------- */
+.img-dimension-badge {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: none;
+    /* shown via JS */
+}
+
+.img-dimension-badge .badge-inner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* OK state */
+.img-dimension-badge.badge-ok .badge-inner {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #b4dfc4;
+}
+
+/* Warning state */
+.img-dimension-badge.badge-warn .badge-inner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffe08a;
+}
+
+.img-dimension-badge .badge-edit-btn {
+    background: none;
+    border: none;
+    color: var(--primary-green, #00662d);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    margin-left: 4px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+}
+
+.img-dimension-badge .badge-edit-btn:hover {
+    color: var(--lime-green, #a5be25);
+}
+
+/* ---------- Crop Modal Overlay ---------- */
+.img-crop-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.img-crop-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.img-crop-modal-card {
+    background: #fff;
+    width: 94%;
+    max-width: 580px;
+    border-radius: 24px;
+    position: relative;
+    transform: scale(0.92);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    max-height: 92vh;
+    overflow: hidden;
+}
+
+.img-crop-modal-overlay.active .img-crop-modal-card {
+    transform: scale(1);
+}
+
+/* Modal header */
+.img-crop-modal-header {
+    padding: 22px 24px 14px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.img-crop-modal-header h5 {
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 16px;
+    font-weight: 600;
+    color: #2f2d2c;
+    margin: 0;
+}
+
+.img-crop-modal-header p {
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 12px;
+    color: var(--text-gray, #6d6d6d);
+    margin: 6px 0 0;
+}
+
+/* Close button */
+.img-crop-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.img-crop-modal-close:hover {
+    background: #e0e0e0;
+    color: #222;
+}
+
+/* Modal body — cropper canvas area */
+.img-crop-modal-body {
+    padding: 16px 20px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    background: #fafafa;
+}
+
+.img-crop-modal-body img {
+    max-width: 100%;
+    display: block;
+}
+
+/* Dimension info bar */
+.img-crop-dim-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 8px 20px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 12px;
+    color: var(--text-gray, #6d6d6d);
+    background: #f5f5f5;
+    border-top: 1px solid #eee;
+}
+
+.img-crop-dim-info span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.img-crop-dim-info .dim-original {
+    color: #856404;
+}
+
+.img-crop-dim-info .dim-target {
+    color: var(--primary-green, #00662d);
+    font-weight: 600;
+}
+
+/* Modal footer */
+.img-crop-modal-footer {
+    padding: 14px 24px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-top: 1px solid #eee;
+}
+
+.img-crop-btn-crop {
+    background-color: var(--lime-green, #a5be25);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 36px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.img-crop-btn-crop:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(165, 190, 37, 0.35);
+}
+
+.img-crop-btn-cancel {
+    background: transparent;
+    color: var(--primary-green, #00662d);
+    border: 2px solid var(--primary-green, #00662d);
+    border-radius: 50px;
+    padding: 10px 30px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.img-crop-btn-cancel:hover {
+    background-color: var(--light-bg, #e8f5ee);
+}
+
+/* -------- SignUp page specific adjustments -------- */
+.signup-img-info-banner {
+    max-width: 400px;
+    margin: 10px auto 0;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-green, #00662d);
+    background-color: var(--light-bg, #e8f5ee);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-green, #00662d);
+}
+
+.signup-img-info-banner i,
+.signup-img-info-banner svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.signup-dimension-badge {
+    display: none;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.signup-dimension-badge .badge-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.signup-dimension-badge.badge-ok .badge-inner {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #b4dfc4;
+}
+
+.signup-dimension-badge.badge-warn .badge-inner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffe08a;
+}
+
+.signup-dimension-badge .badge-edit-btn {
+    background: none;
+    border: none;
+    color: var(--primary-green, #00662d);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    margin-left: 4px;
+    font-family: var(--font-poppins, 'Poppins', sans-serif);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 576px) {
+    .img-size-info-banner {
+        font-size: 11px;
+        padding: 10px 14px;
+        gap: 8px;
+    }
+
+    .img-crop-modal-card {
+        width: 100%;
+        max-width: none;
+        margin: 8px;
+        border-radius: 18px;
+        max-height: 96vh;
+    }
+
+    .img-crop-modal-body {
+        min-height: 220px;
+        padding: 10px;
+    }
+
+    .img-crop-modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .img-crop-btn-crop,
+    .img-crop-btn-cancel {
+        width: 100%;
+        text-align: center;
+    }
+
+    .img-dimension-badge .badge-inner,
+    .signup-dimension-badge .badge-inner {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+
+    .signup-img-info-banner {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+}

@@ -1,0 +1,94 @@
+@using Domain
+@model List<Application.Models.SuccessStoryDto>
+@{
+    ViewBag.Title = "Success Stories";
+    List<RegistrationDto> users = ViewBag.users;
+}
+
+@section Title
+{
+    Success Stories / Customer Testimonials
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Success Stories</h5>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table dt-responsive nowrap w-100">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Couple</th>
+                        <th>Submitted By</th>
+                        <th>Marriage Date</th>
+                        <th>Rating</th>
+                        <th>Featured</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (SuccessStoryDto item in Model)
+                    {
+                        var submitter = users.FirstOrDefault(x => x.Id == item.SubmittedByUserId);
+                        var partner = users.FirstOrDefault(x => x.Id == item.PartnerUserId);
+
+                        string bgColor = item.Status switch
+                        {
+                            SuccessStoryStatus.Published => "#0080001c",
+                            SuccessStoryStatus.Approved => "#0040801c",
+                            SuccessStoryStatus.Rejected => "#8000001c",
+                            SuccessStoryStatus.Unpublished => "#8071001c",
+                            _ => "#003e801c"
+                        };
+
+                        string outlineStyle = item.Status switch
+                        {
+                            SuccessStoryStatus.PendingApproval => "solid #ff7373 thin",
+                            _ => ""
+                        };
+
+                        string statusBadge = item.Status switch
+                        {
+                            SuccessStoryStatus.PendingApproval => "badge bg-warning",
+                            SuccessStoryStatus.Approved => "badge bg-info",
+                            SuccessStoryStatus.Published => "badge bg-success",
+                            SuccessStoryStatus.Rejected => "badge bg-danger",
+                            SuccessStoryStatus.Unpublished => "badge bg-secondary",
+                            _ => "badge bg-secondary"
+                        };
+
+                        <tr style="background-color: @bgColor; outline: @outlineStyle;">
+                            <td>@(item.CreatedOn.HasValue ? item.CreatedOn.Value.ToLocalTime().ToString("dd/MM/yyyy") : "")</td>
+                            <td>@Html.Raw(item.GroomDisplayName) &amp; @Html.Raw(item.BrideDisplayName)</td>
+                            <td>@(submitter?.Name ?? "Unknown") (@(submitter?.RegisterNumber ?? ""))</td>
+                            <td>@item.MarriageDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="@(i <= item.Rating ? "fas fa-star text-warning" : "far fa-star text-muted")" style="font-size: 12px;"></i>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsFeatured)
+                                {
+                                    <span class="badge bg-primary"><i class="fas fa-star me-1"></i>Featured</span>
+                                }
+                            </td>
+                            <td><span class="@statusBadge">@item.Status.ToString()</span></td>
+                            <td>
+                                <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

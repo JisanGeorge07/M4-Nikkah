@@ -1,0 +1,695 @@
+@model URMARRY.Areas.Admin.Models.StaffLeaveAndComplaintViewModel
+@{
+    ViewBag.Title = "Leaves & Complaints Management";
+}
+
+@section Title {
+    <i class="fas fa-user-clock me-2 text-primary"></i>Staff Leaves & Complaints
+}
+
+<style>
+    .summary-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .badge-soft-success { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
+    .badge-soft-warning { background-color: rgba(255, 193, 7, 0.15); color: #856404; }
+    .badge-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+    .badge-soft-info { background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; }
+</style>
+
+<!-- ── Filter Bar ────────────────────────────────────────────── -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="LeaveAndComplaints" asp-controller="Staff" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label font-weight-bold"><i class="fas fa-user text-primary me-1"></i> Select Staff Member</label>
+                <select name="staffId" class="form-select" onchange="this.form.submit()">
+                    @foreach (var staff in Model.StaffOptions)
+                    {
+                        <option value="@staff.Id" selected="@(staff.Id == Model.SelectedStaffId)">
+                            @staff.StaffName (@staff.Department)
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold"><i class="fas fa-calendar-alt text-primary me-1"></i> Year</label>
+                <select name="year" class="form-select" onchange="this.form.submit()">
+                    @for (int y = DateTime.UtcNow.Year - 2; y <= DateTime.UtcNow.Year + 1; y++)
+                    {
+                        <option value="@y" selected="@(y == Model.FilterYear)">@y</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label font-weight-bold"><i class="fas fa-calendar-week text-primary me-1"></i> Month</label>
+                <select name="month" class="form-select" onchange="this.form.submit()">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        var mName = new DateTime(2000, m, 1).ToString("MMMM");
+                        <option value="@m" selected="@(m == Model.FilterMonth)">@mName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-1 text-end">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.SelectedStaffId > 0)
+{
+    <!-- ── Summary Cards ────────────────────────────────────────── -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card summary-card bg-white p-3 border-start border-4 border-primary">
+                <div class="text-muted small font-weight-bold text-uppercase">Basic Salary & Rate</div>
+                <div class="h4 mb-0 font-weight-bold text-dark mt-1">₹@Model.BasicMonthlySalary.ToString("N0")</div>
+                <div class="small text-muted mt-1">
+                    Rate: <span class="fw-semibold text-primary">₹@Model.PerDaySalary.ToString("N2")/day</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card summary-card bg-white p-3 border-start border-4 border-warning">
+                <div class="text-muted small font-weight-bold text-uppercase">Leave Deductions</div>
+                <div class="h4 mb-0 font-weight-bold text-warning mt-1">₹@Model.TotalLeaveDeduction.ToString("N2")</div>
+                <div class="small text-muted mt-1">
+                    Logged Leaves: <span class="fw-semibold">@Model.LeaveRecords.Count</span> (Paid Limit: @Model.PaidLeaveLimit)
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card summary-card bg-white p-3 border-start border-4 border-danger">
+                <div class="text-muted small font-weight-bold text-uppercase">Complaint Deductions</div>
+                <div class="h4 mb-0 font-weight-bold text-danger mt-1">₹@Model.TotalComplaintDeduction.ToString("N2")</div>
+                <div class="small text-muted mt-1">
+                    Approved Complaints: <span class="fw-semibold">@Model.ComplaintRecords.Count(c => c.IsApproved)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card summary-card bg-white p-3 border-start border-4 border-dark">
+                <div class="text-muted small font-weight-bold text-uppercase">Total Month Deductions</div>
+                <div class="h4 mb-0 font-weight-bold text-dark mt-1">₹@Model.TotalDeductions.ToString("N2")</div>
+                <div class="small text-muted mt-1">Reflected in Payroll & Comparison</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Tabbed View for Records ─────────────────────────────── -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs" id="recordsTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active font-weight-bold" id="leaves-tab" data-bs-toggle="tab" data-bs-target="#leaves" type="button" role="tab">
+                        <i class="fas fa-calendar-minus me-1 text-warning"></i> Leave Records (@Model.LeaveRecords.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link font-weight-bold" id="complaints-tab" data-bs-toggle="tab" data-bs-target="#complaints" type="button" role="tab">
+                        <i class="fas fa-exclamation-triangle me-1 text-danger"></i> Complaint Records (@Model.ComplaintRecords.Count)
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body">
+            <div class="tab-content" id="recordsTabContent">
+                
+                <!-- ════ TAB 1: LEAVE RECORDS ════ -->
+                <div class="tab-pane fade show active" id="leaves" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="font-weight-bold mb-0">Leave Entries for @Model.StaffName (@((new DateTime(Model.FilterYear, Model.FilterMonth, 1)).ToString("MMMM yyyy")))</h6>
+                        <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" onclick="openAddLeaveModal()">
+                            <i class="fas fa-plus me-1"></i> Add Leave Record
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Reason</th>
+                                    <th class="text-center">Paid Leave</th>
+                                    <th class="text-center">Approval</th>
+                                    <th class="text-end">Calculated Deduction</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.LeaveRecords.Any())
+                                {
+                                    foreach (var leave in Model.LeaveRecords)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@leave.LeaveDate.ToString("dd-MMM-yyyy")</td>
+                                            <td>
+                                                <span class="badge @(leave.LeaveType == "FullDay" ? "badge-soft-danger" : leave.LeaveType == "HalfDay" ? "badge-soft-warning" : "badge-soft-info")">
+                                                    @leave.LeaveType
+                                                </span>
+                                            </td>
+                                            <td>@(string.IsNullOrEmpty(leave.Reason) ? "—" : leave.Reason)</td>
+                                            <td class="text-center">
+                                                @if (leave.IsPaid)
+                                                {
+                                                    <span class="badge badge-soft-success"><i class="fas fa-check me-1"></i>Paid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-soft-secondary">Unpaid</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                @if (leave.IsApproved)
+                                                {
+                                                    <span class="badge badge-soft-success"><i class="fas fa-check-circle me-1"></i>Approved (@leave.ApprovedBy)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-soft-warning"><i class="fas fa-clock me-1"></i>Pending</span>
+                                                }
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">₹@leave.CalculatedDeduction.ToString("N2")</td>
+                                            <td class="text-center">
+                                                @if (!leave.IsApproved)
+                                                {
+                                                    <div class="btn-group btn-group-xs me-1">
+                                                        <button type="button" class="btn btn-success btn-xs" onclick="openApproveLeaveModal(@leave.Id, '@leave.LeaveDate.ToString("yyyy-MM-dd")', '@leave.LeaveType', '@(leave.Reason?.Replace("'", "\\'") ?? "")', @leave.IsPaid.ToString().ToLower())" title="Review & Approve Leave">
+                                                            <i class="fas fa-check me-1"></i>Approve
+                                                        </button>
+                                                        <button type="button" class="btn btn-success btn-xs dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span class="visually-hidden">Toggle Dropdown</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                            <li>
+                                                                <a class="dropdown-item text-success fw-bold" href="javascript:void(0)" onclick="setLeaveApprovalQuick(@leave.Id, true, true, '@leave.LeaveType', '@leave.LeaveDate.ToString("yyyy-MM-dd")', '@(leave.Reason?.Replace("'", "\\'") ?? "")')">
+                                                                    <i class="fas fa-check-circle me-2"></i>Approve as Paid Leave
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item text-danger fw-bold" href="javascript:void(0)" onclick="setLeaveApprovalQuick(@leave.Id, true, false, '@leave.LeaveType', '@leave.LeaveDate.ToString("yyyy-MM-dd")', '@(leave.Reason?.Replace("'", "\\'") ?? "")')">
+                                                                    <i class="fas fa-minus-circle me-2"></i>Approve as Unpaid Leave (Deduct)
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a class="dropdown-item text-dark" href="javascript:void(0)" onclick="openApproveLeaveModal(@leave.Id, '@leave.LeaveDate.ToString("yyyy-MM-dd")', '@leave.LeaveType', '@(leave.Reason?.Replace("'", "\\'") ?? "")', @leave.IsPaid.ToString().ToLower())">
+                                                                    <i class="fas fa-sliders-h me-2"></i>Review & Decide (Modal)...
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                }
+                                                <button type="button" class="btn btn-outline-danger btn-xs" onclick="deleteLeaveRecord(@leave.Id)" title="Delete Record">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No leave records logged for this month.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ════ TAB 2: COMPLAINT RECORDS ════ -->
+                <div class="tab-pane fade" id="complaints" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="font-weight-bold mb-0">Complaint Entries for @Model.StaffName (@((new DateTime(Model.FilterYear, Model.FilterMonth, 1)).ToString("MMMM yyyy")))</h6>
+                        <button type="button" class="btn btn-danger btn-sm font-weight-bold" onclick="openAddComplaintModal()">
+                            <i class="fas fa-plus me-1"></i> Log Complaint Record
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Severity Level</th>
+                                    <th>Description</th>
+                                    <th>Resolution</th>
+                                    <th class="text-center">Approval Status</th>
+                                    <th class="text-end">Deduction Amount</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.ComplaintRecords.Any())
+                                {
+                                    foreach (var comp in Model.ComplaintRecords)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@comp.ComplaintDate.ToString("dd-MMM-yyyy")</td>
+                                            <td><span class="badge badge-soft-danger">@(comp.ComplaintLevel ?? "Level 1")</span></td>
+                                            <td>@(comp.ComplaintDescription ?? "—")</td>
+                                            <td>@(comp.Resolution ?? "—")</td>
+                                            <td class="text-center">
+                                                @if (comp.IsApproved)
+                                                {
+                                                    <span class="badge badge-soft-success"><i class="fas fa-check-circle me-1"></i>Approved (@comp.ApprovedBy)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-soft-warning"><i class="fas fa-clock me-1"></i>Pending</span>
+                                                }
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">₹@comp.DeductionAmount.ToString("N2")</td>
+                                            <td class="text-center">
+                                                @if (!comp.IsApproved)
+                                                {
+                                                    <button type="button" class="btn btn-success btn-xs me-1" onclick="toggleComplaintApproval(@comp.Id, true, '@comp.ComplaintLevel', '@comp.ComplaintDate.ToString("yyyy-MM-dd")', @comp.DeductionAmount, '@(comp.ComplaintDescription?.Replace("'", "\\'") ?? "")', '@(comp.Resolution?.Replace("'", "\\'") ?? "")')">
+                                                        <i class="fas fa-check me-1"></i>Approve
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-outline-warning btn-xs me-1" onclick="toggleComplaintApproval(@comp.Id, false, '@comp.ComplaintLevel', '@comp.ComplaintDate.ToString("yyyy-MM-dd")', @comp.DeductionAmount, '@(comp.ComplaintDescription?.Replace("'", "\\'") ?? "")', '@(comp.Resolution?.Replace("'", "\\'") ?? "")')">
+                                                        <i class="fas fa-undo me-1"></i>Revoke
+                                                    </button>
+                                                }
+                                                <button type="button" class="btn btn-outline-danger btn-xs" onclick="deleteComplaintRecord(@comp.Id)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No complaint records logged for this month.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── Add Leave Modal ────────────────────────────────────────── -->
+<div class="modal fade" id="addLeaveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-calendar-plus me-2"></i>Add Leave Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addLeaveForm">
+                <input type="hidden" name="StaffId" value="@Model.SelectedStaffId" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Leave Date <span class="text-danger">*</span></label>
+                        <input type="date" name="LeaveDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Leave Type</label>
+                        <select name="LeaveType" class="form-select">
+                            <option value="FullDay">Full Day</option>
+                            <option value="HalfDay">Half Day</option>
+                            <option value="Late">Late Arrival</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Reason / Remarks</label>
+                        <textarea name="Reason" class="form-control" rows="2" placeholder="e.g. Medical leave, personal work"></textarea>
+                    </div>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input type="checkbox" name="IsPaid" value="true" class="form-check-input" id="isPaidCheck" />
+                        <label class="form-check-label font-weight-bold" for="isPaidCheck">Mark as Paid Leave (Uses Paid Leave Limit)</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning font-weight-bold text-dark" onclick="saveLeaveRecord()">Save Leave</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Add Complaint Modal ────────────────────────────────────── -->
+<div class="modal fade" id="addComplaintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-exclamation-circle me-2"></i>Log Staff Complaint</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addComplaintForm">
+                <input type="hidden" name="StaffId" value="@Model.SelectedStaffId" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Complaint Date <span class="text-danger">*</span></label>
+                        <input type="date" name="ComplaintDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Severity Level</label>
+                        <select name="ComplaintLevel" class="form-select">
+                            <option value="Level1">Level 1 (Minor)</option>
+                            <option value="Level2">Level 2 (Moderate)</option>
+                            <option value="Level3">Level 3 (Severe)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Deduction Amount (₹) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0" name="DeductionAmount" class="form-control" placeholder="e.g. 200.00" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Complaint Description</label>
+                        <textarea name="ComplaintDescription" class="form-control" rows="2" placeholder="Details of customer complaint or misconduct"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Resolution / Note</label>
+                        <input type="text" name="Resolution" class="form-control" placeholder="e.g. Warning issued, fine imposed" />
+                    </div>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input type="checkbox" name="IsApproved" value="true" class="form-check-input" id="isApprovedCheck" checked />
+                        <label class="form-check-label font-weight-bold" for="isApprovedCheck">Approved (Applies to Salary Deduction)</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger font-weight-bold" onclick="saveComplaintRecord()">Save Complaint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Approve Leave Modal ────────────────────────────────────── -->
+<div class="modal fade" id="approveLeaveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-clipboard-check me-2"></i>Approve Staff Leave Application</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="approveLeaveForm">
+                <input type="hidden" id="approveLeaveId" name="Id" />
+                <input type="hidden" name="StaffId" value="@Model.SelectedStaffId" />
+                <div class="modal-body">
+                    <div class="alert alert-light border mb-3 p-2">
+                        <div class="d-flex justify-content-between small">
+                            <div><strong>Staff:</strong> @Model.StaffName</div>
+                            <div><strong>Per-Day Rate:</strong> ₹@Model.PerDaySalary.ToString("N2")/day</div>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-1">
+                            <div><strong>Paid Leave Quota:</strong> @Model.PaidLeaveLimit days</div>
+                            <div><strong>Approved Paid Leaves:</strong> @Model.LeaveRecords.Count(l => l.IsPaid && l.IsApproved) days</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Leave Date</label>
+                        <input type="date" id="approveLeaveDate" name="LeaveDate" class="form-control" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Leave Type <span class="text-muted fw-normal">(Requested by Staff)</span></label>
+                        <input type="hidden" id="approveLeaveType" name="LeaveType" />
+                        <div class="p-2 border rounded bg-light d-flex align-items-center">
+                            <span id="approveLeaveTypeDisplay" class="badge badge-soft-primary px-3 py-2 font-weight-bold">Full Day</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Reason / Remarks</label>
+                        <textarea id="approveLeaveReason" name="Reason" class="form-control" rows="2" placeholder="Leave reason or admin notes"></textarea>
+                    </div>
+
+                    <label class="form-label font-weight-bold">Payment Decision <span class="text-danger">*</span></label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <div class="form-check p-3 border rounded h-100 bg-light" id="paidCard">
+                                <input class="form-check-input" type="radio" name="approveIsPaid" id="optPaid" value="true" onchange="updateDeductionPreview()">
+                                <label class="form-check-label fw-bold text-success" for="optPaid">
+                                    <i class="fas fa-check-circle me-1"></i> Paid Leave
+                                </label>
+                                <div class="small text-muted mt-1">No salary deduction. Covered under paid leave limit.</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check p-3 border rounded h-100 bg-light" id="unpaidCard">
+                                <input class="form-check-input" type="radio" name="approveIsPaid" id="optUnpaid" value="false" checked onchange="updateDeductionPreview()">
+                                <label class="form-check-label fw-bold text-danger" for="optUnpaid">
+                                    <i class="fas fa-minus-circle me-1"></i> Unpaid Leave
+                                </label>
+                                <div class="small text-muted mt-1">Deduct: <span class="fw-bold text-danger" id="previewDedAmount">₹@Model.PerDaySalary.ToString("N2")</span> from monthly salary.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success font-weight-bold" onclick="submitApproveLeave()"><i class="fas fa-check me-1"></i>Confirm Approval</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openAddLeaveModal() {
+            var modal = new bootstrap.Modal(document.getElementById('addLeaveModal'));
+            modal.show();
+        }
+
+        function openAddComplaintModal() {
+            var modal = new bootstrap.Modal(document.getElementById('addComplaintModal'));
+            modal.show();
+        }
+
+        function saveLeaveRecord() {
+            const form = document.getElementById('addLeaveForm');
+            const data = {
+                StaffId: parseInt(form.elements['StaffId'].value),
+                LeaveDate: form.elements['LeaveDate'].value,
+                LeaveType: form.elements['LeaveType'].value,
+                Reason: form.elements['Reason'].value,
+                IsPaid: form.elements['IsPaid'].checked,
+                IsApproved: true
+            };
+
+            fetch('/admin/staff/leave-record/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error saving leave record.');
+                }
+            })
+            .catch(err => alert('Failed to save leave record.'));
+        }
+
+        const perDaySalary = @(Model.PerDaySalary > 0 ? Model.PerDaySalary.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0");
+
+        function openApproveLeaveModal(id, date, type, reason, isPaid) {
+            document.getElementById('approveLeaveId').value = id;
+            document.getElementById('approveLeaveDate').value = date;
+            document.getElementById('approveLeaveType').value = type;
+
+            const displaySpan = document.getElementById('approveLeaveTypeDisplay');
+            if (displaySpan) {
+                displaySpan.innerText = type === 'FullDay' ? 'Full Day' : type === 'HalfDay' ? 'Half Day' : type === 'Late' ? 'Late Arrival' : type;
+                displaySpan.className = 'badge px-3 py-2 font-weight-bold ' + (type === 'FullDay' ? 'badge-soft-danger' : type === 'HalfDay' ? 'badge-soft-warning' : 'badge-soft-info');
+            }
+
+            document.getElementById('approveLeaveReason').value = reason || '';
+
+            if (isPaid) {
+                document.getElementById('optPaid').checked = true;
+            } else {
+                document.getElementById('optUnpaid').checked = true;
+            }
+
+            updateDeductionPreview();
+            var modal = new bootstrap.Modal(document.getElementById('approveLeaveModal'));
+            modal.show();
+        }
+
+        function updateDeductionPreview() {
+            const isPaid = document.getElementById('optPaid').checked;
+            const type = document.getElementById('approveLeaveType').value;
+            let ded = 0;
+            if (!isPaid) {
+                if (type === 'HalfDay') ded = perDaySalary / 2;
+                else if (type === 'Late') ded = perDaySalary / 4;
+                else ded = perDaySalary;
+            }
+            document.getElementById('previewDedAmount').innerText = '₹' + ded.toFixed(2);
+        }
+
+        function submitApproveLeave() {
+            const id = parseInt(document.getElementById('approveLeaveId').value);
+            const date = document.getElementById('approveLeaveDate').value;
+            const type = document.getElementById('approveLeaveType').value;
+            const reason = document.getElementById('approveLeaveReason').value;
+            const isPaid = document.getElementById('optPaid').checked;
+
+            setLeaveApprovalQuick(id, true, isPaid, type, date, reason);
+        }
+
+        function setLeaveApprovalQuick(id, isApproved, isPaid, leaveType, leaveDate, reason) {
+            const data = {
+                Id: id,
+                StaffId: @Model.SelectedStaffId,
+                LeaveDate: leaveDate,
+                LeaveType: leaveType,
+                Reason: reason,
+                IsPaid: isPaid,
+                IsApproved: isApproved
+            };
+
+            fetch('/admin/staff/leave-record/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error updating leave status.');
+                }
+            })
+            .catch(err => alert('Failed to update leave status.'));
+        }
+
+        function toggleLeaveApproval(id, isApproved, leaveType, leaveDate, isPaid, reason) {
+            setLeaveApprovalQuick(id, isApproved, isPaid, leaveType, leaveDate, reason);
+        }
+
+        function deleteLeaveRecord(id) {
+            if (!confirm('Are you sure you want to delete this leave record?')) return;
+
+            fetch('/admin/staff/leave-record/delete/' + id, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error deleting leave record.');
+                }
+            })
+            .catch(err => alert('Failed to delete leave record.'));
+        }
+
+        function saveComplaintRecord() {
+            const form = document.getElementById('addComplaintForm');
+            const data = {
+                StaffId: parseInt(form.elements['StaffId'].value),
+                ComplaintDate: form.elements['ComplaintDate'].value,
+                ComplaintLevel: form.elements['ComplaintLevel'].value,
+                DeductionAmount: parseFloat(form.elements['DeductionAmount'].value) || 0,
+                ComplaintDescription: form.elements['ComplaintDescription'].value,
+                Resolution: form.elements['Resolution'].value,
+                IsApproved: form.elements['IsApproved'].checked
+            };
+
+            fetch('/admin/staff/complaint-record/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error saving complaint record.');
+                }
+            })
+            .catch(err => alert('Failed to save complaint record.'));
+        }
+
+        function deleteComplaintRecord(id) {
+            if (!confirm('Are you sure you want to delete this complaint record?')) return;
+
+            fetch('/admin/staff/complaint-record/delete/' + id, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error deleting complaint record.');
+                }
+            })
+            .catch(err => alert('Failed to delete complaint record.'));
+        }
+
+        function toggleComplaintApproval(id, isApproved, level, date, amount, desc, resolution) {
+            const data = {
+                Id: id,
+                StaffId: @Model.SelectedStaffId,
+                ComplaintDate: date,
+                ComplaintLevel: level,
+                DeductionAmount: amount,
+                ComplaintDescription: desc,
+                Resolution: resolution,
+                IsApproved: isApproved
+            };
+
+            fetch('/admin/staff/complaint-record/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert(res.message || 'Error updating approval status.');
+                }
+            })
+            .catch(err => alert('Failed to update complaint approval status.'));
+        }
+    </script>
+}

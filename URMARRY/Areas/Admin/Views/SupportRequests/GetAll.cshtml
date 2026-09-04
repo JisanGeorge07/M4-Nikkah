@@ -1,0 +1,64 @@
+@model List<Application.Models.SupportRequestDto>
+@{
+    ViewBag.Title = "Help & Support Tickets";
+}
+
+@section Title
+{
+    Help & Support Tickets
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Help & Support Appeals</h4>
+            </div>
+            <div class="card-body">
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                        <tr>
+                            <th>Profile ID</th>
+                            <th>User Name</th>
+                            <th>Subject</th>
+                            <th>Created On</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.Raw(item.UserRegisterNumber)</td>
+                                <td>@Html.Raw(item.UserName)</td>
+                                <td>@Html.Raw(item.Subject)</td>
+                                <td>@(item.CreatedOn?.ToString("dd-MM-yyyy hh:mm tt") ?? "")</td>
+                                <td>
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else if (item.Status == "Resolved")
+                                    {
+                                        <span class="badge bg-success">Resolved (Reactivated)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Rejected</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Get" asp-controller="SupportRequests" asp-route-id="@item.Id"
+                                       class="btn btn-primary btn-xs">
+                                        <i class="fas fa-pencil-alt"></i> View details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+@model List<URMARRY.Areas.Admin.Models.ActivityDetail>
+@{
+    var tabType = ViewData["TabType"] as string;
+}
+
+<table class="table table-striped dt-responsive nowrap w-100 datatable-analytics">
+    <thead>
+        <tr>
+            <th>Profile Name</th>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.ProfileName</td>
+                <td>@item.RegisterNumber</td>
+                <td>@item.ActionDate.ToString("dd-MM-yyyy HH:mm")</td>
+                <td>
+                    <div class="d-flex gap-1 align-items-center">
+                        <a asp-action="Get" asp-route-id="@item.ProfileId" class="btn btn-soft-primary btn-xs" target="_blank">View</a>
+                        @if (tabType == "Liked" && item.InterestStatus == Domain.InterestStatus.Accepted && item.UserFavouriteProfileId.HasValue && !item.HasSubmittedSuccessStory)
+                        {
+                            <button type="button" class="btn btn-soft-danger btn-xs btn-trigger-prompt" data-fav-id="@item.UserFavouriteProfileId.Value" onclick="triggerTestimonialPrompt(this)">
+                                Trigger Prompt
+                            </button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
