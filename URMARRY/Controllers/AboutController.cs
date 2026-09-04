@@ -21,9 +21,11 @@ namespace URMARRY.Controllers
 		public async Task<IActionResult> Index()
 		{
 			return View(new HomeViewModel
-			{ 
+			{
 				About = _mapper.Map<AboutDto>(await _repo.FirstActive())
 			});
 		}
 	}
 }
+
+
