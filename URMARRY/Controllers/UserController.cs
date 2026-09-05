@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1389,7 +1389,23 @@ public class UserController : Controller
 		if (userId.HasValue && userId.Value > 0)
 		{
 			_presenceTracker.UserLoggedOut(userId.Value);
-			await _hubContext.Clients.All.SendAsync("UserOffline", userId.Value);
+			var now = DateTime.UtcNow;
+			try
+			{
+				var userEntity = await _registrationRepo.Get(userId.Value);
+				if (userEntity != null)
+				{
+					userEntity.LastSeenAt = now;
+					await _registrationRepo.Update(userEntity);
+					await _registrationRepo.SaveChanges();
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error updating LastSeenAt on signout for user {UserId}", userId.Value);
+			}
+
+			await _hubContext.Clients.All.SendAsync("UserOffline", userId.Value, now);
 			_logger.LogInformation("Presence: User {UserId} marked offline on signout", userId.Value);
 		}
 		_cookieHelper.ClearSecureCookie(HttpContext);
@@ -2292,7 +2308,9 @@ public class UserController : Controller
 			InterestStatusToUs = (int)(profileLikedUs?.Status ?? ((InterestStatus)(-1))),
 			PhotosUnlocked = photosUnlocked,
 			PhotoUnlockRequestStatus = photoUnlockRequestStatus,
-			AlreadyReported = existingReport != null
+			AlreadyReported = existingReport != null,
+			IsProfileOnline = _presenceTracker.IsOnline(profile.Id),
+			ProfileLastSeenAt = _presenceTracker.GetLastSeen(profile.Id) ?? profile.LastSeenAt
 		};
 		return View(homeViewModel);
 	}

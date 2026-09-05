@@ -13,12 +13,18 @@ namespace URMARRY.Hubs
     {
         private readonly PresenceTracker _tracker;
         private readonly CookieHelper _cookieHelper;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<PresenceHub> _logger;
 
-        public PresenceHub(PresenceTracker tracker, CookieHelper cookieHelper, ILogger<PresenceHub> logger)
+        public PresenceHub(
+            PresenceTracker tracker,
+            CookieHelper cookieHelper,
+            IServiceScopeFactory scopeFactory,
+            ILogger<PresenceHub> logger)
         {
             _tracker = tracker;
             _cookieHelper = cookieHelper;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
@@ -27,11 +33,15 @@ namespace URMARRY.Hubs
             var userId = ResolveUserId();
             if (userId.HasValue && userId.Value > 0)
             {
+                bool wasOnline = _tracker.IsOnline(userId.Value);
                 _tracker.WebConnected(userId.Value, Context.ConnectionId);
                 _logger.LogInformation("PresenceHub: User {UserId} connected with ConnectionId {ConnectionId}", userId.Value, Context.ConnectionId);
 
                 // Notify other active users that this user came online in real-time
-                await Clients.Others.SendAsync("UserOnline", userId.Value);
+                if (!wasOnline)
+                {
+                    await Clients.Others.SendAsync("UserOnline", userId.Value, DateTime.UtcNow);
+                }
             }
             else
             {
@@ -51,8 +61,29 @@ namespace URMARRY.Hubs
                 _tracker.WebDisconnected(userId.Value, Context.ConnectionId);
                 _logger.LogInformation("PresenceHub: User {UserId} disconnected with ConnectionId {ConnectionId}", userId.Value, Context.ConnectionId);
 
-                // Notify other active users that this user went offline in real-time
-                await Clients.Others.SendAsync("UserOffline", userId.Value);
+                // Only broadcast and persist offline if the user has no remaining connections (web or mobile)
+                if (!_tracker.IsOnline(userId.Value))
+                {
+                    var now = DateTime.UtcNow;
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<Persistence.AppDbContext>();
+                        var reg = await db.Registration.FindAsync(userId.Value);
+                        if (reg != null)
+                        {
+                            reg.LastSeenAt = now;
+                            await db.SaveChangesAsync();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "PresenceHub: Error persisting LastSeenAt for User {UserId}", userId.Value);
+                    }
+
+                    // Notify other active users that this user went offline in real-time
+                    await Clients.Others.SendAsync("UserOffline", userId.Value, now);
+                }
             }
 
             await base.OnDisconnectedAsync(exception);

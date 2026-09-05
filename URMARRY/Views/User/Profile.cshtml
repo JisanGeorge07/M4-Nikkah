@@ -126,6 +126,44 @@
         display: inline-flex;
         text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
+    /* Presence Badge Styling */
+    .profile-presence-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        vertical-align: middle;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        line-height: 1;
+        padding: 4px 9px 4px 8px;
+        border-radius: 20px;
+        letter-spacing: 0.2px;
+    }
+    .profile-online-badge {
+        background-color: rgba(34, 197, 94, 0.12);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .profile-offline-badge {
+        background-color: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    .profile-online-badge .presence-dot {
+        width: 7px;
+        height: 7px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .profile-offline-badge .presence-clock-icon {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+        display: inline-block;
+        stroke: #64748b;
+    }
 </style>
 
     <main class="flex-fil p-4" style="min-width: 0;"> 
@@ -220,14 +258,61 @@
 
                                 <div class="col-12 col-md-6 col-lg-8">
                                         <div class="bio-title ms-md-4">
-                                            <h5>
-                                                @Html.Raw(user.Name)
+                                            <h5 class="d-flex align-items-center flex-wrap gap-2">
+                                                <span>@Html.Raw(user.Name)</span>
                                                 @if (user.DocumentVerificationComplete && user.DocumentVerificationFollowupApproved)
                                                 {
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0d6efd" class="bi bi-patch-check-fill ms-1 align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0d6efd" class="bi bi-patch-check-fill align-middle" viewBox="0 0 16 16" style="vertical-align: middle; display: inline-block;" title="Document Verified Profile" data-bs-toggle="tooltip">
                                                         <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
                                                     </svg>
                                                 }
+                                                <span id="profile-presence-status">
+                                                    @if (Model.IsProfileOnline)
+                                                    {
+                                                        <span class="profile-presence-badge profile-online-badge">
+                                                            <span class="presence-dot"></span>Active Now
+                                                        </span>
+                                                    }
+                                                    else if (Model.ProfileLastSeenAt.HasValue)
+                                                    {
+                                                        var diff = DateTime.UtcNow - Model.ProfileLastSeenAt.Value;
+                                                        string timeText;
+                                                        if (diff.TotalMinutes < 1)
+                                                        {
+                                                            timeText = "Active just now";
+                                                        }
+                                                        else if (diff.TotalMinutes < 60)
+                                                        {
+                                                            int mins = Math.Max(1, (int)diff.TotalMinutes);
+                                                            timeText = $"Active {mins} {(mins == 1 ? "min" : "mins")} ago";
+                                                        }
+                                                        else if (diff.TotalHours < 24)
+                                                        {
+                                                            int hours = (int)diff.TotalHours;
+                                                            timeText = $"Active {hours} {(hours == 1 ? "hour" : "hours")} ago";
+                                                        }
+                                                        else if (diff.TotalDays < 2)
+                                                        {
+                                                            timeText = "Active yesterday";
+                                                        }
+                                                        else if (diff.TotalDays < 7)
+                                                        {
+                                                            int days = (int)diff.TotalDays;
+                                                            timeText = $"Active {days} days ago";
+                                                        }
+                                                        else
+                                                        {
+                                                            timeText = $"Last seen {Model.ProfileLastSeenAt.Value.ToString("dd MMM yyyy")}";
+                                                        }
+                                                        <span class="profile-presence-badge profile-offline-badge">
+                                                            <svg class="presence-clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <circle cx="12" cy="12" r="10"></circle>
+                                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                                            </svg>
+                                                            <span>@timeText</span>
+                                                        </span>
+                                                    }
+                                                </span>
                                             </h5>
                                             <div class="">
                                                 <h6 class="text-muted mb-0">@Html.Raw(user.Village ?? string.Empty)
@@ -2156,5 +2241,42 @@
                 showContactDetails(null);
             }
         });
+
+        // Real-time presence listener for viewed profile
+        try {
+            if (typeof signalR !== 'undefined') {
+                const profilePresenceConn = new signalR.HubConnectionBuilder()
+                    .withUrl("/hubs/presence?userId=" + @Model.Registration.Id)
+                    .withAutomaticReconnect()
+                    .configureLogging(signalR.LogLevel.Warning)
+                    .build();
+
+                const viewedProfileId = @user.Id;
+
+                profilePresenceConn.on("UserOnline", function (id) {
+                    if (id == viewedProfileId) {
+                        const statusEl = document.getElementById('profile-presence-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = '<span class="profile-presence-badge profile-online-badge"><span class="presence-dot"></span>Active Now</span>';
+                        }
+                    }
+                });
+
+                profilePresenceConn.on("UserOffline", function (id) {
+                    if (id == viewedProfileId) {
+                        const statusEl = document.getElementById('profile-presence-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = '<span class="profile-presence-badge profile-offline-badge"><svg class="presence-clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Active just now</span></span>';
+                        }
+                    }
+                });
+
+                profilePresenceConn.start().catch(function(err) {
+                    console.log("Profile presence connection error:", err);
+                });
+            }
+        } catch (e) {
+            console.error("Profile presence error:", e);
+        }
     </script>
 }

@@ -51,6 +51,11 @@
                         <option value="3">Call Back Later</option>
                         <option value="4">Converted</option>
                     </select>
+
+                    <!-- Run Auto Renewal Check Button -->
+                    <button id="btnRunRenewalCheck" class="btn btn-outline-primary btn-sm ms-auto d-flex align-items-center gap-1" style="border-radius: 6px; font-weight: 500;">
+                        <i class="bi bi-arrow-repeat"></i> Run Auto-Renewal Check
+                    </button>
                 </div>
             </div>
             
@@ -728,6 +733,12 @@
             followUps.forEach(function (f) {
                 var badgeColor = getFollowUpTypeColor(f.followUpTypeEnum);
                 var typeLabel = formatFollowUpType(f.followUpTypeEnum);
+                if (f.followUpTypeEnum === 2) {
+                    var takenDate = f.createdOn || f.CreatedOn || (f.createdOnFull ? f.createdOnFull.split(' ')[0] : (f.CreatedOnFull ? f.CreatedOnFull.split(' ')[0] : ''));
+                    if (takenDate) {
+                        typeLabel = `Renewal Follow-up (${takenDate})`;
+                    }
+                }
 
                 var statusLabel = 'Interest';
                 var statusValue = f.latestInterestStatus;
@@ -973,6 +984,70 @@
                 },
                 complete: function () {
                     $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+
+        // Manual trigger for auto-renewal follow-up check
+        $('#btnRunRenewalCheck').on('click', function () {
+            Swal.fire({
+                title: 'Run Auto-Renewal Check?',
+                text: 'This will evaluate all active profiles for expiring plans (<= 10 days) or low credits (<= 5) and assign Renewal Follow-ups to their assigned staff.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#556ee6',
+                cancelButtonColor: '#74788d',
+                confirmButtonText: 'Yes, Run Check',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Evaluating Profiles...',
+                        text: 'Please wait while the system checks premium plans and credit balances.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: '/admin/staff/trigger-auto-renewal-check',
+                        type: 'POST',
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Check Completed',
+                                    html: `<p class="mb-2">${res.message}</p>
+                                           <div class="text-start small bg-light p-2 rounded">
+                                               <div><strong>Eligible Profiles:</strong> ${res.eligibleCount ?? 0}</div>
+                                               <div><strong>New Follow-ups Added:</strong> ${res.addedCount ?? 0}</div>
+                                               <div><strong>Cycles Re-opened:</strong> ${res.reopenedCount ?? 0}</div>
+                                               <div><strong>Already In-Progress:</strong> ${res.skippedActiveCount ?? 0}</div>
+                                               <div><strong>Not Interested (Skipped):</strong> ${res.skippedNotInterestedCount ?? 0}</div>
+                                           </div>`,
+                                    confirmButtonColor: '#556ee6'
+                                }).then(() => {
+                                    table.ajax.reload(null, false);
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: res.message || 'Failed to process auto-renewal check.',
+                                    confirmButtonColor: '#dc3545'
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Server Error',
+                                text: 'Failed to communicate with the server.',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    });
                 }
             });
         });

@@ -49,6 +49,9 @@ builder.Services.AddScoped<CookieHelper>();
 builder.Services.AddScoped<UserStatusFilter>();
 builder.Services.AddHostedService<PremiumNotificationService>();
 builder.Services.AddHostedService<RelationshipStatusNotificationService>();
+builder.Services.AddHostedService<PresenceCleanupService>();
+builder.Services.AddScoped<IRenewalFollowUpProcessor, RenewalFollowUpProcessor>();
+builder.Services.AddHostedService<AutoRenewalFollowUpService>();
 
 builder.Services.AddReCaptcha(builder.Configuration.GetSection("ReCaptcha"));
 // it sets the login path to /account/login, so unauthenticated users are redirected there when authentication is required.

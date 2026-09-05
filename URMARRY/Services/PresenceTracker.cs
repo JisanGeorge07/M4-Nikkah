@@ -69,12 +69,23 @@ namespace URMARRY.Services
         /// </summary>
         public void UserLoggedOut(long userId)
         {
+            RecordExplicitOffline(userId);
+        }
+
+        /// <summary>
+        /// Explicitly records that a user is offline (logout, browser unload beacon, or mobile app close).
+        /// Clears all web connections and mobile heartbeats, updates last seen.
+        /// </summary>
+        public DateTime RecordExplicitOffline(long userId)
+        {
+            var now = DateTime.UtcNow;
             if (userId > 0)
             {
                 _webConnections.TryRemove(userId, out _);
                 _apiHeartbeats.TryRemove(userId, out _);
-                _lastSeen[userId] = DateTime.UtcNow;
+                _lastSeen[userId] = now;
             }
+            return now;
         }
 
         /// <summary>
@@ -82,10 +93,59 @@ namespace URMARRY.Services
         /// </summary>
         public void RecordHeartbeat(long userId)
         {
-            if (userId <= 0) return;
+            RecordHeartbeatAndCheckIfNewlyOnline(userId);
+        }
+
+        /// <summary>
+        /// Records a heartbeat from a mobile / external client.
+        /// Returns true if the user was previously offline, so a real-time UserOnline event can be broadcast.
+        /// </summary>
+        public bool RecordHeartbeatAndCheckIfNewlyOnline(long userId)
+        {
+            if (userId <= 0) return false;
+            bool wasOnline = IsOnline(userId);
             var now = DateTime.UtcNow;
             _apiHeartbeats[userId] = now;
             _lastSeen[userId] = now;
+            return !wasOnline;
+        }
+
+        /// <summary>
+        /// Scans for mobile heartbeats that have exceeded the timeout.
+        /// If the user also has no active web connections, removes them from active heartbeats
+        /// and returns them so the caller can persist LastSeenAt to DB and broadcast UserOffline over SignalR.
+        /// </summary>
+        public List<(long UserId, DateTime LastSeen)> SweepExpiredHeartbeats(TimeSpan? timeout = null)
+        {
+            var effectiveTimeout = timeout ?? HeartbeatTimeout;
+            var now = DateTime.UtcNow;
+            var expired = new List<(long UserId, DateTime LastSeen)>();
+
+            foreach (var kvp in _apiHeartbeats)
+            {
+                if (now - kvp.Value > effectiveTimeout)
+                {
+                    if (_apiHeartbeats.TryRemove(kvp.Key, out var lastHeartbeat))
+                    {
+                        bool hasWeb = false;
+                        if (_webConnections.TryGetValue(kvp.Key, out var connections))
+                        {
+                            lock (connections)
+                            {
+                                hasWeb = connections.Count > 0;
+                            }
+                        }
+
+                        if (!hasWeb)
+                        {
+                            _lastSeen[kvp.Key] = lastHeartbeat;
+                            expired.Add((kvp.Key, lastHeartbeat));
+                        }
+                    }
+                }
+            }
+
+            return expired;
         }
 
         /// <summary>

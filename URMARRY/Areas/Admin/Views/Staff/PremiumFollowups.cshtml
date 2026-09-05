@@ -728,6 +728,12 @@
             followUps.forEach(function (f) {
                 var badgeColor = getFollowUpTypeColor(f.followUpTypeEnum);
                 var typeLabel = formatFollowUpType(f.followUpTypeEnum);
+                if (f.followUpTypeEnum === 2) {
+                    var takenDate = f.createdOn || f.CreatedOn || (f.createdOnFull ? f.createdOnFull.split(' ')[0] : (f.CreatedOnFull ? f.CreatedOnFull.split(' ')[0] : ''));
+                    if (takenDate) {
+                        typeLabel = `Renewal Follow-up (${takenDate})`;
+                    }
+                }
 
                 var statusLabel = 'Interest';
                 var statusValue = f.latestInterestStatus;

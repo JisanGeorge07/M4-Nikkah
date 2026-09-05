@@ -152,7 +152,6 @@ namespace URMARRY.Areas.Admin.Controllers
                 staffDetailsMap.TryGetValue(staffId, out var staffDetail);
 
                 var staffAssignments = assignments.Where(a => a.StaffId == staffId).ToList();
-                var staffFollowUps = followUps.Where(f => f.AssignedStaffId == staffId).ToList();
 
                 // Timeline followUp IDs for this staff member in date range
                 var timelineStaffFollowUpIds = followUpTimelines
@@ -162,6 +161,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     .ToHashSet();
 
                 bool hasTimelinesInPeriod = timelineStaffFollowUpIds.Any();
+
+                var staffFollowUps = followUps.Where(f => f.AssignedStaffId == staffId || timelineStaffFollowUpIds.Contains(f.Id)).ToList();
 
                 // Resilient profile association: include current assignments, assigned follow-up profiles,
                 // and any profiles where this staff logged timeline activity during the selected period.
@@ -180,8 +181,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 var staffTransactions = transactions.Where(t => staffProfileIds.Contains(t.userId)).ToList();
 
                 var convertedFollowUps = staffFollowUps
-                    .Where(f => f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                        && (
+                    .Where(f => 
+                        (
                             timelineStaffFollowUpIds.Contains(f.Id) 
                             || (f.ModifiedOn >= dateFrom && f.ModifiedOn <= dateTo)
                             || (f.CreatedOn >= dateFrom && f.CreatedOn <= dateTo)
@@ -190,9 +191,11 @@ namespace URMARRY.Areas.Admin.Controllers
                             (f.FollowUpType == FollowUpType.PremiumFollowUp && (f.LatestInterestStatus == PremiumInterestStatus.Converted || (f.Profile != null && f.Profile.IsPremiumMember)))
                             || (f.FollowUpType == FollowUpType.RenewalFollowUp && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember)))
                         )
-                        // Payment verification: only count if customer has a successful transaction
-                        // created on or after this follow-up was created (prevents old payments from counting for renewals)
-                        && staffTransactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn))
+                        && (
+                            f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                            || f.PaymentCompleted
+                            || staffTransactions.Any(t => t.userId == f.ProfileId)
+                        ))
                     .ToList();
 
                 int convBoys = 0, convGirls = 0;
@@ -234,14 +237,23 @@ namespace URMARRY.Areas.Admin.Controllers
                         .Where(t => t.userId == fu.ProfileId)
                         .ToList();
 
+                    decimal profileCollection = 0;
                     foreach (var txn in profileTransactions)
                     {
                         if (decimal.TryParse(txn.Amount, out decimal amt) && amt > 0)
                         {
-                            if (isMale) collectionBoys += amt;
-                            else collectionGirls += amt;
+                            profileCollection += amt;
                         }
                     }
+
+                    // Fallback to recorded payment amount on follow-up if approved by admin and no gateway transaction row exists
+                    if (profileCollection == 0 && fu.PaymentAmount.HasValue && fu.PaymentAmount > 0 && fu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    {
+                        profileCollection = fu.PaymentAmount.Value;
+                    }
+
+                    if (isMale) collectionBoys += profileCollection;
+                    else collectionGirls += profileCollection;
                 }
 
                 // Apply premium package filter
@@ -265,9 +277,11 @@ namespace URMARRY.Areas.Admin.Controllers
                 int gradeA = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
                 int gradeB = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
                 int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started
-                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest);
+                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest
+                    || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
                 int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending
-                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold);
+                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold
+                    || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
 
                 // Apply verification grade filter
                 if (!string.IsNullOrEmpty(verificationGrade))
@@ -355,7 +369,32 @@ namespace URMARRY.Areas.Admin.Controllers
                 decimal dailyTargetPercent = 0;
                 if (perfTargetConfig != null)
                 {
-                    int totalTarget = perfTargetConfig.MaleVerificationMonthlyTarget + perfTargetConfig.FemaleVerificationMonthlyTarget + perfTargetConfig.MaleConversionMonthlyTarget + perfTargetConfig.FemaleConversionMonthlyTarget;
+                    bool isDaily = string.Equals(period, "Day", StringComparison.OrdinalIgnoreCase);
+                    bool isWeekly = string.Equals(period, "Week", StringComparison.OrdinalIgnoreCase);
+                    bool isYearly = string.Equals(period, "Year", StringComparison.OrdinalIgnoreCase);
+
+                    int totalTarget;
+                    if (isDaily)
+                    {
+                        totalTarget = perfTargetConfig.MaleVerificationDailyTarget + perfTargetConfig.FemaleVerificationDailyTarget +
+                                      perfTargetConfig.MaleConversionDailyTarget + perfTargetConfig.FemaleConversionDailyTarget;
+                    }
+                    else if (isWeekly)
+                    {
+                        totalTarget = (perfTargetConfig.MaleVerificationDailyTarget + perfTargetConfig.FemaleVerificationDailyTarget +
+                                       perfTargetConfig.MaleConversionDailyTarget + perfTargetConfig.FemaleConversionDailyTarget) * 7;
+                    }
+                    else if (isYearly)
+                    {
+                        totalTarget = (perfTargetConfig.MaleVerificationMonthlyTarget + perfTargetConfig.FemaleVerificationMonthlyTarget +
+                                       perfTargetConfig.MaleConversionMonthlyTarget + perfTargetConfig.FemaleConversionMonthlyTarget) * 12;
+                    }
+                    else
+                    {
+                        totalTarget = perfTargetConfig.MaleVerificationMonthlyTarget + perfTargetConfig.FemaleVerificationMonthlyTarget +
+                                      perfTargetConfig.MaleConversionMonthlyTarget + perfTargetConfig.FemaleConversionMonthlyTarget;
+                    }
+
                     int totalAchieved = maleVerifications + femaleVerifications + convBoys + convGirls;
                     if (totalTarget > 0)
                     {
@@ -1000,29 +1039,34 @@ namespace URMARRY.Areas.Admin.Controllers
         }
 
         // ─── Helper: Compute Date Range ──────────────────────────
-        private void ComputeDateRange(string period, int year, int month, out DateTime dateFrom, out DateTime dateTo)
+        private void ComputeDateRange(string? period, int year, int month, out DateTime dateFrom, out DateTime dateTo)
         {
-            switch (period)
+            string cleanPeriod = (period ?? "Month").Trim();
+
+            if (cleanPeriod.Equals("Day", StringComparison.OrdinalIgnoreCase))
             {
-                case "Day":
-                    dateFrom = DateTime.UtcNow.Date;
-                    dateTo = dateFrom.AddDays(1).AddTicks(-1);
-                    break;
-                case "Week":
-                    var today = DateTime.UtcNow.Date;
-                    int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-                    dateFrom = today.AddDays(-diff);
-                    dateTo = dateFrom.AddDays(7).AddTicks(-1);
-                    break;
-                case "Year":
-                    dateFrom = new DateTime(year, 1, 1);
-                    dateTo = new DateTime(year, 12, 31, 23, 59, 59);
-                    break;
-                case "Month":
-                default:
-                    dateFrom = new DateTime(year, month, 1);
-                    dateTo = dateFrom.AddMonths(1).AddTicks(-1);
-                    break;
+                var localTodayStartUtc = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local).ToUniversalTime();
+                dateFrom = localTodayStartUtc < DateTime.UtcNow.Date ? localTodayStartUtc : DateTime.UtcNow.Date;
+                var localTodayEnd = DateTime.Today.AddDays(1).AddTicks(-1);
+                var utcTodayEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+                dateTo = localTodayEnd > utcTodayEnd ? localTodayEnd : utcTodayEnd;
+            }
+            else if (cleanPeriod.Equals("Week", StringComparison.OrdinalIgnoreCase))
+            {
+                var today = DateTime.UtcNow.Date;
+                int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+                dateFrom = today.AddDays(-diff);
+                dateTo = dateFrom.AddDays(7).AddTicks(-1);
+            }
+            else if (cleanPeriod.Equals("Year", StringComparison.OrdinalIgnoreCase))
+            {
+                dateFrom = new DateTime(year, 1, 1);
+                dateTo = new DateTime(year, 12, 31, 23, 59, 59);
+            }
+            else // Month (default)
+            {
+                dateFrom = new DateTime(year, month, 1);
+                dateTo = dateFrom.AddMonths(1).AddTicks(-1);
             }
         }
     }

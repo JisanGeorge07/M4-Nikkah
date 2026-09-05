@@ -90,8 +90,7 @@ namespace Persistence;
             .HasForeignKey(t => t.userId);
 
         modelBuilder.Entity<FollowUp>()
-            .HasIndex(f => new { f.ProfileId, f.FollowUpType })
-            .IsUnique();
+            .HasIndex(f => new { f.ProfileId, f.FollowUpType });
 
         modelBuilder.Entity<FollowUp>()
             .HasOne(f => f.Profile)

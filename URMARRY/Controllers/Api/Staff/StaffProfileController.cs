@@ -495,6 +495,8 @@ namespace URMARRY.Controllers.Api.Staff
                     followUpId = f.Id,
                     followUpType = f.FollowUpType.ToString(),
                     followUpTypeVal = (int)f.FollowUpType,
+                    createdOn = f.CreatedOn.ToString("dd-MMM-yyyy"),
+                    createdOnFull = f.CreatedOn.ToString("yyyy-MM-dd HH:mm:ss"),
                     latestContactType = f.LatestContactType?.ToString() ?? "N/A",
                     latestCallStatus = f.LatestCallStatus?.ToString() ?? "N/A",
                     latestPremiumInterestStatus = f.LatestInterestStatus?.ToString() ?? "N/A",
@@ -921,7 +923,7 @@ namespace URMARRY.Controllers.Api.Staff
         }
 
         /// <summary>
-        /// Registers or updates a profile completely by a staff member (all steps).
+        /// Registers or updates a profile completely by a staff member (all steps). 
         /// </summary>
         [HttpPost("api-register")]
         public async Task<IActionResult> ApiRegister([FromForm] UserController.MobileProfileDto mobileModel)
@@ -2749,8 +2751,11 @@ namespace URMARRY.Controllers.Api.Staff
                     string cleanPeriod = (period ?? "Month").Trim();
                     if (cleanPeriod.Equals("Day", StringComparison.OrdinalIgnoreCase))
                     {
-                        startDate = DateTime.UtcNow.Date;
-                        endDate = startDate.AddDays(1).AddTicks(-1);
+                        var localTodayStartUtc = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local).ToUniversalTime();
+                        startDate = localTodayStartUtc < DateTime.UtcNow.Date ? localTodayStartUtc : DateTime.UtcNow.Date;
+                        var localTodayEnd = DateTime.Today.AddDays(1).AddTicks(-1);
+                        var utcTodayEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+                        endDate = localTodayEnd > utcTodayEnd ? localTodayEnd : utcTodayEnd;
                     }
                     else if (cleanPeriod.Equals("Week", StringComparison.OrdinalIgnoreCase))
                     {
@@ -2787,6 +2792,21 @@ namespace URMARRY.Controllers.Api.Staff
                 var staffTimelines = await _followUpTimelineRepo.GetQueryable()
                     .Where(t => t.StaffId == targetStaffId && !t.IsDeleted && t.CreatedOn >= startDate && t.CreatedOn <= endDate)
                     .ToListAsync();
+
+                var additionalFollowUpIds = staffTimelines
+                    .Select(t => t.FollowUpId)
+                    .Where(fId => !staffFollowUps.Any(f => f.Id == fId))
+                    .Distinct()
+                    .ToList();
+
+                if (additionalFollowUpIds.Any())
+                {
+                    var extraFollowUps = await _followUpRepo.GetQueryable()
+                        .Where(f => additionalFollowUpIds.Contains(f.Id) && !f.IsDeleted)
+                        .Include(f => f.Profile)
+                        .ToListAsync();
+                    staffFollowUps.AddRange(extraFollowUps);
+                }
 
                 var timelineStaffProfileIds = staffTimelines
                     .Select(t => staffFollowUps.FirstOrDefault(f => f.Id == t.FollowUpId)?.ProfileId ?? 0)
@@ -2850,8 +2870,8 @@ namespace URMARRY.Controllers.Api.Staff
                     .ToListAsync();
 
                 var convertedFollowUps = staffFollowUps
-                    .Where(f => f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                        && (
+                    .Where(f => 
+                        (
                             timelineStaffFollowUpIds.Contains(f.Id)
                             || (f.ModifiedOn >= startDate && f.ModifiedOn <= endDate)
                             || (f.CreatedOn >= startDate && f.CreatedOn <= endDate)
@@ -2860,9 +2880,11 @@ namespace URMARRY.Controllers.Api.Staff
                             (f.FollowUpType == FollowUpType.PremiumFollowUp && (f.LatestInterestStatus == PremiumInterestStatus.Converted || (f.Profile != null && f.Profile.IsPremiumMember)))
                             || (f.FollowUpType == FollowUpType.RenewalFollowUp && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember)))
                         )
-                        // Payment verification: only count if customer has a successful transaction
-                        // created on or after this follow-up was created (prevents old payments from counting for renewals)
-                        && transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn))
+                        && (
+                            f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                            || f.PaymentCompleted
+                            || transactions.Any(t => t.userId == f.ProfileId)
+                        ))
                     .ToList();
 
                 // Group conversions by ProfileId to prevent double-counting if a profile has both follow-up types in the same period
@@ -2894,14 +2916,22 @@ namespace URMARRY.Controllers.Api.Staff
                 {
                     bool isMale = string.Equals(fu.Profile!.Gender, "Male", StringComparison.OrdinalIgnoreCase);
                     var pTxns = transactions.Where(t => t.userId == fu.ProfileId);
+                    decimal profileCollection = 0;
                     foreach (var txn in pTxns)
                     {
                         if (decimal.TryParse(txn.Amount, out decimal amt) && amt > 0)
                         {
-                            if (isMale) collectionBoys += amt;
-                            else collectionGirls += amt;
+                            profileCollection += amt;
                         }
                     }
+
+                    if (profileCollection == 0 && fu.PaymentAmount.HasValue && fu.PaymentAmount > 0 && fu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    {
+                        profileCollection = fu.PaymentAmount.Value;
+                    }
+
+                    if (isMale) collectionBoys += profileCollection;
+                    else collectionGirls += profileCollection;
                 }
                 decimal totalPremiumCollection = collectionBoys + collectionGirls;
 
@@ -2917,8 +2947,12 @@ namespace URMARRY.Controllers.Api.Staff
 
                 int gradeA = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
                 int gradeB = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
-                int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest);
-                int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold);
+                int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started 
+                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest
+                    || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
+                int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending 
+                    || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold
+                    || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
                 int totalVerifications = gradeA + gradeB + gradeC + gradeD;
 
                 int verifBoys = verificationFollowUps.Count(f => f.Profile != null 

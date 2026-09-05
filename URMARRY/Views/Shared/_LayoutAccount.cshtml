@@ -1,4 +1,8 @@
 @model dynamic
+@inject URMARRY.Services.CookieHelper CookieHelper
+@{
+    var loggedInUserPresenceId = CookieHelper.GetUserIdFromCookie(Context);
+}
 @*
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -855,7 +859,27 @@ Bootstrap icon for search -->
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SignalR JS Client Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     @RenderSection("Scripts", required: false)
+    <script>
+        (function () {
+            const uid = @(loggedInUserPresenceId ?? 0);
+            if (uid > 0) {
+                // Real-time offline beacon when closing browser tab or navigating away
+                window.addEventListener('beforeunload', function () {
+                    if (navigator.sendBeacon) {
+                        navigator.sendBeacon('/api/presence/offline?userId=' + uid);
+                    }
+                });
+                window.addEventListener('pagehide', function () {
+                    if (navigator.sendBeacon) {
+                        navigator.sendBeacon('/api/presence/offline?userId=' + uid);
+                    }
+                });
+            }
+        })();
+    </script>
     <script>
         function checkUnreadNotifications() {
             $.ajax({

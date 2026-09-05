@@ -63,6 +63,10 @@
                                         onclick="window.location.href='/dashboard?tab=myMatches'">
                                         My Matches
                                     </button>
+                                    <button type="button" class="btn main-tab"
+                                        onclick="window.location.href='/dashboard?tab=onlineProfiles'">
+                                        Online Profiles
+                                    </button>
                                     <button type="button" class="btn main-tab" onclick="window.location.href='/dashboard?tab=newMatches'">
                                         New Matches
                                     </button>
@@ -333,6 +337,17 @@
                         if (card && !card.querySelector('.online-indicator-badge')) {
                             card.insertAdjacentHTML('afterbegin', '<span class="online-indicator-badge" title="Online"><span class="online-pulse-dot"></span>Online</span>');
                         }
+                        // In My Matches tab, move newly online users to the top in real-time
+                        if (activeTab === 'myMatches' && grid && cardCol.parentElement === grid) {
+                            grid.prepend(cardCol);
+                        }
+                    } else if (activeTab === 'onlineProfiles') {
+                        // If we are on Online Profiles tab and grid was empty, refresh first page
+                        if (grid && grid.children.length === 0) {
+                            currentPage = 0;
+                            hasMore = true;
+                            fetchProfiles(true);
+                        }
                     }
                 });
 
@@ -343,7 +358,24 @@
                     if (cardCol) {
                         const badge = cardCol.querySelector('.online-indicator-badge');
                         if (badge) badge.remove();
+
+                        // On Online Profiles tab, immediately remove the offline user's card
+                        if (activeTab === 'onlineProfiles') {
+                            cardCol.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                            cardCol.style.opacity = '0';
+                            cardCol.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                cardCol.remove();
+                                if (grid && grid.querySelectorAll('.col-12').length === 0 && noResults) {
+                                    noResults.style.display = 'block';
+                                }
+                            }, 400);
+                        }
                     }
+                });
+
+                presenceConn.onreconnected(function (connectionId) {
+                    console.log("PresenceHub: Reconnected with connectionId:", connectionId);
                 });
 
                 presenceConn.start()
@@ -378,6 +410,7 @@
         // --- Tab Type Map ---
         const tabTypeMap = {
             'myMatches': 'mymatching',
+            'onlineProfiles': 'onlineprofiles',
             'newMatches': 'newmatching',
             'location': 'mylocation',
             'family': 'samefamilystatus',
@@ -387,6 +420,18 @@
         };
 
         let currentType = tabTypeMap[activeTab] || 'mymatching';
+
+        // --- Immediate offline notification on browser close / page unload ---
+        window.addEventListener('beforeunload', function () {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('/api/presence/offline?userId=' + userId);
+            }
+        });
+        window.addEventListener('pagehide', function () {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('/api/presence/offline?userId=' + userId);
+            }
+        });
 
         // --- Set active tab button on page load based on URL param ---
         document.querySelectorAll('.main-tab').forEach(btn => {

@@ -18,6 +18,7 @@ using Application.Helpers;
 using Application.Interfaces.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Application.Models.Transactions;
+using URMARRY.Services;
 
 namespace URMARRY.Areas.Admin.Controllers
 {
@@ -1174,7 +1175,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     }
 
                     // Create or update Renewal Follow-up
-                    var existingRenewal = existingFollowUps.FirstOrDefault(f => f.ProfileId == profileId);
+                    // If an existing renewal follow-up is already Renewed, do not overwrite it — create a new follow-up for the new cycle!
+                    var existingRenewal = existingFollowUps.FirstOrDefault(f => f.ProfileId == profileId && f.LatestRenewalInterestStatus != RenewalInterestStatus.Renewed);
                     if (existingRenewal != null)
                     {
                         existingRenewal.AssignedStaffId = staffId;
@@ -1282,6 +1284,32 @@ namespace URMARRY.Areas.Admin.Controllers
                 var logger = HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILogger<StaffController>)) as Microsoft.Extensions.Logging.ILogger<StaffController>;
                 logger?.LogError(ex, "Error occurred in BulkRenewalFollowUp endpoint");
                 return Json(new { success = false, message = "An error occurred while adding bulk renewal follow-ups: " + ex.Message });
+            }
+        }
+
+        [HttpPost("/admin/staff/trigger-auto-renewal-check")]
+        public async Task<IActionResult> TriggerAutoRenewalCheck([FromServices] IRenewalFollowUpProcessor processor)
+        {
+            try
+            {
+                var result = await processor.ProcessAutoRenewalFollowUpsAsync();
+                return Json(new
+                {
+                    success = result.Success,
+                    message = result.Message,
+                    eligibleCount = result.EligibleCount,
+                    addedCount = result.AddedCount,
+                    reopenedCount = result.ReopenedCount,
+                    skippedActiveCount = result.SkippedActiveCount,
+                    skippedNotInterestedCount = result.SkippedNotInterestedCount,
+                    skippedNotEligibleCount = result.SkippedNotEligibleCount
+                });
+            }
+            catch (Exception ex)
+            {
+                var logger = HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILogger<StaffController>)) as Microsoft.Extensions.Logging.ILogger<StaffController>;
+                logger?.LogError(ex, "Error occurred in TriggerAutoRenewalCheck endpoint");
+                return Json(new { success = false, message = "An error occurred while running the auto-renewal check: " + ex.Message });
             }
         }
 
@@ -1495,6 +1523,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     f.Id,
                     FollowUpType = f.FollowUpType.ToString(),
                     FollowUpTypeEnum = (int)f.FollowUpType,
+                    CreatedOn = f.CreatedOn.ToString("dd-MMM-yyyy"),
+                    CreatedOnFull = f.CreatedOn.ToString("yyyy-MM-dd HH:mm:ss"),
                     LatestContactType = f.LatestContactType?.ToString() ?? "N/A",
                     LatestCallStatus = f.LatestCallStatus?.ToString() ?? "N/A",
                     LatestInterestStatus = f.LatestInterestStatus?.ToString() ?? "N/A",
