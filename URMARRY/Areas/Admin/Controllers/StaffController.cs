@@ -176,6 +176,10 @@ namespace URMARRY.Areas.Admin.Controllers
                         FemaleVerificationTarget = incentiveConfig.FemaleVerificationTarget,
                         FemaleVerificationAmount = incentiveConfig.FemaleVerificationAmount,
 
+                        FemaleDocVerificationType = incentiveConfig.FemaleDocVerificationType ?? "TargetBasis",
+                        FemaleDocVerificationTarget = incentiveConfig.FemaleDocVerificationTarget,
+                        FemaleDocVerificationAmount = incentiveConfig.FemaleDocVerificationAmount,
+
                         MaleConversionType = incentiveConfig.MaleConversionType ?? "TargetBasis",
                         MaleConversionTarget = incentiveConfig.MaleConversionTarget,
                         MaleConversionAmount = incentiveConfig.MaleConversionAmount,
@@ -431,6 +435,10 @@ namespace URMARRY.Areas.Admin.Controllers
                 existing.FemaleVerificationTarget = model.FemaleVerificationTarget;
                 existing.FemaleVerificationAmount = model.FemaleVerificationAmount;
 
+                existing.FemaleDocVerificationType = model.FemaleDocVerificationType;
+                existing.FemaleDocVerificationTarget = model.FemaleDocVerificationTarget;
+                existing.FemaleDocVerificationAmount = model.FemaleDocVerificationAmount;
+
                 existing.MaleConversionType = model.MaleConversionType;
                 existing.MaleConversionTarget = model.MaleConversionTarget;
                 existing.MaleConversionAmount = model.MaleConversionAmount;
@@ -453,6 +461,10 @@ namespace URMARRY.Areas.Admin.Controllers
                     FemaleVerificationType = model.FemaleVerificationType,
                     FemaleVerificationTarget = model.FemaleVerificationTarget,
                     FemaleVerificationAmount = model.FemaleVerificationAmount,
+
+                    FemaleDocVerificationType = model.FemaleDocVerificationType,
+                    FemaleDocVerificationTarget = model.FemaleDocVerificationTarget,
+                    FemaleDocVerificationAmount = model.FemaleDocVerificationAmount,
 
                     MaleConversionType = model.MaleConversionType,
                     MaleConversionTarget = model.MaleConversionTarget,
@@ -1982,6 +1994,7 @@ namespace URMARRY.Areas.Admin.Controllers
             long? staffId,
             int? callStatus,
             int? interestStatus,
+            string? scheduleFilter,
             string searchName)
         {
             try
@@ -2023,6 +2036,48 @@ namespace URMARRY.Areas.Admin.Controllers
                 {
                     var interest = (PremiumInterestStatus)interestStatus.Value;
                     query = query.Where(x => x.LatestInterestStatus == interest);
+                }
+
+                // Filter by Follow-up Schedule (Today's Follow-ups)
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
+                    ? scheduleFilter 
+                    : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
+
+                if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
+                {
+                    DateTime todayDate;
+                    try
+                    {
+                        var tzi = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+                        todayDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzi).Date;
+                    }
+                    catch
+                    {
+                        todayDate = DateTime.UtcNow.AddHours(5.5).Date;
+                    }
+
+                    DateTime istStartUtc = todayDate.AddHours(-5.5);
+                    DateTime istEndUtc = istStartUtc.AddDays(1);
+                    DateTime localStart = todayDate;
+                    DateTime localEnd = localStart.AddDays(1);
+                    DateTime utcStart = DateTime.UtcNow.Date;
+                    DateTime utcEnd = utcStart.AddDays(1);
+
+                    query = query.Where(x =>
+                        (x.CreatedOn >= istStartUtc && x.CreatedOn < istEndUtc) ||
+                        (x.CreatedOn >= localStart && x.CreatedOn < localEnd) ||
+                        (x.CreatedOn >= utcStart && x.CreatedOn < utcEnd) ||
+                        (x.NextFollowUpDate.HasValue && (
+                            (x.NextFollowUpDate.Value >= istStartUtc && x.NextFollowUpDate.Value < istEndUtc) ||
+                            (x.NextFollowUpDate.Value >= localStart && x.NextFollowUpDate.Value < localEnd) ||
+                            (x.NextFollowUpDate.Value >= utcStart && x.NextFollowUpDate.Value < utcEnd)
+                        )) ||
+                        x.Timelines.Any(t =>
+                            (t.CreatedOn >= istStartUtc && t.CreatedOn < istEndUtc) ||
+                            (t.CreatedOn >= localStart && t.CreatedOn < localEnd) ||
+                            (t.CreatedOn >= utcStart && t.CreatedOn < utcEnd)
+                        )
+                    );
                 }
 
                 // Search Filter (by Name, ID, or Phone)
@@ -2259,6 +2314,7 @@ namespace URMARRY.Areas.Admin.Controllers
             long? staffId,
             int? callStatus,
             int? interestStatus,
+            string? scheduleFilter,
             string searchName)
         {
             try
@@ -2300,6 +2356,48 @@ namespace URMARRY.Areas.Admin.Controllers
                 {
                     var interest = (PremiumInterestStatus)interestStatus.Value;
                     query = query.Where(x => x.LatestInterestStatus == interest);
+                }
+
+                // Filter by Follow-up Schedule (Today's Follow-ups)
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
+                    ? scheduleFilter 
+                    : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
+
+                if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
+                {
+                    DateTime todayDate;
+                    try
+                    {
+                        var tzi = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+                        todayDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzi).Date;
+                    }
+                    catch
+                    {
+                        todayDate = DateTime.UtcNow.AddHours(5.5).Date;
+                    }
+
+                    DateTime istStartUtc = todayDate.AddHours(-5.5);
+                    DateTime istEndUtc = istStartUtc.AddDays(1);
+                    DateTime localStart = todayDate;
+                    DateTime localEnd = localStart.AddDays(1);
+                    DateTime utcStart = DateTime.UtcNow.Date;
+                    DateTime utcEnd = utcStart.AddDays(1);
+
+                    query = query.Where(x =>
+                        (x.CreatedOn >= istStartUtc && x.CreatedOn < istEndUtc) ||
+                        (x.CreatedOn >= localStart && x.CreatedOn < localEnd) ||
+                        (x.CreatedOn >= utcStart && x.CreatedOn < utcEnd) ||
+                        (x.NextFollowUpDate.HasValue && (
+                            (x.NextFollowUpDate.Value >= istStartUtc && x.NextFollowUpDate.Value < istEndUtc) ||
+                            (x.NextFollowUpDate.Value >= localStart && x.NextFollowUpDate.Value < localEnd) ||
+                            (x.NextFollowUpDate.Value >= utcStart && x.NextFollowUpDate.Value < utcEnd)
+                        )) ||
+                        x.Timelines.Any(t =>
+                            (t.CreatedOn >= istStartUtc && t.CreatedOn < istEndUtc) ||
+                            (t.CreatedOn >= localStart && t.CreatedOn < localEnd) ||
+                            (t.CreatedOn >= utcStart && t.CreatedOn < utcEnd)
+                        )
+                    );
                 }
 
                 // Search Filter (by Name, ID, or Phone)
@@ -2413,6 +2511,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         ContactType = x.LatestContactType?.ToString() ?? "None",
                         CallStatus = x.LatestCallStatus?.ToString() ?? "None",
                         InterestStatus = x.LatestInterestStatus?.ToString() ?? "None",
+                        NextFollowUpDate = x.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? "N/A",
                         Status = x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending",
                         PaymentMode = x.PaymentMode ?? "Online",
                         PaymentLinkSent = x.PaymentLinkSent,
@@ -2462,6 +2561,7 @@ namespace URMARRY.Areas.Admin.Controllers
             long? staffId,
             int? callStatus,
             int? interestStatus,
+            string? scheduleFilter,
             string searchName)
         {
             try
@@ -2503,6 +2603,48 @@ namespace URMARRY.Areas.Admin.Controllers
                 {
                     var interest = (PremiumInterestStatus)interestStatus.Value;
                     query = query.Where(x => x.LatestInterestStatus == interest);
+                }
+
+                // Filter by Follow-up Schedule (Today's Follow-ups)
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
+                    ? scheduleFilter 
+                    : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
+
+                if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
+                {
+                    DateTime todayDate;
+                    try
+                    {
+                        var tzi = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+                        todayDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzi).Date;
+                    }
+                    catch
+                    {
+                        todayDate = DateTime.UtcNow.AddHours(5.5).Date;
+                    }
+
+                    DateTime istStartUtc = todayDate.AddHours(-5.5);
+                    DateTime istEndUtc = istStartUtc.AddDays(1);
+                    DateTime localStart = todayDate;
+                    DateTime localEnd = localStart.AddDays(1);
+                    DateTime utcStart = DateTime.UtcNow.Date;
+                    DateTime utcEnd = utcStart.AddDays(1);
+
+                    query = query.Where(x =>
+                        (x.CreatedOn >= istStartUtc && x.CreatedOn < istEndUtc) ||
+                        (x.CreatedOn >= localStart && x.CreatedOn < localEnd) ||
+                        (x.CreatedOn >= utcStart && x.CreatedOn < utcEnd) ||
+                        (x.NextFollowUpDate.HasValue && (
+                            (x.NextFollowUpDate.Value >= istStartUtc && x.NextFollowUpDate.Value < istEndUtc) ||
+                            (x.NextFollowUpDate.Value >= localStart && x.NextFollowUpDate.Value < localEnd) ||
+                            (x.NextFollowUpDate.Value >= utcStart && x.NextFollowUpDate.Value < utcEnd)
+                        )) ||
+                        x.Timelines.Any(t =>
+                            (t.CreatedOn >= istStartUtc && t.CreatedOn < istEndUtc) ||
+                            (t.CreatedOn >= localStart && t.CreatedOn < localEnd) ||
+                            (t.CreatedOn >= utcStart && t.CreatedOn < utcEnd)
+                        )
+                    );
                 }
 
                 // Search Filter (by Name, ID, or Phone)
@@ -2617,6 +2759,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         CallStatus = x.LatestCallStatus?.ToString() ?? "None",
                         InterestStatus = x.LatestRenewalInterestStatus?.ToString() ?? "None",
                         RenewalInterestStatus = x.LatestRenewalInterestStatus?.ToString() ?? "None",
+                        NextFollowUpDate = x.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? "N/A",
                         Status = x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending",
                         PaymentMode = x.PaymentMode ?? "Online",
                         PaymentLinkSent = x.PaymentLinkSent,

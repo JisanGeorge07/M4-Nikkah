@@ -413,6 +413,14 @@ namespace URMARRY.Controllers
                 {
                     activeFollowUp.PaymentCompleted = true;
                     activeFollowUp.LatestAdminApprovalStatus = AdminApprovalStatus.Approved;
+                    activeFollowUp.PaymentMode = "Online";
+                    activeFollowUp.TransactionId = transaction.TxnId;
+                    if (decimal.TryParse(transaction.Amount, out decimal parsedAmt))
+                    {
+                        activeFollowUp.PaymentAmount = parsedAmt;
+                    }
+                    activeFollowUp.ModifiedOn = DateTime.UtcNow;
+
                     if (activeFollowUp.FollowUpType == FollowUpType.PremiumFollowUp)
                     {
                         activeFollowUp.LatestInterestStatus = PremiumInterestStatus.Converted;

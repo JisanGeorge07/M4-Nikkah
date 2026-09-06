@@ -504,6 +504,8 @@ namespace URMARRY.Controllers.Api.Staff
                     latestRenewalInterestStatus = f.LatestRenewalInterestStatus?.ToString() ?? "N/A",
                     latestRemarks = f.LatestRemarks ?? string.Empty,
                     nextFollowUpDate = f.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? string.Empty,
+                    adminApprovalStatus = f.LatestAdminApprovalStatus?.ToString() ?? "None",
+                    isAdminApproved = f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved,
                     verificationDocumentUrl = f.Profile?.VerificationDocumentUrl ?? docs.FirstOrDefault()?.documentUrl,
                     verificationDocuments = docs,
                     documentVerificationEnabled = f.Profile?.DocumentVerificationEnabled ?? false,
@@ -747,6 +749,8 @@ namespace URMARRY.Controllers.Api.Staff
                         latestRemarks = f.LatestRemarks ?? string.Empty,
                         nextFollowUpDate = f.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? "N/A",
                         lastUpdateDate = f.ModifiedOn.ToString("yyyy-MM-dd HH:mm:ss"),
+                        adminApprovalStatus = f.LatestAdminApprovalStatus?.ToString() ?? "None",
+                        isAdminApproved = f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved,
                         previousPackage = packageName,
                         membershipStatus = membershipStatus,
                         expiryDate = expiryDate ?? "N/A",
@@ -2887,15 +2891,14 @@ namespace URMARRY.Controllers.Api.Staff
                         ))
                     .ToList();
 
-                // Group conversions by ProfileId to prevent double-counting if a profile has both follow-up types in the same period
-                var uniqueConvertedProfiles = convertedFollowUps
+                // Each distinct converted follow-up (Premium conversion or Renewal conversion) counts towards conversions
+                var validConvertedFollowUps = convertedFollowUps
                     .Where(fu => fu.Profile != null)
-                    .GroupBy(fu => fu.ProfileId)
-                    .Select(g => g.OrderByDescending(f => f.FollowUpType == FollowUpType.RenewalFollowUp).First())
+                    .DistinctBy(fu => fu.Id)
                     .ToList();
 
                 int convBoys = 0, convGirls = 0;
-                foreach (var fu in uniqueConvertedProfiles)
+                foreach (var fu in validConvertedFollowUps)
                 {
                     if (fu.Profile == null) continue;
                     if (string.Equals(fu.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase)) convBoys++;
@@ -2904,7 +2907,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                 int totalPremiumConversions = convBoys + convGirls;
 
-                // Group by ProfileId to avoid double-counting when a profile has multiple follow-ups
+                // Group by ProfileId to avoid double-counting when summing gateway transactions
                 decimal collectionBoys = 0, collectionGirls = 0;
                 var distinctConvertedProfiles = convertedFollowUps
                     .Where(fu => fu.Profile != null)
@@ -2925,9 +2928,16 @@ namespace URMARRY.Controllers.Api.Staff
                         }
                     }
 
-                    if (profileCollection == 0 && fu.PaymentAmount.HasValue && fu.PaymentAmount > 0 && fu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    if (profileCollection == 0)
                     {
-                        profileCollection = fu.PaymentAmount.Value;
+                        var profileFollowUps = convertedFollowUps.Where(f => f.ProfileId == fu.ProfileId);
+                        foreach (var pfu in profileFollowUps)
+                        {
+                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                            {
+                                profileCollection += pfu.PaymentAmount.Value;
+                            }
+                        }
                     }
 
                     if (isMale) collectionBoys += profileCollection;
@@ -2960,11 +2970,17 @@ namespace URMARRY.Controllers.Api.Staff
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase));
 
-                int verifGirls = verificationFollowUps.Count(f => f.Profile != null 
-                    && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+                int femaleNormalVerifs = verificationFollowUps.Count(f => f.Profile != null 
+                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
 
+                int femaleDocVerifs = verificationFollowUps.Count(f => f.Profile != null 
+                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify
+                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+
+                int verifGirls = femaleNormalVerifs + femaleDocVerifs;
                 int totalApprovedVerifications = verifBoys + verifGirls;
 
                 // 8. Salary Config & Eligibility Flags
@@ -3008,7 +3024,8 @@ namespace URMARRY.Controllers.Api.Staff
                 var staffIncentiveConfig = await _dbContext.StaffIncentiveConfigs.FirstOrDefaultAsync(c => c.StaffId == targetStaffId && !c.IsDeleted);
 
                 decimal verifIncentiveBoys = 0;
-                decimal verifIncentiveGirls = 0;
+                decimal verifIncentiveGirlsNormal = 0;
+                decimal verifIncentiveGirlsDoc = 0;
                 decimal premiumIncentiveBoys = 0;
                 decimal premiumIncentiveGirls = 0;
 
@@ -3019,19 +3036,41 @@ namespace URMARRY.Controllers.Api.Staff
                     {
                         verifIncentiveBoys += verifBoys * staffIncentiveConfig.MaleVerificationAmount;
                     }
-                    else if (verifBoys >= (staffIncentiveConfig.MaleVerificationTarget ?? 0) && staffIncentiveConfig.MaleVerificationTarget > 0)
+                    else
                     {
-                        verifIncentiveBoys += staffIncentiveConfig.MaleVerificationAmount;
+                        int baseTarget = staffIncentiveConfig.MaleVerificationTarget ?? 0;
+                        if (verifBoys > baseTarget)
+                        {
+                            verifIncentiveBoys += (verifBoys - baseTarget) * staffIncentiveConfig.MaleVerificationAmount;
+                        }
                     }
 
-                    // Female Verification (Requires Admin Approval)
+                    // Female Normal Verification (Requires Admin Approval)
                     if (string.Equals(staffIncentiveConfig.FemaleVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentiveGirls += verifGirls * staffIncentiveConfig.FemaleVerificationAmount;
+                        verifIncentiveGirlsNormal += femaleNormalVerifs * staffIncentiveConfig.FemaleVerificationAmount;
                     }
-                    else if (verifGirls >= (staffIncentiveConfig.FemaleVerificationTarget ?? 0) && staffIncentiveConfig.FemaleVerificationTarget > 0)
+                    else
                     {
-                        verifIncentiveGirls += staffIncentiveConfig.FemaleVerificationAmount;
+                        int baseTarget = staffIncentiveConfig.FemaleVerificationTarget ?? 0;
+                        if (femaleNormalVerifs > baseTarget)
+                        {
+                            verifIncentiveGirlsNormal += (femaleNormalVerifs - baseTarget) * staffIncentiveConfig.FemaleVerificationAmount;
+                        }
+                    }
+
+                    // Female Document Verification (Requires Admin Approval)
+                    if (string.Equals(staffIncentiveConfig.FemaleDocVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentiveGirlsDoc += femaleDocVerifs * staffIncentiveConfig.FemaleDocVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleDocVerificationTarget ?? 0;
+                        if (femaleDocVerifs > baseTarget)
+                        {
+                            verifIncentiveGirlsDoc += (femaleDocVerifs - baseTarget) * staffIncentiveConfig.FemaleDocVerificationAmount;
+                        }
                     }
 
                     // Male Premium Conversion
@@ -3039,9 +3078,13 @@ namespace URMARRY.Controllers.Api.Staff
                     {
                         premiumIncentiveBoys = convBoys * staffIncentiveConfig.MaleConversionAmount;
                     }
-                    else if (convBoys >= (staffIncentiveConfig.MaleConversionTarget ?? 0) && staffIncentiveConfig.MaleConversionTarget > 0)
+                    else
                     {
-                        premiumIncentiveBoys = staffIncentiveConfig.MaleConversionAmount;
+                        int baseTarget = staffIncentiveConfig.MaleConversionTarget ?? 0;
+                        if (convBoys > baseTarget)
+                        {
+                            premiumIncentiveBoys = (convBoys - baseTarget) * staffIncentiveConfig.MaleConversionAmount;
+                        }
                     }
 
                     // Female Premium Conversion
@@ -3049,12 +3092,17 @@ namespace URMARRY.Controllers.Api.Staff
                     {
                         premiumIncentiveGirls = convGirls * staffIncentiveConfig.FemaleConversionAmount;
                     }
-                    else if (convGirls >= (staffIncentiveConfig.FemaleConversionTarget ?? 0) && staffIncentiveConfig.FemaleConversionTarget > 0)
+                    else
                     {
-                        premiumIncentiveGirls = staffIncentiveConfig.FemaleConversionAmount;
+                        int baseTarget = staffIncentiveConfig.FemaleConversionTarget ?? 0;
+                        if (convGirls > baseTarget)
+                        {
+                            premiumIncentiveGirls = (convGirls - baseTarget) * staffIncentiveConfig.FemaleConversionAmount;
+                        }
                     }
                 }
 
+                decimal verifIncentiveGirls = verifIncentiveGirlsNormal + verifIncentiveGirlsDoc;
                 decimal totalVerifIncentive = verifIncentiveBoys + verifIncentiveGirls;
                 decimal totalIncentivePayable = premiumIncentiveBoys + premiumIncentiveGirls + totalVerifIncentive;
 
@@ -3191,6 +3239,8 @@ namespace URMARRY.Controllers.Api.Staff
                         {
                             verificationBoys = verifBoys,
                             verificationGirls = verifGirls,
+                            femaleNormalVerifications = femaleNormalVerifs,
+                            femaleDocVerifications = femaleDocVerifs,
                             totalApprovedVerifications = totalApprovedVerifications,
                             gradeA = gradeA,
                             gradeB = gradeB,
@@ -3263,6 +3313,8 @@ namespace URMARRY.Controllers.Api.Staff
                         incentives = new
                         {
                             verificationIncentiveBoys = Math.Round(verifIncentiveBoys, 2),
+                            verificationIncentiveGirlsNormal = Math.Round(verifIncentiveGirlsNormal, 2),
+                            verificationIncentiveGirlsDoc = Math.Round(verifIncentiveGirlsDoc, 2),
                             verificationIncentiveGirls = Math.Round(verifIncentiveGirls, 2),
                             totalVerificationIncentive = Math.Round(totalVerifIncentive, 2),
                             premiumIncentiveBoys = Math.Round(premiumIncentiveBoys, 2),

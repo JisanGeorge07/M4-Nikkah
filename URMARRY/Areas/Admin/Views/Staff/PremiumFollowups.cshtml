@@ -51,6 +51,12 @@
                         <option value="3">Call Back Later</option>
                         <option value="4">Converted</option>
                     </select>
+
+                    <!-- Today's Follow-up Filter -->
+                    <select id="scheduleFilter" class="form-select form-select-sm" style="width: 170px; border-radius: 6px;">
+                        <option value="">All Follow-ups</option>
+                        <option value="today">Today's Follow-ups</option>
+                    </select>
                 </div>
             </div>
             
@@ -454,6 +460,7 @@
                     d.staffId = $('#staffFilter').val() || null;
                     d.callStatus = $('#callStatusFilter').val() !== "" ? parseInt($('#callStatusFilter').val()) : null;
                     d.interestStatus = $('#interestStatusFilter').val() !== "" ? parseInt($('#interestStatusFilter').val()) : null;
+                    d.scheduleFilter = $('#scheduleFilter').val() || null;
                     d.searchName = $('#searchInput').val();
                 }
             },
@@ -533,7 +540,7 @@
         });
 
         // Trigger redraw on filter change
-        $('#staffFilter, #callStatusFilter, #interestStatusFilter').on('change', function () {
+        $('#staffFilter, #callStatusFilter, #interestStatusFilter, #scheduleFilter').on('change', function () {
             table.ajax.reload(null, true);
         });
 

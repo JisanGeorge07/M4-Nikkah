@@ -65,9 +65,9 @@ namespace URMARRY.Services
                     _logger.LogError(ex, "An error occurred while executing AutoRenewalFollowUpService.");
                 }
 
-                // Default interval: 6 hours
-                var intervalHours = _configuration.GetValue<int>("AutoRenewalFollowUp:CheckIntervalHours", 6);
-                if (intervalHours <= 0) intervalHours = 6;
+                // Default interval: 1 hour
+                var intervalHours = _configuration.GetValue<int>("AutoRenewalFollowUp:CheckIntervalHours", 1);
+                if (intervalHours <= 0) intervalHours = 1;
 
                 try
                 {

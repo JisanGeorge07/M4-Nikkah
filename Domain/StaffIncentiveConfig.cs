@@ -12,10 +12,15 @@ namespace Domain
         public int? MaleVerificationTarget { get; set; }
         public decimal MaleVerificationAmount { get; set; }
 
-        // 2. Female Profile Verification
+        // 2. Female Normal Profile Verification
         public string? FemaleVerificationType { get; set; } // "TargetBasis" or "ProfileBasis"
         public int? FemaleVerificationTarget { get; set; }
         public decimal FemaleVerificationAmount { get; set; }
+
+        // 3. Female Document Profile Verification
+        public string? FemaleDocVerificationType { get; set; } // "TargetBasis" or "ProfileBasis"
+        public int? FemaleDocVerificationTarget { get; set; }
+        public decimal FemaleDocVerificationAmount { get; set; }
 
         // 3. Male Premium Conversion
         public string? MaleConversionType { get; set; } // "TargetBasis" or "ProfileBasis"

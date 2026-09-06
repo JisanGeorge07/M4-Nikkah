@@ -201,14 +201,13 @@ namespace URMARRY.Areas.Admin.Controllers
                 int convBoys = 0, convGirls = 0;
                 decimal collectionBoys = 0, collectionGirls = 0;
 
-                // Group conversions by ProfileId to prevent double-counting if a profile has both follow-up types in the same period
-                var uniqueConvertedProfiles = convertedFollowUps
+                // Each distinct converted follow-up (Premium conversion or Renewal conversion) counts towards conversions
+                var validConvertedFollowUps = convertedFollowUps
                     .Where(fu => fu.Profile != null)
-                    .GroupBy(fu => fu.ProfileId)
-                    .Select(g => g.OrderByDescending(f => f.FollowUpType == FollowUpType.RenewalFollowUp).First())
+                    .DistinctBy(fu => fu.Id)
                     .ToList();
 
-                foreach (var fu in uniqueConvertedProfiles)
+                foreach (var fu in validConvertedFollowUps)
                 {
                     if (fu.Profile == null) continue;
 
@@ -247,9 +246,16 @@ namespace URMARRY.Areas.Admin.Controllers
                     }
 
                     // Fallback to recorded payment amount on follow-up if approved by admin and no gateway transaction row exists
-                    if (profileCollection == 0 && fu.PaymentAmount.HasValue && fu.PaymentAmount > 0 && fu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    if (profileCollection == 0)
                     {
-                        profileCollection = fu.PaymentAmount.Value;
+                        var profileFollowUps = convertedFollowUps.Where(f => f.ProfileId == fu.ProfileId);
+                        foreach (var pfu in profileFollowUps)
+                        {
+                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                            {
+                                profileCollection += pfu.PaymentAmount.Value;
+                            }
+                        }
                     }
 
                     if (isMale) collectionBoys += profileCollection;
@@ -312,10 +318,18 @@ namespace URMARRY.Areas.Admin.Controllers
                     && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase));
-                int femaleVerifications = verificationFollowUps.Count(f => f.Profile != null 
-                    && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+
+                int femaleNormalVerifs = verificationFollowUps.Count(f => f.Profile != null 
+                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+
+                int femaleDocVerifs = verificationFollowUps.Count(f => f.Profile != null 
+                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify
+                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+
+                int femaleVerifications = femaleNormalVerifs + femaleDocVerifs;
 
                 if (isIncentiveEligible && staffIncentiveConfig != null)
                 {
@@ -324,39 +338,69 @@ namespace URMARRY.Areas.Admin.Controllers
                     {
                         verifIncentive += maleVerifications * staffIncentiveConfig.MaleVerificationAmount;
                     }
-                    else if (maleVerifications >= (staffIncentiveConfig.MaleVerificationTarget ?? 0) && staffIncentiveConfig.MaleVerificationTarget > 0)
+                    else
                     {
-                        verifIncentive += staffIncentiveConfig.MaleVerificationAmount;
+                        int baseTarget = staffIncentiveConfig.MaleVerificationTarget ?? 0;
+                        if (maleVerifications > baseTarget)
+                        {
+                            verifIncentive += (maleVerifications - baseTarget) * staffIncentiveConfig.MaleVerificationAmount;
+                        }
                     }
 
-                    // 2. Female Profile Verification Incentive
+                    // 2. Female Normal Profile Verification Incentive
                     if (string.Equals(staffIncentiveConfig.FemaleVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentive += femaleVerifications * staffIncentiveConfig.FemaleVerificationAmount;
+                        verifIncentive += femaleNormalVerifs * staffIncentiveConfig.FemaleVerificationAmount;
                     }
-                    else if (femaleVerifications >= (staffIncentiveConfig.FemaleVerificationTarget ?? 0) && staffIncentiveConfig.FemaleVerificationTarget > 0)
+                    else
                     {
-                        verifIncentive += staffIncentiveConfig.FemaleVerificationAmount;
+                        int baseTarget = staffIncentiveConfig.FemaleVerificationTarget ?? 0;
+                        if (femaleNormalVerifs > baseTarget)
+                        {
+                            verifIncentive += (femaleNormalVerifs - baseTarget) * staffIncentiveConfig.FemaleVerificationAmount;
+                        }
                     }
 
-                    // 3. Male Premium Conversion Incentive
+                    // 3. Female Document Profile Verification Incentive
+                    if (string.Equals(staffIncentiveConfig.FemaleDocVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentive += femaleDocVerifs * staffIncentiveConfig.FemaleDocVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleDocVerificationTarget ?? 0;
+                        if (femaleDocVerifs > baseTarget)
+                        {
+                            verifIncentive += (femaleDocVerifs - baseTarget) * staffIncentiveConfig.FemaleDocVerificationAmount;
+                        }
+                    }
+
+                    // 4. Male Premium Conversion Incentive
                     if (string.Equals(staffIncentiveConfig.MaleConversionType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
                         premiumIncentiveBoys = convBoys * staffIncentiveConfig.MaleConversionAmount;
                     }
-                    else if (convBoys >= (staffIncentiveConfig.MaleConversionTarget ?? 0) && staffIncentiveConfig.MaleConversionTarget > 0)
+                    else
                     {
-                        premiumIncentiveBoys = staffIncentiveConfig.MaleConversionAmount;
+                        int baseTarget = staffIncentiveConfig.MaleConversionTarget ?? 0;
+                        if (convBoys > baseTarget)
+                        {
+                            premiumIncentiveBoys = (convBoys - baseTarget) * staffIncentiveConfig.MaleConversionAmount;
+                        }
                     }
 
-                    // 4. Female Premium Conversion Incentive
+                    // 5. Female Premium Conversion Incentive
                     if (string.Equals(staffIncentiveConfig.FemaleConversionType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
                         premiumIncentiveGirls = convGirls * staffIncentiveConfig.FemaleConversionAmount;
                     }
-                    else if (convGirls >= (staffIncentiveConfig.FemaleConversionTarget ?? 0) && staffIncentiveConfig.FemaleConversionTarget > 0)
+                    else
                     {
-                        premiumIncentiveGirls = staffIncentiveConfig.FemaleConversionAmount;
+                        int baseTarget = staffIncentiveConfig.FemaleConversionTarget ?? 0;
+                        if (convGirls > baseTarget)
+                        {
+                            premiumIncentiveGirls = (convGirls - baseTarget) * staffIncentiveConfig.FemaleConversionAmount;
+                        }
                     }
                 }
 
