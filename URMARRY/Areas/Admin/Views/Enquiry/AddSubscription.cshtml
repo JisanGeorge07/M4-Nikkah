@@ -34,8 +34,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="manualTxnId">Transaction ID / Reference</label>
-                        <input type="text" class="form-control" id="manualTxnId" name="txnId" placeholder="Enter Transaction Reference" required>
+                        <label class="form-label" for="manualTxnId">Transaction ID / Reference <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="manualTxnId" name="txnId" placeholder="Enter Transaction Reference" required autocomplete="off">
+                        <div id="txnIdFeedback" class="font-size-12 mt-1"></div>
                     </div>
 
                     <div class="mb-3">
@@ -50,11 +51,11 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="manualAmount">Amount Paid</label>
-                        <input type="number" class="form-control" id="manualAmount" name="amount" placeholder="Enter Amount" required>
+                        <input type="number" class="form-control" id="manualAmount" name="amount" placeholder="Enter Amount" required min="1" step="0.01">
                     </div>
 
                     <div class="mt-4">
-                        <button type="submit" class="btn btn-primary w-md">Save Subscription</button>
+                        <button type="submit" id="btnSubmitSubscription" class="btn btn-primary w-md">Save Subscription</button>
                         <a asp-action="GetAllTransaction" class="btn btn-secondary w-md ms-2">Back to List</a>
                     </div>
                 </form>
@@ -66,6 +67,9 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            var isTxnValid = false;
+            var txnCheckTimeout = null;
+
             $('#btnFetchUser').click(function () {
                 var regId = $('#regId').val();
                 if (!regId) {
@@ -73,7 +77,7 @@
                     return;
                 }
 
-                $.get('/admin/enquiry/get-user-by-regid/' + regId, function (data) {
+                $.get('/admin/enquiry/get-user-by-regid/' + encodeURIComponent(regId), function (data) {
                     if (data) {
                         $('#lblUserName').text(data.name);
                         $('#lblUserPhone').text(data.phone);
@@ -84,6 +88,63 @@
                         $('#userDetails').hide();
                     }
                 });
+            });
+
+            function checkTxnAvailability() {
+                var txnId = $('#manualTxnId').val().trim();
+                var $feedback = $('#txnIdFeedback');
+                var $input = $('#manualTxnId');
+
+                if (!txnId) {
+                    $feedback.html('').removeClass('text-success text-danger');
+                    $input.removeClass('is-valid is-invalid');
+                    isTxnValid = false;
+                    return;
+                }
+
+                $feedback.html('<i class="fas fa-spinner fa-spin me-1"></i> Checking availability...').removeClass('text-success text-danger').addClass('text-muted');
+
+                $.get('/admin/enquiry/check-txnid-availability', { txnId: txnId }, function (res) {
+                    if (res && res.available) {
+                        $feedback.html('<i class="fas fa-check-circle me-1"></i> ' + res.message).removeClass('text-muted text-danger').addClass('text-success');
+                        $input.removeClass('is-invalid').addClass('is-valid');
+                        isTxnValid = true;
+                    } else {
+                        $feedback.html('<i class="fas fa-times-circle me-1"></i> ' + (res ? res.message : 'Transaction ID is already in use.')).removeClass('text-muted text-success').addClass('text-danger');
+                        $input.removeClass('is-valid').addClass('is-invalid');
+                        isTxnValid = false;
+                    }
+                }).fail(function () {
+                    $feedback.html('<i class="fas fa-exclamation-triangle me-1"></i> Error checking Transaction ID.').removeClass('text-muted text-success').addClass('text-danger');
+                    isTxnValid = false;
+                });
+            }
+
+            $('#manualTxnId').on('input paste', function () {
+                clearTimeout(txnCheckTimeout);
+                txnCheckTimeout = setTimeout(checkTxnAvailability, 400);
+            });
+
+            $('#manualTxnId').on('blur', function () {
+                clearTimeout(txnCheckTimeout);
+                checkTxnAvailability();
+            });
+
+            $('form[asp-action="AddManualSubscription"]').on('submit', function (e) {
+                var txnId = $('#manualTxnId').val().trim();
+                if (!txnId) {
+                    alert('Please enter Transaction ID.');
+                    $('#manualTxnId').focus();
+                    e.preventDefault();
+                    return false;
+                }
+
+                if ($('#manualTxnId').hasClass('is-invalid')) {
+                    alert('This Transaction ID is already used. Please enter a unique Transaction ID.');
+                    $('#manualTxnId').focus();
+                    e.preventDefault();
+                    return false;
+                }
             });
         });
     </script>

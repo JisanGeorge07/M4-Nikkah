@@ -135,6 +135,18 @@
                         </div>
                     </div>
 
+                    <div class="mb-3" id="reviewGradeSection" style="display:none;">
+                        <label for="reviewVerificationGrade" class="form-label fw-semibold">Verification Grade (Female Profile) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="reviewVerificationGrade" style="border-radius: 6px;">
+                            <option value="">-- Select Grade --</option>
+                            <option value="A">Grade A</option>
+                            <option value="B">Grade B</option>
+                            <option value="C">Grade C</option>
+                            <option value="D">Grade D</option>
+                        </select>
+                        <small class="text-muted font-size-12">Staff profile verification incentive will be calculated based on this selected grade.</small>
+                    </div>
+
                     <div class="mb-3">
                         <label for="reviewAdminRemarks" class="form-label fw-semibold">Admin Remarks / Instructions <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="reviewAdminRemarks" rows="3" required placeholder="Provide feedback or action instructions..." style="border-radius: 6px; resize: none;"></textarea>
@@ -180,7 +192,7 @@
                     render: function (data, type, row) {
                         if (!data || data === 'N/A') return '<span class="text-muted font-size-12">N/A</span>';
                         var profileId = row.profileId || row.id;
-                        return '<a href="/admin/staff/profile/' + profileId + '" target="_blank" class="fw-semibold text-primary text-decoration-underline" title="View Full Profile Details">' + data + '</a>';
+                        return '<a href="/admin/staff/profile/' + profileId + '" class="fw-semibold text-primary text-decoration-underline" title="View Full Profile Details">' + data + '</a>';
                     }
                 },
                 {
@@ -271,7 +283,7 @@
             $('#reviewFollowUpId').val(rowData.id);
             $('#reviewCustomerName').text(rowData.customerName);
             var profileId = rowData.profileId || rowData.id;
-            $('#reviewRegisterNumber').html('<a href="/admin/staff/profile/' + profileId + '" target="_blank" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (rowData.registerNumber || 'N/A') + '</a>');
+            $('#reviewRegisterNumber').html('<a href="/admin/staff/profile/' + profileId + '" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (rowData.registerNumber || 'N/A') + '</a>');
             $('#reviewFollowUpType').text(rowData.followUpType);
             $('#reviewEndStatus').text(rowData.endStatus);
             $('#reviewStaffRemarks').text(rowData.latestRemarks);
@@ -314,6 +326,24 @@
                 $('#reviewAmount').text(rowData.paymentAmount ? ('₹ ' + rowData.paymentAmount) : 'N/A');
             } else {
                 $('#reviewOfflinePaymentSection').hide();
+            }
+
+            var isFemale = (rowData.gender && rowData.gender.toLowerCase() === "female");
+            if (isProfileVerification && isFemale) {
+                $('#reviewGradeSection').show();
+                if (rowData.verificationGrade) {
+                    $('#reviewVerificationGrade').val(rowData.verificationGrade);
+                } else {
+                    $('#reviewVerificationGrade').val('');
+                }
+                if (rowData.approvalStatus !== "Pending") {
+                    $('#reviewVerificationGrade').prop('disabled', true);
+                } else {
+                    $('#reviewVerificationGrade').prop('disabled', false);
+                }
+            } else {
+                $('#reviewGradeSection').hide();
+                $('#reviewVerificationGrade').val('');
             }
 
             if (rowData.approvalStatus !== "Pending") {
@@ -402,7 +432,25 @@
         }
 
         $('#btnApprove').click(function () {
-            postDecision(true);
+            var isProfileVerification = currentSelectedRow && (currentSelectedRow.followUpType === "ProfileVerification");
+            var isFemale = currentSelectedRow && currentSelectedRow.gender && (currentSelectedRow.gender.toLowerCase() === "female");
+            var extraParams = {};
+
+            if (isProfileVerification && isFemale) {
+                var selectedGrade = $('#reviewVerificationGrade').val();
+                if (!selectedGrade) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Select Verification Grade',
+                        text: 'Please select a Verification Grade (Grade A, B, C, or D) for this female profile before approving.',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return;
+                }
+                extraParams.VerificationGrade = selectedGrade;
+            }
+
+            postDecision(true, extraParams);
         });
 
         $('#btnReject').click(function () {

@@ -172,6 +172,22 @@ namespace URMARRY.Areas.Admin.Controllers
                         MaleVerificationTarget = incentiveConfig.MaleVerificationTarget,
                         MaleVerificationAmount = incentiveConfig.MaleVerificationAmount,
 
+                        FemaleGradeAVerificationType = incentiveConfig.FemaleGradeAVerificationType ?? "TargetBasis",
+                        FemaleGradeAVerificationTarget = incentiveConfig.FemaleGradeAVerificationTarget,
+                        FemaleGradeAVerificationAmount = incentiveConfig.FemaleGradeAVerificationAmount,
+
+                        FemaleGradeBVerificationType = incentiveConfig.FemaleGradeBVerificationType ?? "TargetBasis",
+                        FemaleGradeBVerificationTarget = incentiveConfig.FemaleGradeBVerificationTarget,
+                        FemaleGradeBVerificationAmount = incentiveConfig.FemaleGradeBVerificationAmount,
+
+                        FemaleGradeCVerificationType = incentiveConfig.FemaleGradeCVerificationType ?? "TargetBasis",
+                        FemaleGradeCVerificationTarget = incentiveConfig.FemaleGradeCVerificationTarget,
+                        FemaleGradeCVerificationAmount = incentiveConfig.FemaleGradeCVerificationAmount,
+
+                        FemaleGradeDVerificationType = incentiveConfig.FemaleGradeDVerificationType ?? "TargetBasis",
+                        FemaleGradeDVerificationTarget = incentiveConfig.FemaleGradeDVerificationTarget,
+                        FemaleGradeDVerificationAmount = incentiveConfig.FemaleGradeDVerificationAmount,
+
                         FemaleVerificationType = incentiveConfig.FemaleVerificationType ?? "TargetBasis",
                         FemaleVerificationTarget = incentiveConfig.FemaleVerificationTarget,
                         FemaleVerificationAmount = incentiveConfig.FemaleVerificationAmount,
@@ -431,13 +447,29 @@ namespace URMARRY.Areas.Admin.Controllers
                 existing.MaleVerificationTarget = model.MaleVerificationTarget;
                 existing.MaleVerificationAmount = model.MaleVerificationAmount;
 
-                existing.FemaleVerificationType = model.FemaleVerificationType;
-                existing.FemaleVerificationTarget = model.FemaleVerificationTarget;
-                existing.FemaleVerificationAmount = model.FemaleVerificationAmount;
+                existing.FemaleGradeAVerificationType = model.FemaleGradeAVerificationType;
+                existing.FemaleGradeAVerificationTarget = model.FemaleGradeAVerificationTarget;
+                existing.FemaleGradeAVerificationAmount = model.FemaleGradeAVerificationAmount;
 
-                existing.FemaleDocVerificationType = model.FemaleDocVerificationType;
-                existing.FemaleDocVerificationTarget = model.FemaleDocVerificationTarget;
-                existing.FemaleDocVerificationAmount = model.FemaleDocVerificationAmount;
+                existing.FemaleGradeBVerificationType = model.FemaleGradeBVerificationType;
+                existing.FemaleGradeBVerificationTarget = model.FemaleGradeBVerificationTarget;
+                existing.FemaleGradeBVerificationAmount = model.FemaleGradeBVerificationAmount;
+
+                existing.FemaleGradeCVerificationType = model.FemaleGradeCVerificationType;
+                existing.FemaleGradeCVerificationTarget = model.FemaleGradeCVerificationTarget;
+                existing.FemaleGradeCVerificationAmount = model.FemaleGradeCVerificationAmount;
+
+                existing.FemaleGradeDVerificationType = model.FemaleGradeDVerificationType;
+                existing.FemaleGradeDVerificationTarget = model.FemaleGradeDVerificationTarget;
+                existing.FemaleGradeDVerificationAmount = model.FemaleGradeDVerificationAmount;
+
+                existing.FemaleVerificationType = model.FemaleGradeBVerificationType;
+                existing.FemaleVerificationTarget = model.FemaleGradeBVerificationTarget;
+                existing.FemaleVerificationAmount = model.FemaleGradeBVerificationAmount;
+
+                existing.FemaleDocVerificationType = model.FemaleGradeAVerificationType;
+                existing.FemaleDocVerificationTarget = model.FemaleGradeAVerificationTarget;
+                existing.FemaleDocVerificationAmount = model.FemaleGradeAVerificationAmount;
 
                 existing.MaleConversionType = model.MaleConversionType;
                 existing.MaleConversionTarget = model.MaleConversionTarget;
@@ -458,13 +490,29 @@ namespace URMARRY.Areas.Admin.Controllers
                     MaleVerificationTarget = model.MaleVerificationTarget,
                     MaleVerificationAmount = model.MaleVerificationAmount,
 
-                    FemaleVerificationType = model.FemaleVerificationType,
-                    FemaleVerificationTarget = model.FemaleVerificationTarget,
-                    FemaleVerificationAmount = model.FemaleVerificationAmount,
+                    FemaleGradeAVerificationType = model.FemaleGradeAVerificationType,
+                    FemaleGradeAVerificationTarget = model.FemaleGradeAVerificationTarget,
+                    FemaleGradeAVerificationAmount = model.FemaleGradeAVerificationAmount,
 
-                    FemaleDocVerificationType = model.FemaleDocVerificationType,
-                    FemaleDocVerificationTarget = model.FemaleDocVerificationTarget,
-                    FemaleDocVerificationAmount = model.FemaleDocVerificationAmount,
+                    FemaleGradeBVerificationType = model.FemaleGradeBVerificationType,
+                    FemaleGradeBVerificationTarget = model.FemaleGradeBVerificationTarget,
+                    FemaleGradeBVerificationAmount = model.FemaleGradeBVerificationAmount,
+
+                    FemaleGradeCVerificationType = model.FemaleGradeCVerificationType,
+                    FemaleGradeCVerificationTarget = model.FemaleGradeCVerificationTarget,
+                    FemaleGradeCVerificationAmount = model.FemaleGradeCVerificationAmount,
+
+                    FemaleGradeDVerificationType = model.FemaleGradeDVerificationType,
+                    FemaleGradeDVerificationTarget = model.FemaleGradeDVerificationTarget,
+                    FemaleGradeDVerificationAmount = model.FemaleGradeDVerificationAmount,
+
+                    FemaleVerificationType = model.FemaleGradeBVerificationType,
+                    FemaleVerificationTarget = model.FemaleGradeBVerificationTarget,
+                    FemaleVerificationAmount = model.FemaleGradeBVerificationAmount,
+
+                    FemaleDocVerificationType = model.FemaleGradeAVerificationType,
+                    FemaleDocVerificationTarget = model.FemaleGradeAVerificationTarget,
+                    FemaleDocVerificationAmount = model.FemaleGradeAVerificationAmount,
 
                     MaleConversionType = model.MaleConversionType,
                     MaleConversionTarget = model.MaleConversionTarget,
@@ -1556,6 +1604,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     DocumentVerificationComplete = f.Profile?.DocumentVerificationComplete ?? profile.DocumentVerificationComplete,
                     DocumentVerificationRejected = f.Profile?.DocumentVerificationRejected ?? profile.DocumentVerificationRejected,
                     DocumentVerificationFollowupApproved = f.Profile?.DocumentVerificationFollowupApproved ?? profile.DocumentVerificationFollowupApproved,
+                    LatestAdminApprovalStatus = f.LatestAdminApprovalStatus?.ToString() ?? "None",
                     Timelines = (f.Timelines ?? new List<FollowUpTimeline>())
                         .Where(t => t != null && !t.IsDeleted)
                         .OrderByDescending(t => t.CreatedOn)
@@ -1993,9 +2042,11 @@ namespace URMARRY.Areas.Admin.Controllers
         public async Task<IActionResult> ProfileVerificationsData(
             long? staffId,
             int? callStatus,
+            int? verificationStatus,
             int? interestStatus,
             string? scheduleFilter,
-            string searchName)
+            string searchName,
+            string? gender)
         {
             try
             {
@@ -2018,6 +2069,12 @@ namespace URMARRY.Areas.Admin.Controllers
                     .Where(x => !x.IsDeleted && x.FollowUpType == FollowUpType.ProfileVerification)
                     .Include(x => x.Profile);
 
+                // Filter by Gender
+                if (!string.IsNullOrEmpty(gender))
+                {
+                    query = query.Where(x => x.Profile != null && x.Profile.Gender != null && x.Profile.Gender.ToLower() == gender.ToLower());
+                }
+
                 // Filter by Staff
                 if (staffId.HasValue && staffId.Value > 0)
                 {
@@ -2031,11 +2088,12 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = query.Where(x => x.LatestCallStatus == status);
                 }
 
-                // Filter by Interest Status
-                if (interestStatus.HasValue)
+                // Filter by Verification Status (ProfileVerificationStatus)
+                var verifStatus = verificationStatus ?? interestStatus;
+                if (verifStatus.HasValue)
                 {
-                    var interest = (PremiumInterestStatus)interestStatus.Value;
-                    query = query.Where(x => x.LatestInterestStatus == interest);
+                    var status = (ProfileVerificationStatus)verifStatus.Value;
+                    query = query.Where(x => x.LatestProfileVerificationStatus == status);
                 }
 
                 // Filter by Follow-up Schedule (Today's Follow-ups)
@@ -2100,17 +2158,22 @@ namespace URMARRY.Areas.Admin.Controllers
                 // Sort columns mapping:
                 // 0 -> Customer Name
                 // 1 -> Profile ID (RegisterNumber)
-                // 2 -> Assigned Staff
-                // 3 -> Contact Type
-                // 4 -> Call Status
-                // 5 -> Interest Status
+                // 2 -> Gender
+                // 3 -> Assigned Staff
+                // 4 -> Contact Type
+                // 5 -> Call Status
                 // 6 -> Next Date
                 // 7 -> Status
                 string sortColumn = sortColumnIndex switch
                 {
                     "0" => "Name",
                     "1" => "RegisterNumber",
+                    "2" => "Gender",
+                    "3" => "Staff",
+                    "4" => "ContactType",
+                    "5" => "CallStatus",
                     "6" => "NextFollowUpDate",
+                    "7" => "Status",
                     _ => "CreatedOn"
                 };
                 bool isAscending = sortDirection == "asc";
@@ -2131,11 +2194,41 @@ namespace URMARRY.Areas.Admin.Controllers
                         ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
                 }
+                else if (sortColumn == "Gender")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                        : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
+                }
+                else if (sortColumn == "Staff")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.AssignedStaffId) 
+                        : query.OrderByDescending(x => x.AssignedStaffId);
+                }
+                else if (sortColumn == "ContactType")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.LatestContactType) 
+                        : query.OrderByDescending(x => x.LatestContactType);
+                }
+                else if (sortColumn == "CallStatus")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.LatestCallStatus) 
+                        : query.OrderByDescending(x => x.LatestCallStatus);
+                }
                 else if (sortColumn == "NextFollowUpDate")
                 {
                     query = isAscending 
                         ? query.OrderBy(x => x.NextFollowUpDate) 
                         : query.OrderByDescending(x => x.NextFollowUpDate);
+                }
+                else if (sortColumn == "Status")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.LatestProfileVerificationStatus) 
+                        : query.OrderByDescending(x => x.LatestProfileVerificationStatus);
                 }
                 else
                 {
@@ -2183,6 +2276,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         AssignedStaffId = x.AssignedStaffId,
                         CustomerName = x.Profile?.Name ?? "N/A",
                         RegisterNumber = x.Profile?.RegisterNumber ?? "N/A",
+                        Gender = x.Profile?.Gender ?? "N/A",
                         StaffName = staffName,
                         ContactType = x.LatestContactType?.ToString() ?? "None",
                         CallStatus = x.LatestCallStatus?.ToString() ?? "None",
@@ -2192,7 +2286,8 @@ namespace URMARRY.Areas.Admin.Controllers
                         VerificationDocumentUrl = x.Profile?.VerificationDocumentUrl,
                         VerificationDocuments = userDocs != null ? (object)userDocs : Array.Empty<object>(),
                         DocumentVerificationEnabled = x.Profile?.DocumentVerificationEnabled ?? false,
-                        DocumentVerificationComplete = x.Profile?.DocumentVerificationComplete ?? false
+                        DocumentVerificationComplete = x.Profile?.DocumentVerificationComplete ?? false,
+                        ApprovalStatus = x.LatestAdminApprovalStatus?.ToString() ?? "None"
                     };
                 }).ToList();
 
@@ -2315,7 +2410,8 @@ namespace URMARRY.Areas.Admin.Controllers
             int? callStatus,
             int? interestStatus,
             string? scheduleFilter,
-            string searchName)
+            string searchName,
+            string? gender)
         {
             try
             {
@@ -2338,6 +2434,12 @@ namespace URMARRY.Areas.Admin.Controllers
                     .Where(x => !x.IsDeleted && x.FollowUpType == FollowUpType.PremiumFollowUp)
                     .Include(x => x.Profile);
 
+                // Filter by Gender
+                if (!string.IsNullOrEmpty(gender))
+                {
+                    query = query.Where(x => x.Profile != null && x.Profile.Gender != null && x.Profile.Gender.ToLower() == gender.ToLower());
+                }
+
                 // Filter by Staff
                 if (staffId.HasValue && staffId.Value > 0)
                 {
@@ -2351,7 +2453,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = query.Where(x => x.LatestCallStatus == status);
                 }
 
-                // Filter by Interest Status
+                // Filter by Interest Status (PremiumInterestStatus)
                 if (interestStatus.HasValue)
                 {
                     var interest = (PremiumInterestStatus)interestStatus.Value;
@@ -2420,16 +2522,20 @@ namespace URMARRY.Areas.Admin.Controllers
                 // Sorting
                 // 0 -> Profile ID (RegisterNumber)
                 // 1 -> Customer Name
-                // 2 -> Assigned Staff
-                // 3 -> Package
-                // 4 -> Payment
-                // 5 -> Start Date
-                // 6 -> Expiry Date
-                // 7 -> Status
+                // 2 -> Gender
+                // 3 -> Assigned Staff
+                // 4 -> Package
+                // 5 -> Payment
+                // 6 -> Start Date
+                // 7 -> Expiry Date
+                // 8 -> Status
                 string sortColumn = sortColumnIndex switch
                 {
                     "0" => "RegisterNumber",
                     "1" => "Name",
+                    "2" => "Gender",
+                    "3" => "Staff",
+                    "8" => "Status",
                     _ => "CreatedOn"
                 };
                 bool isAscending = sortDirection == "asc";
@@ -2449,6 +2555,24 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = isAscending 
                         ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
+                }
+                else if (sortColumn == "Gender")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                        : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
+                }
+                else if (sortColumn == "Staff")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.AssignedStaffId) 
+                        : query.OrderByDescending(x => x.AssignedStaffId);
+                }
+                else if (sortColumn == "Status")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.LatestInterestStatus).ThenBy(x => x.LatestCallStatus) 
+                        : query.OrderByDescending(x => x.LatestInterestStatus).ThenByDescending(x => x.LatestCallStatus);
                 }
                 else
                 {
@@ -2503,6 +2627,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         ProfileId = x.ProfileId,
                         CustomerName = x.Profile?.Name ?? "N/A",
                         RegisterNumber = x.Profile?.RegisterNumber ?? "N/A",
+                        Gender = x.Profile?.Gender ?? "N/A",
                         StaffName = staffName,
                         PackageName = packageName,
                         PaymentInfo = paymentInfo,
@@ -2512,7 +2637,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         CallStatus = x.LatestCallStatus?.ToString() ?? "None",
                         InterestStatus = x.LatestInterestStatus?.ToString() ?? "None",
                         NextFollowUpDate = x.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? "N/A",
-                        Status = x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending",
+                        Status = x.LatestInterestStatus.HasValue ? x.LatestInterestStatus.Value.ToString() : (x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending"),
                         PaymentMode = x.PaymentMode ?? "Online",
                         PaymentLinkSent = x.PaymentLinkSent,
                         PaymentLinkSentAt = x.PaymentLinkSentAt?.ToString("yyyy-MM-dd HH:mm"),
@@ -2560,9 +2685,11 @@ namespace URMARRY.Areas.Admin.Controllers
         public async Task<IActionResult> RenewalFollowupsData(
             long? staffId,
             int? callStatus,
+            int? renewalStatus,
             int? interestStatus,
             string? scheduleFilter,
-            string searchName)
+            string searchName,
+            string? gender)
         {
             try
             {
@@ -2585,6 +2712,12 @@ namespace URMARRY.Areas.Admin.Controllers
                     .Where(x => !x.IsDeleted && x.FollowUpType == FollowUpType.RenewalFollowUp)
                     .Include(x => x.Profile);
 
+                // Filter by Gender
+                if (!string.IsNullOrEmpty(gender))
+                {
+                    query = query.Where(x => x.Profile != null && x.Profile.Gender != null && x.Profile.Gender.ToLower() == gender.ToLower());
+                }
+
                 // Filter by Staff
                 if (staffId.HasValue && staffId.Value > 0)
                 {
@@ -2598,11 +2731,12 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = query.Where(x => x.LatestCallStatus == status);
                 }
 
-                // Filter by Interest Status
-                if (interestStatus.HasValue)
+                // Filter by Renewal Interest Status (RenewalInterestStatus)
+                var renStatus = renewalStatus ?? interestStatus;
+                if (renStatus.HasValue)
                 {
-                    var interest = (PremiumInterestStatus)interestStatus.Value;
-                    query = query.Where(x => x.LatestInterestStatus == interest);
+                    var interest = (RenewalInterestStatus)renStatus.Value;
+                    query = query.Where(x => x.LatestRenewalInterestStatus == interest);
                 }
 
                 // Filter by Follow-up Schedule (Today's Follow-ups)
@@ -2667,16 +2801,20 @@ namespace URMARRY.Areas.Admin.Controllers
                 // Sorting
                 // 0 -> Profile ID (RegisterNumber)
                 // 1 -> Customer Name
-                // 2 -> Assigned Staff
-                // 3 -> Package
-                // 4 -> Payment
-                // 5 -> Start Date
-                // 6 -> Expiry Date
-                // 7 -> Status
+                // 2 -> Gender
+                // 3 -> Assigned Staff
+                // 4 -> Package
+                // 5 -> Payment
+                // 6 -> Start Date
+                // 7 -> Expiry Date
+                // 8 -> Status
                 string sortColumn = sortColumnIndex switch
                 {
                     "0" => "RegisterNumber",
                     "1" => "Name",
+                    "2" => "Gender",
+                    "3" => "Staff",
+                    "8" => "Status",
                     _ => "CreatedOn"
                 };
                 bool isAscending = sortDirection == "asc";
@@ -2696,6 +2834,24 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = isAscending 
                         ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
+                }
+                else if (sortColumn == "Gender")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                        : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
+                }
+                else if (sortColumn == "Staff")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.AssignedStaffId) 
+                        : query.OrderByDescending(x => x.AssignedStaffId);
+                }
+                else if (sortColumn == "Status")
+                {
+                    query = isAscending 
+                        ? query.OrderBy(x => x.LatestRenewalInterestStatus).ThenBy(x => x.LatestCallStatus) 
+                        : query.OrderByDescending(x => x.LatestRenewalInterestStatus).ThenByDescending(x => x.LatestCallStatus);
                 }
                 else
                 {
@@ -2750,6 +2906,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         ProfileId = x.ProfileId,
                         CustomerName = x.Profile?.Name ?? "N/A",
                         RegisterNumber = x.Profile?.RegisterNumber ?? "N/A",
+                        Gender = x.Profile?.Gender ?? "N/A",
                         StaffName = staffName,
                         PackageName = packageName,
                         PaymentInfo = paymentInfo,
@@ -2760,7 +2917,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         InterestStatus = x.LatestRenewalInterestStatus?.ToString() ?? "None",
                         RenewalInterestStatus = x.LatestRenewalInterestStatus?.ToString() ?? "None",
                         NextFollowUpDate = x.NextFollowUpDate?.ToString("yyyy-MM-dd") ?? "N/A",
-                        Status = x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending",
+                        Status = x.LatestRenewalInterestStatus.HasValue ? x.LatestRenewalInterestStatus.Value.ToString() : (x.LatestCallStatus.HasValue ? x.LatestCallStatus.Value.ToString() : "Pending"),
                         PaymentMode = x.PaymentMode ?? "Online",
                         PaymentLinkSent = x.PaymentLinkSent,
                         PaymentLinkSentAt = x.PaymentLinkSentAt?.ToString("yyyy-MM-dd HH:mm"),
@@ -2788,6 +2945,36 @@ namespace URMARRY.Areas.Admin.Controllers
                     error = ex.Message
                 });
             }
+        }
+
+        [HttpGet("/admin/staff/check-txnid-availability")]
+        public async Task<IActionResult> CheckTxnIdAvailability([FromQuery] string txnId, [FromQuery] long? followUpId = null)
+        {
+            if (string.IsNullOrWhiteSpace(txnId))
+            {
+                return Json(new { available = false, message = "Transaction ID cannot be empty." });
+            }
+
+            var cleanTxnId = txnId.Trim();
+            bool isUsedInTxn = await _transactionRepository.IsTransactionIdExistsAsync(cleanTxnId);
+            if (isUsedInTxn)
+            {
+                return Json(new { available = false, message = "This Transaction ID is already used for another transaction." });
+            }
+
+            var followUpQuery = _dbContext.FollowUps.Where(f => !f.IsDeleted && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+            if (followUpId.HasValue && followUpId.Value > 0)
+            {
+                followUpQuery = followUpQuery.Where(f => f.Id != followUpId.Value);
+            }
+
+            bool isUsedInFollowUp = await followUpQuery.AnyAsync();
+            if (isUsedInFollowUp)
+            {
+                return Json(new { available = false, message = "This Transaction ID is already submitted in a staff follow-up payment." });
+            }
+
+            return Json(new { available = true, message = "Transaction ID is available." });
         }
 
         [HttpPost("/admin/staff/update-followup")]
@@ -2906,9 +3093,23 @@ namespace URMARRY.Areas.Admin.Controllers
                     {
                         if (string.Equals(model.PaymentMode, "Offline", StringComparison.OrdinalIgnoreCase))
                         {
+                            if (string.IsNullOrWhiteSpace(model.TransactionId))
+                            {
+                                return Json(new { success = false, message = "Transaction ID is required for offline payment." });
+                            }
+
+                            var cleanTxnId = model.TransactionId.Trim();
+                            bool isUsedInTxn = await _transactionRepository.IsTransactionIdExistsAsync(cleanTxnId);
+                            bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.Id != followUp.Id && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+
+                            if (isUsedInTxn || isUsedInFollowUp)
+                            {
+                                return Json(new { success = false, message = "This Transaction ID is already used for another transaction. Please enter a unique Transaction ID." });
+                            }
+
                             followUp.PaymentMode = "Offline";
                             followUp.OfflinePaymentType = model.OfflinePaymentType;
-                            followUp.TransactionId = model.TransactionId;
+                            followUp.TransactionId = cleanTxnId;
                             followUp.PaymentAmount = model.PaymentAmount;
                             followUp.PaymentCompleted = false;
                             followUp.LatestAdminApprovalStatus = AdminApprovalStatus.Pending;
@@ -2917,7 +3118,7 @@ namespace URMARRY.Areas.Admin.Controllers
                             {
                                 FollowUpId = followUp.Id,
                                 Status = AdminApprovalStatus.Pending,
-                                Remarks = $"Pending admin review for offline payment ({staffName}). TxnId: {model.TransactionId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
+                                Remarks = $"Pending admin review for offline payment ({staffName}). TxnId: {cleanTxnId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
                                 ActionDate = null,
                                 ActionBy = null,
                                 IsActive = true
@@ -2926,10 +3127,10 @@ namespace URMARRY.Areas.Admin.Controllers
                             await _dbContext.SaveChangesAsync();
 
                             timeline.Remarks = string.IsNullOrEmpty(timeline.Remarks)
-                                ? $"Offline payment details submitted (Txn: {model.TransactionId}, Amount: {model.PaymentAmount})"
-                                : $"{timeline.Remarks} [Offline Payment: {model.TransactionId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
+                                ? $"Offline payment details submitted (Txn: {cleanTxnId}, Amount: {model.PaymentAmount})"
+                                : $"{timeline.Remarks} [Offline Payment: {cleanTxnId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
 
-                            successMessage = "Follow-up converted with offline payment details and submitted for admin review.";
+                            successMessage = "Follow-up converted with offline payment details and submitted for admin review. Membership will be activated once Admin approves.";
                         }
                         else
                         {
@@ -3002,9 +3203,23 @@ namespace URMARRY.Areas.Admin.Controllers
                     {
                         if (string.Equals(model.PaymentMode, "Offline", StringComparison.OrdinalIgnoreCase))
                         {
+                            if (string.IsNullOrWhiteSpace(model.TransactionId))
+                            {
+                                return Json(new { success = false, message = "Transaction ID is required for offline renewal payment." });
+                            }
+
+                            var cleanTxnId = model.TransactionId.Trim();
+                            bool isUsedInTxn = await _transactionRepository.IsTransactionIdExistsAsync(cleanTxnId);
+                            bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.Id != followUp.Id && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+
+                            if (isUsedInTxn || isUsedInFollowUp)
+                            {
+                                return Json(new { success = false, message = "This Transaction ID is already used for another transaction. Please enter a unique Transaction ID." });
+                            }
+
                             followUp.PaymentMode = "Offline";
                             followUp.OfflinePaymentType = model.OfflinePaymentType;
-                            followUp.TransactionId = model.TransactionId;
+                            followUp.TransactionId = cleanTxnId;
                             followUp.PaymentAmount = model.PaymentAmount;
                             followUp.PaymentCompleted = false;
                             followUp.LatestAdminApprovalStatus = AdminApprovalStatus.Pending;
@@ -3013,7 +3228,7 @@ namespace URMARRY.Areas.Admin.Controllers
                             {
                                 FollowUpId = followUp.Id,
                                 Status = AdminApprovalStatus.Pending,
-                                Remarks = $"Pending admin review for offline renewal payment ({staffName}). TxnId: {model.TransactionId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
+                                Remarks = $"Pending admin review for offline renewal payment ({staffName}). TxnId: {cleanTxnId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
                                 ActionDate = null,
                                 ActionBy = null,
                                 IsActive = true
@@ -3022,10 +3237,10 @@ namespace URMARRY.Areas.Admin.Controllers
                             await _dbContext.SaveChangesAsync();
 
                             timeline.Remarks = string.IsNullOrEmpty(timeline.Remarks)
-                                ? $"Offline payment details submitted (Txn: {model.TransactionId}, Amount: {model.PaymentAmount})"
-                                : $"{timeline.Remarks} [Offline Payment: {model.TransactionId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
+                                ? $"Offline payment details submitted (Txn: {cleanTxnId}, Amount: {model.PaymentAmount})"
+                                : $"{timeline.Remarks} [Offline Payment: {cleanTxnId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
 
-                            successMessage = "Follow-up renewed with offline payment details and submitted for admin review.";
+                            successMessage = "Follow-up renewed with offline payment details and submitted for admin review. Membership will be activated once Admin approves.";
                         }
                         else
                         {
@@ -3268,6 +3483,8 @@ namespace URMARRY.Areas.Admin.Controllers
                         AssignedStaffId = x.AssignedStaffId,
                         CustomerName = x.Profile?.Name ?? "N/A",
                         RegisterNumber = x.Profile?.RegisterNumber ?? "N/A",
+                        Gender = x.Profile?.Gender ?? "N/A",
+                        VerificationGrade = x.VerificationGrade,
                         StaffName = staffName,
                         FollowUpType = x.FollowUpType.ToString(),
                         EndStatus = endStatusDesc,
@@ -3337,6 +3554,12 @@ namespace URMARRY.Areas.Admin.Controllers
                 // Update followUp's latest admin approval status
                 followUp.LatestAdminApprovalStatus = approvalStatus;
 
+                // Assign Verification Grade if approved for Profile Verification
+                if (model.IsApproved && followUp.FollowUpType == FollowUpType.ProfileVerification && !string.IsNullOrWhiteSpace(model.VerificationGrade))
+                {
+                    followUp.VerificationGrade = model.VerificationGrade.Trim().ToUpper();
+                }
+
                 // Add FollowUpAdminApproval record
                 var approvalRecord = new FollowUpAdminApproval
                 {
@@ -3352,6 +3575,7 @@ namespace URMARRY.Areas.Admin.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Create a timeline entry for this decision
+                string gradeText = (model.IsApproved && !string.IsNullOrEmpty(followUp.VerificationGrade)) ? $" (Grade {followUp.VerificationGrade})" : "";
                 var timeline = new FollowUpTimeline
                 {
                     FollowUpId = followUp.Id,
@@ -3359,7 +3583,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     StaffName = $"Admin ({adminName})",
                     ContactType = null,
                     CallStatus = null,
-                    Remarks = $"Admin {(model.IsApproved ? "Approved" : "Rejected")} this follow-up. Remarks: {model.Remarks}",
+                    Remarks = $"Admin {(model.IsApproved ? "Approved" : "Rejected")} this follow-up{gradeText}. Remarks: {model.Remarks}",
                     NextFollowUpDate = null,
                     ProfileVerificationStatus = followUp.LatestProfileVerificationStatus,
                     InterestStatus = followUp.LatestInterestStatus,
@@ -3785,9 +4009,10 @@ namespace URMARRY.Areas.Admin.Controllers
                 
                 // Payment verification: only count if admin approved and customer has a successful transaction created on or after this follow-up was created
                 int premConverted = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp 
-                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && (f.LatestInterestStatus == PremiumInterestStatus.Converted || (f.Profile != null && f.Profile.IsPremiumMember))
-                    && transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn));
+                    && (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                        || f.PaymentCompleted
+                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)));
                 
                 // Expired premium
                 // Count plan purchases belonging to assigned users that are expired
@@ -3797,9 +4022,10 @@ namespace URMARRY.Areas.Admin.Controllers
                 
                 // Payment verification: only count renewal if admin approved and customer has a successful transaction created on or after this follow-up was created
                 int renewalConvs = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp 
-                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember))
-                    && transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn));
+                    && (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
+                        || f.PaymentCompleted
+                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)));
 
                 int convRate = assigned > 0 ? (int)Math.Round((double)premConverted * 100 / assigned) : 0;
                 int renewalRate = renewalFollows > 0 ? (int)Math.Round((double)renewalConvs * 100 / renewalFollows) : 0;

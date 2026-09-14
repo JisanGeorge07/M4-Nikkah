@@ -12,6 +12,7 @@ namespace Application.Interfaces.Persistence
     {
         Task AddPaymentResultAsync(Transaction _transaction);
         Task<Transaction> GetTransactionByTxnIdAsync(string txnId);
+        Task<bool> IsTransactionIdExistsAsync(string txnId);
         Task<List<Transaction>> GetAllTransactionsAsync();
         Task<List<Transaction>> GetTransactionsBasedOnDateAsync(DateTime? fromDate, DateTime? toDate);
         Task<List<Transaction>> GetTransactionsBasedOnNameDateAsync(DateTime? fromDate, DateTime? toDate, string name, string paymentType);

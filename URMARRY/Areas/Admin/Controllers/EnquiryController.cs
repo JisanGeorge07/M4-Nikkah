@@ -36,10 +36,10 @@ public class EnquiryController : Controller
     private readonly IMapper _mapper;
     private readonly IRepository<ProfileFor> _profileForRepo;
     private readonly IRepository<Nationality> _nationalityRepo;
-	private readonly IRepository<State> _stateRepository;
-	private readonly IRepository<District> _districtRepository;
-	private readonly IRepository<City> _cityRepository;
-	private readonly IRepository<MaritalStatus> _maritalStatusRepo;
+    private readonly IRepository<State> _stateRepository;
+    private readonly IRepository<District> _districtRepository;
+    private readonly IRepository<City> _cityRepository;
+    private readonly IRepository<MaritalStatus> _maritalStatusRepo;
     private readonly IRepository<BodyFeatures> _bodyFeaturesRepo;
     private readonly IRepository<Profession> _professionRepo;
     private readonly IRepository<MotherTongue> _motherTongueRepo;
@@ -71,9 +71,9 @@ public class EnquiryController : Controller
         IMapper mapper,
         IRepository<ProfileFor> profileForRepo,
         IRepository<Nationality> nationalityRepo,
-        IRepository<State>stateRepository,
-        IRepository<District>districtRepository,
-        IRepository<City>cityRepository,
+        IRepository<State> stateRepository,
+        IRepository<District> districtRepository,
+        IRepository<City> cityRepository,
         IRepository<MaritalStatus> maritalStatusRepo,
         IRepository<BodyFeatures> bodyFeaturesRepo,
         IRepository<Profession> professionRepo,
@@ -87,7 +87,7 @@ public class EnquiryController : Controller
         IRepository<MatchingProfiles> matchingProfilesRepo,
         IFileService fileService,
         ITransactionRepository transactionRepository,
-        Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment, 
+        Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment,
         IRepository<PlanPurchase> planPurchaseRepository,
         IRepository<UserContactView> userContactViewRepo,
         IRepository<UserFavouriteProfile> userFavouriteProfileRepo,
@@ -187,10 +187,10 @@ public class EnquiryController : Controller
             Enquiry = enquiry,
             ProfileFor = _mapper.Map<List<ProfileForDto>>(await _profileForRepo.GetAll()),
             Nationalities = _mapper.Map<List<NationalityDto>>(await _nationalityRepo.GetAll()).OrderBy(x => x.Title).ToList(),
-			States = _mapper.Map<List<StateDto>>(await _stateRepository.GetAllActive()),
-			Districts = _mapper.Map<List<DistrictDto>>(await _districtRepository.GetAllActive()),
-			Cities = _mapper.Map<List<CityDto>>(await _cityRepository.GetAllActive()),
-			MaritalStatuses = _mapper.Map<List<MaritalStatusDto>>(await _maritalStatusRepo.GetAll()),
+            States = _mapper.Map<List<StateDto>>(await _stateRepository.GetAllActive()),
+            Districts = _mapper.Map<List<DistrictDto>>(await _districtRepository.GetAllActive()),
+            Cities = _mapper.Map<List<CityDto>>(await _cityRepository.GetAllActive()),
+            MaritalStatuses = _mapper.Map<List<MaritalStatusDto>>(await _maritalStatusRepo.GetAll()),
             BodyFeatures = _mapper.Map<List<BodyFeaturesDto>>(await _bodyFeaturesRepo.GetAll()),
             Professions = _mapper.Map<List<ProfessionDto>>(await _professionRepo.GetAll()),
             MotherTongues = _mapper.Map<List<MotherTongueDto>>(await _motherTongueRepo.GetAll()),
@@ -223,7 +223,10 @@ public class EnquiryController : Controller
                 await model.Image.CopyToAsync(fileStream);
             }
         }
-        user.Name = model.Name;
+        if (!string.IsNullOrWhiteSpace(model.Name))
+        {
+            user.Name = model.Name.Trim();
+        }
         user.Email = model.Email;
         if (string.IsNullOrEmpty(user.RegisterNumber))
         {
@@ -231,16 +234,19 @@ public class EnquiryController : Controller
         }
         user.ProfileForId = model.ProfileForId;
         user.Gender = model.Gender;
-        var dateString = model.DOB;
-        // Split the date string into components
-        string[] dateParts = dateString.Split('-');
-        string year = dateParts[0];
-        string month = dateParts[1];
-        string day = dateParts[2];
-        // Concatenate the components in "dd/MM/yyyy" format
-        string formattedDate = $"{day}/{month}/{year}";
-        user.DOB = formattedDate;
+        if (!string.IsNullOrWhiteSpace(model.DOB))
+        {
+            if (DateTime.TryParse(model.DOB, out var parsedDate))
+            {
+                user.DOB = parsedDate.ToString("dd/MM/yyyy");
+            }
+            else
+            {
+                user.DOB = model.DOB.Trim();
+            }
+        }
         user.NationalityId = model.NationalityId;
+        user.CountryCode = !string.IsNullOrWhiteSpace(model.CountryCode) ? model.CountryCode.Trim() : null;
         user.Phone = model.Phone;
         user.MaritalStatusId = model.MaritalStatusId;
         user.NumberOfChildrens = (model.MaritalStatusId == 1) ? null : model.NumberOfChildrens;
@@ -279,7 +285,11 @@ public class EnquiryController : Controller
         user.IsVerified = model.IsVerified;
         user.IsComplete = model.IsComplete;
         user.IsVisible = model.IsVisible;
-        user.LandlineNumber =model.LandlineNumber;
+        user.LandlineNumber = model.LandlineNumber;
+        user.SecondaryCountryCode = !string.IsNullOrWhiteSpace(model.SecondaryCountryCode) ? model.SecondaryCountryCode.Trim() : null;
+        user.PhotoVisibleToAll = model.PhotoVisibleToAll;
+        user.PhotoVisibleToPremium = model.PhotoVisibleToPremium;
+        user.PhotoVisibleToAccepted = model.PhotoVisibleToAccepted;
         if (!isIndia(model.Country))
         {
             user.State = "";
@@ -299,11 +309,31 @@ public class EnquiryController : Controller
                 user.Village = model.Village;
             }
         }
-        if (string.IsNullOrEmpty(user.Password))
+        if (!string.IsNullOrEmpty(model.Password))
         {
             RijndaelManagedEncryption encryption = new RijndaelManagedEncryption(key);
-            user.PasswordHash = encryption.CreateSalt();
-            user.Password = encryption.EncryptRijndael(model.Password, user.PasswordHash);
+            bool passwordChanged = true;
+            if (!string.IsNullOrEmpty(user.Password) && !string.IsNullOrEmpty(user.PasswordHash))
+            {
+                try
+                {
+                    string existingDecrypted = encryption.DecryptRijndael(user.Password, user.PasswordHash);
+                    if (existingDecrypted == model.Password)
+                    {
+                        passwordChanged = false;
+                    }
+                }
+                catch
+                {
+                    passwordChanged = true;
+                }
+            }
+
+            if (passwordChanged)
+            {
+                user.PasswordHash = encryption.CreateSalt();
+                user.Password = encryption.EncryptRijndael(model.Password, user.PasswordHash);
+            }
         }
         await _enquiryRepo.Update(user);
         await _enquiryRepo.SaveChanges();
@@ -398,63 +428,63 @@ public class EnquiryController : Controller
 
     //    return RedirectToAction(nameof(GetAll));
     //}
-     [HttpPost("/admin/delete-pending-enquiry/{id:long}")]
-        public async Task<IActionResult> DeletePending(long id)
+    [HttpPost("/admin/delete-pending-enquiry/{id:long}")]
+    public async Task<IActionResult> DeletePending(long id)
+    {
+        var entity = await _enquiryRepo.Get(id);
+        if (entity != null)
         {
-            var entity = await _enquiryRepo.Get(id);
-            if (entity != null)
-            {
-                await _enquiryRepo.SoftDelete(entity);
-                await _enquiryRepo.SaveChanges();
-            }
-
-            return RedirectToAction("GetAllPending", "Enquiry");
+            await _enquiryRepo.SoftDelete(entity);
+            await _enquiryRepo.SaveChanges();
         }
 
-        [HttpPost("/admin/enquiry/recycle/{id:long}")]
-        public async Task<IActionResult> RecycleEnquiry(long id, bool restore = false)
-        {
-            var entity = await _enquiryRepo.Get(id);
-            if (entity != null)
-            {
-                entity.IsActive = restore;
-                if (restore)
-                {
-                    entity.DisabledReason = DisabledReason.Deactivated;
-                    entity.IsVisible = true; // Ensure restored profiles are visible in active lists
-                }
-                else
-                {
-                    entity.DisabledReason = DisabledReason.Recycled;
-                    entity.IsVisible = false; // Hide recycled profiles from active lists
-                }
-                
-                await _enquiryRepo.Update(entity);
-                await _enquiryRepo.SaveChanges();
-            }
-            return Json(new { success = true });
-        }
+        return RedirectToAction("GetAllPending", "Enquiry");
+    }
 
-        [HttpPost("/admin/enquiry/delete/{id:long}")]
-        public async Task<IActionResult> DeleteEnquiry(long id)
+    [HttpPost("/admin/enquiry/recycle/{id:long}")]
+    public async Task<IActionResult> RecycleEnquiry(long id, bool restore = false)
+    {
+        var entity = await _enquiryRepo.Get(id);
+        if (entity != null)
         {
-            var entity = await _enquiryRepo.Get(id);
-            if (entity != null)
+            entity.IsActive = restore;
+            if (restore)
             {
-                // Remove reports associated with this profile
-                var reports = await _userReportRepo.Where(x => x.ReportedUserId == id);
-                foreach (var report in reports)
-                {
-                    await _userReportRepo.SoftDelete(report);
-                }
-                await _userReportRepo.SaveChanges();
-
-                await _enquiryRepo.SoftDelete(entity);
-                await _enquiryRepo.SaveChanges();
+                entity.DisabledReason = DisabledReason.Deactivated;
+                entity.IsVisible = true; // Ensure restored profiles are visible in active lists
             }
-            return Json(new { success = true });
-            //return RedirectToAction("memberslist", "Enquiry");
+            else
+            {
+                entity.DisabledReason = DisabledReason.Recycled;
+                entity.IsVisible = false; // Hide recycled profiles from active lists
+            }
+
+            await _enquiryRepo.Update(entity);
+            await _enquiryRepo.SaveChanges();
         }
+        return Json(new { success = true });
+    }
+
+    [HttpPost("/admin/enquiry/delete/{id:long}")]
+    public async Task<IActionResult> DeleteEnquiry(long id)
+    {
+        var entity = await _enquiryRepo.Get(id);
+        if (entity != null)
+        {
+            // Remove reports associated with this profile
+            var reports = await _userReportRepo.Where(x => x.ReportedUserId == id);
+            foreach (var report in reports)
+            {
+                await _userReportRepo.SoftDelete(report);
+            }
+            await _userReportRepo.SaveChanges();
+
+            await _enquiryRepo.SoftDelete(entity);
+            await _enquiryRepo.SaveChanges();
+        }
+        return Json(new { success = true });
+        //return RedirectToAction("memberslist", "Enquiry");
+    }
     #endregion
 
     #region PendingList
@@ -518,10 +548,25 @@ public class EnquiryController : Controller
                 await model.Image.CopyToAsync(fileStream);
             }
         }
+        if (!string.IsNullOrWhiteSpace(model.Name))
+        {
+            user.Name = model.Name.Trim();
+        }
         user.ProfileForId = model.ProfileForId;
         user.Gender = model.Gender;
-        user.DOB = model.DOB;
+        if (!string.IsNullOrWhiteSpace(model.DOB))
+        {
+            if (DateTime.TryParse(model.DOB, out var parsedDob))
+            {
+                user.DOB = parsedDob.ToString("dd/MM/yyyy");
+            }
+            else
+            {
+                user.DOB = model.DOB.Trim();
+            }
+        }
         user.NationalityId = model.NationalityId;
+        user.CountryCode = !string.IsNullOrWhiteSpace(model.CountryCode) ? model.CountryCode.Trim() : null;
         user.Phone = model.Phone;
         user.MaritalStatusId = model.MaritalStatusId;
         user.HeightId = model.HeightId;
@@ -550,9 +595,14 @@ public class EnquiryController : Controller
         user.PresentState = model.PresentState;
         user.PresentDistrict = model.PresentDistrict;
         user.PresentCity = model.PresentCity;
+        user.LandlineNumber = model.LandlineNumber;
+        user.SecondaryCountryCode = !string.IsNullOrWhiteSpace(model.SecondaryCountryCode) ? model.SecondaryCountryCode.Trim() : null;
+        user.PhotoVisibleToAll = model.PhotoVisibleToAll;
+        user.PhotoVisibleToPremium = model.PhotoVisibleToPremium;
+        user.PhotoVisibleToAccepted = model.PhotoVisibleToAccepted;
         user.About = model.About;
         user.IsComplete = model.IsComplete;
-        user.IsPremiumMember = model.IsPremiumMember;
+        // user.IsPremiumMember = model.IsPremiumMember;
         user.IsSpecialRequest = model.IsSpecialRequest;
         user.ShowOnHomePage = model.ShowOnHomePage;
         user.IsActive = model.IsActive;
@@ -631,7 +681,9 @@ public class EnquiryController : Controller
         switch (status)
         {
             case "Premium":
-                query = query.Where(x => x.IsActive && x.IsPremiumMember && x.IsVisible);
+                var activePlanUsers = await _planPurchaseRepository.WhereActive(x => x.ExpiresAt > DateTime.UtcNow);
+                var activePlanUserIds = activePlanUsers.Select(p => p.UserId).Distinct().ToList();
+                query = query.Where(x => x.IsActive && x.IsVisible && (x.IsPremiumMember || activePlanUserIds.Contains(x.Id)));
                 break;
 
             case "Active":
@@ -641,7 +693,7 @@ public class EnquiryController : Controller
             case "Pending":
                 query = query.Where(x => x.IsActive && !x.IsComplete && x.IsVerified);
                 break;
- 
+
             case "NewRegistration":
                 query = query.Where(x => x.IsActive && !x.IsVisible && x.IsVerified);
                 break;
@@ -751,6 +803,9 @@ public class EnquiryController : Controller
             }
         }
 
+        var activePlanProfiles = await _planPurchaseRepository.WhereActive(x => profileIds.Contains(x.UserId) && x.ExpiresAt > DateTime.UtcNow);
+        var activePlanUserSet = new HashSet<long>(activePlanProfiles.Select(p => p.UserId));
+
         var data = enquiries.Select(x =>
         {
             string staffName = "Unassigned";
@@ -774,7 +829,7 @@ public class EnquiryController : Controller
                 StaffName = staffName,
                 x.IsActive,
                 x.DisabledReason,
-                x.IsPremiumMember,
+                IsPremiumMember = x.IsPremiumMember || activePlanUserSet.Contains(x.Id),
                 x.IsVerified,
                 x.IsComplete
             };
@@ -831,8 +886,8 @@ public class EnquiryController : Controller
             .Where(p => p.ExpiresAt > DateTime.UtcNow)
             .Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed));
 
-        string expiryDate = activePlan != null 
-            ? activePlan.ExpiresAt.ToString("dd MMM yyyy") 
+        string expiryDate = activePlan != null
+            ? activePlan.ExpiresAt.ToString("dd MMM yyyy")
             : (latestPlan != null ? latestPlan.ExpiresAt.ToString("dd MMM yyyy") + " (Expired)" : "N/A");
 
         // Followups with timelines
@@ -945,9 +1000,25 @@ public class EnquiryController : Controller
         var profiles = await _enquiryRepo.WhereActive(x => allViewedIds.Contains(x.Id));
         var profileDict = profiles.ToDictionary(x => x.Id, x => x);
 
+        bool isPremium = user.IsPremiumMember || (latestPlan != null && latestPlan.ExpiresAt > DateTime.UtcNow);
+        var userDto = _mapper.Map<RegistrationDto>(user);
+        userDto.IsPremiumMember = isPremium;
+
+        // Auto-heal database flag if out of sync
+        if (!user.IsPremiumMember && isPremium)
+        {
+            try
+            {
+                user.IsPremiumMember = true;
+                await _enquiryRepo.Update(user);
+                await _enquiryRepo.SaveChanges();
+            }
+            catch { }
+        }
+
         var viewModel = new PremiumAnalyticsViewModel
         {
-            User = _mapper.Map<RegistrationDto>(user),
+            User = userDto,
             LatestPlan = latestPlan,
             UserImages = _mapper.Map<ImagesDto>(userImages),
             ContactViews = contactViews.OrderByDescending(x => x.CreatedOn).Select(x => new ActivityDetail
@@ -1011,18 +1082,18 @@ public class EnquiryController : Controller
         return RedirectToAction(nameof(GetAllPending));
     }
 
-    
-	#endregion
 
-	#region PremiumList
-	[HttpGet("/admin/enquiry/premium-enquiry")]
-	public async Task<IActionResult> GetAllPremium()
+    #endregion
+
+    #region PremiumList
+    [HttpGet("/admin/enquiry/premium-enquiry")]
+    public async Task<IActionResult> GetAllPremium()
     {
-		return View(new EnquiryViewModel
-		{
-			Enquiries = _mapper.Map<List<RegistrationDto>>((await _planPurchaseRepository.WhereActive(x => x.ExpiresAt > DateTime.UtcNow)).Select(x => x.User))
-		});
-	}
+        return View(new EnquiryViewModel
+        {
+            Enquiries = _mapper.Map<List<RegistrationDto>>((await _planPurchaseRepository.WhereActive(x => x.ExpiresAt > DateTime.UtcNow)).Select(x => x.User))
+        });
+    }
     #endregion
     #region TransactionDetails
     //[HttpGet("/admin/enquiry/Transaction-enquiry")]
@@ -1174,12 +1245,60 @@ public class EnquiryController : Controller
         return View();
     }
 
+    [HttpGet("/admin/enquiry/check-txnid-availability")]
+    public async Task<IActionResult> CheckTxnIdAvailability([FromQuery] string txnId)
+    {
+        if (string.IsNullOrWhiteSpace(txnId))
+        {
+            return Json(new { available = false, message = "Transaction ID cannot be empty." });
+        }
+
+        var cleanTxnId = txnId.Trim();
+        bool isUsedInTxn = await _transactionRepository.IsTransactionIdExistsAsync(cleanTxnId);
+        if (isUsedInTxn)
+        {
+            return Json(new { available = false, message = "This Transaction ID is already used for another transaction." });
+        }
+
+        bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+        if (isUsedInFollowUp)
+        {
+            return Json(new { available = false, message = "This Transaction ID is already submitted in a staff follow-up payment." });
+        }
+
+        return Json(new { available = true, message = "Transaction ID is available." });
+    }
+
     [HttpPost("/admin/enquiry/add-subscription")]
     public async Task<IActionResult> AddManualSubscription(string regId, string txnId, string amount, OfflinePaymentMethod offlinePaymentType)
     {
         bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest" || (Request.Headers["Accept"].ToString().Contains("application/json"));
         try
         {
+            if (string.IsNullOrWhiteSpace(txnId))
+            {
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "Transaction ID is required." });
+                }
+                ModelState.AddModelError("txnId", "Transaction ID is required.");
+                return View("AddSubscription");
+            }
+
+            var cleanTxnId = txnId.Trim();
+            bool isUsedInTxn = await _transactionRepository.IsTransactionIdExistsAsync(cleanTxnId);
+            bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+
+            if (isUsedInTxn || isUsedInFollowUp)
+            {
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "Transaction ID is already used for another transaction. Please enter a unique Transaction ID." });
+                }
+                ModelState.AddModelError("txnId", "Transaction ID is already used for another transaction. Please enter a unique Transaction ID.");
+                return View("AddSubscription");
+            }
+
             var user = await _enquiryRepo.FirstOrDefaultActive(x => x.RegisterNumber == regId);
             if (user == null)
             {
@@ -1194,7 +1313,7 @@ public class EnquiryController : Controller
             var transaction = new Transaction
             {
                 userId = user.Id,
-                TxnId = txnId,
+                TxnId = cleanTxnId,
                 Amount = amount,
                 Status = "success",
                 PaymentType = "Offline",

@@ -74,6 +74,8 @@ namespace URMARRY.Areas.Admin.Models
         // Deductions
         public decimal LeaveDeductions { get; set; }
         public decimal ComplaintDeductions { get; set; }
+        public decimal DeletedProfileDeductions { get; set; }
+        public List<DeletedProfileDeductionItem> DeletedProfileItems { get; set; } = new();
 
         // Composite score for ranking
         public decimal PerformanceScore { get; set; }
@@ -127,6 +129,10 @@ namespace URMARRY.Areas.Admin.Models
         public string? AdminIncentiveRemarks { get; set; }
         public List<AdminIncentiveItemRow> AdminIncentiveItems { get; set; } = new();
         public decimal TotalIncentive { get; set; }
+        public decimal LeaveDeduction { get; set; }
+        public decimal ComplaintDeduction { get; set; }
+        public decimal DeletedProfileDeduction { get; set; }
+        public List<DeletedProfileDeductionItem> DeletedProfileItems { get; set; } = new();
         public decimal TotalDeduction { get; set; }
         public decimal EstimatedPayroll { get; set; }
         public decimal ApprovedPayroll { get; set; }
@@ -188,5 +194,18 @@ namespace URMARRY.Areas.Admin.Models
         public decimal Amount { get; set; }
         public string? Label { get; set; }
         public DateTime CreatedOn { get; set; }
+    }
+
+    // ─── Deleted Profile Deduction Item ────────────────────────
+    public class DeletedProfileDeductionItem
+    {
+        public long ProfileId { get; set; }
+        public string RegisterNumber { get; set; } = string.Empty;
+        public string ProfileName { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public string VerificationType { get; set; } = string.Empty;
+        public DateTime? VerifiedDate { get; set; }
+        public string DeletionStatus { get; set; } = string.Empty;
+        public decimal DeductionAmount { get; set; }
     }
 }

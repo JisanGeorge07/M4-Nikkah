@@ -23,6 +23,7 @@ namespace Domain
         // Deductions
         public decimal LeaveDeduction { get; set; }
         public decimal ComplaintDeduction { get; set; }
+        public decimal DeletedProfileDeduction { get; set; }
         public decimal TotalDeduction { get; set; }
 
         // Payroll totals

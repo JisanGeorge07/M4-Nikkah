@@ -16,9 +16,16 @@
                     <!-- Search Field -->
                     <div class="form-group mb-0 position-relative" style="min-width: 200px;">
                         <input type="text" class="form-control form-control-sm" placeholder="Search By Name/ID/Phone"
-                               id="searchInput" style="padding-right: 32px; border-radius: 6px;"/>
+                                id="searchInput" style="padding-right: 32px; border-radius: 6px;"/>
                         <i class="bi bi-search position-absolute text-muted" style="top: 50%; right: 10px; transform: translateY(-50%); pointer-events: none;"></i>
                     </div>
+
+                    <!-- Gender Filter -->
+                    <select id="genderFilter" class="form-select form-select-sm" style="width: 140px; border-radius: 6px;">
+                        <option value="">All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
 
                     <!-- Staff Filter -->
                     <select id="staffFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
@@ -42,14 +49,17 @@
                         <option value="4">No Response</option>
                     </select>
 
-                    <!-- Interest Status Filter -->
-                    <select id="interestStatusFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
-                        <option value="">All Interests</option>
-                        <option value="0">Interested</option>
-                        <option value="1">Not Interested</option>
-                        <option value="2">Thinking</option>
-                        <option value="3">Call Back Later</option>
-                        <option value="4">Converted</option>
+                    <!-- Verification Status Filter -->
+                    <select id="verificationStatusFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
+                        <option value="">All Verification Status</option>
+                        <option value="0">Pending</option>
+                        <option value="1">Started</option>
+                        <option value="2">Verified</option>
+                        <option value="3">Hold</option>
+                        <option value="4">Suspended</option>
+                        <option value="5">Dismissed</option>
+                        <option value="6">Detailed Verify</option>
+                        <option value="7">Doc Requested</option>
                     </select>
 
                     <!-- Today's Follow-up Filter -->
@@ -65,14 +75,15 @@
                     <table id="verificationTable" class="table table-hover table-striped w-100 align-middle">
                         <thead class="table-light text-uppercase font-size-12">
                             <tr>
-                                <th width="15%">Customer</th>
-                                <th width="12%">Profile ID</th>
-                                <th width="15%">Assigned Staff</th>
+                                <th width="14%">Customer</th>
+                                <th width="11%">Profile ID</th>
+                                <th width="9%">Gender</th>
+                                <th width="14%">Assigned Staff</th>
                                 <th width="10%">Type</th>
-                                <th width="12%">Call</th>
-                                <th width="12%">Next Date</th>
+                                <th width="11%">Call</th>
+                                <th width="11%">Next Date</th>
                                 <th width="10%">Status</th>
-                                <th width="8%" class="text-center sorting_disabled">Action</th>
+                                <th width="10%" class="text-center sorting_disabled">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -526,9 +537,11 @@
                 url: "/admin/staff/profile-verifications-data",
                 type: "POST",
                 data: function (d) {
+                    d.gender = $('#genderFilter').val() || null;
                     d.staffId = $('#staffFilter').val() || null;
                     d.callStatus = $('#callStatusFilter').val() !== "" ? parseInt($('#callStatusFilter').val()) : null;
-                    d.interestStatus = $('#interestStatusFilter').val() !== "" ? parseInt($('#interestStatusFilter').val()) : null;
+                    d.verificationStatus = $('#verificationStatusFilter').val() !== "" ? parseInt($('#verificationStatusFilter').val()) : null;
+                    d.interestStatus = $('#verificationStatusFilter').val() !== "" ? parseInt($('#verificationStatusFilter').val()) : null;
                     d.scheduleFilter = $('#scheduleFilter').val() || null;
                     d.searchName = $('#searchInput').val();
                 }
@@ -545,14 +558,26 @@
                     render: function (data, type, row) {
                         if (!data || data === 'N/A') return '<span class="text-muted font-size-12">N/A</span>';
                         var profileId = row.profileId || row.id;
-                        return '<a href="/admin/staff/profile/' + profileId + '" target="_blank" class="fw-semibold text-primary text-decoration-underline" title="View Full Profile Details">' + data + '</a>';
+                        return '<a href="/admin/staff/profile/' + profileId + '" class="fw-semibold text-primary text-decoration-underline" title="View Full Profile Details">' + data + '</a>';
+                    }
+                },
+                {
+                    data: "gender",
+                    render: function (data, type, row) {
+                        if (!data || data === 'N/A') return '<span class="text-muted font-size-12">N/A</span>';
+                        if (data.toLowerCase() === 'female') {
+                            return '<span class="badge font-size-11 px-2 py-1" style="background-color: rgba(233, 30, 99, 0.1); color: #e91e63; border: 1px solid rgba(233, 30, 99, 0.2);"><i class="bi bi-gender-female me-1"></i>Female</span>';
+                        } else if (data.toLowerCase() === 'male') {
+                            return '<span class="badge font-size-11 px-2 py-1" style="background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border: 1px solid rgba(13, 110, 253, 0.2);"><i class="bi bi-gender-male me-1"></i>Male</span>';
+                        }
+                        return '<span class="badge bg-light text-dark font-size-11 px-2 py-1 border">' + data + '</span>';
                     }
                 },
                 {
                     data: "staffName",
                     render: function (data, type, row) {
                         if (data && data !== "Unassigned") {
-                            return '<span class="badge badge-soft-info font-size-11 px-2 py-1" style="background-color: rgba(23, 162, 184, 0.15); color: #17a2b8; border: 1px solid rgba(23, 162, 184, 0.25);"><i class="fas fa-user-circle me-1"></i> ' + data + '</span>';
+                            return '<span class="badge badge-soft-info font-size-11 px-2 py-1" style="background-color: rgba(233, 162, 184, 0.15); color: #17a2b8; border: 1px solid rgba(23, 162, 184, 0.25);"><i class="fas fa-user-circle me-1"></i> ' + data + '</span>';
                         }
                         return '<button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 btn-assign-staff" data-id="' + row.id + '" style="font-size: 11px; border-radius: 4px;"><i class="fas fa-user-plus me-1"></i> Assign Staff</button>';
                     }
@@ -584,18 +609,43 @@
                 {
                     data: "status",
                     render: function (data, type, row) {
-                        if (data === "Verify") {
-                            return '<span class="badge badge-soft-success font-size-11" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid rgba(40, 167, 69, 0.2);">Verified</span>';
-                        } else if (data === "Reject") {
-                            return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);">Rejected</span>';
+                        var appStatus = row.approvalStatus || 'None';
+
+                        if (data === "Verify" || data === "Verified") {
+                            if (appStatus === "Pending") {
+                                return '<span class="badge font-size-11" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.35);"><i class="bi bi-hourglass-split me-1"></i>Verified (Pending Approval)</span>';
+                            } else if (appStatus === "Rejected") {
+                                return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);"><i class="bi bi-x-circle me-1"></i>Verification Rejected</span>';
+                            }
+                            return '<span class="badge badge-soft-success font-size-11" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid rgba(40, 167, 69, 0.2);"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>';
+                        } else if (data === "DetailedVerify") {
+                            if (appStatus === "Pending") {
+                                return '<span class="badge font-size-11" style="background-color: rgba(255, 152, 0, 0.15); color: #c2410c; border: 1px solid rgba(255, 152, 0, 0.35);"><i class="bi bi-hourglass-split me-1"></i>Detailed Verify (Pending)</span>';
+                            } else if (appStatus === "Rejected") {
+                                return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);"><i class="bi bi-x-circle me-1"></i>Detailed Verify (Rejected)</span>';
+                            }
+                            return '<span class="badge badge-soft-warning font-size-11" style="background-color: rgba(255, 152, 0, 0.15); color: #e65100; border: 1px solid rgba(255, 152, 0, 0.3);"><i class="fas fa-file-contract me-1"></i>Detailed Verify</span>';
+                        } else if (data === "Dismissed") {
+                            if (appStatus === "Pending") {
+                                return '<span class="badge font-size-11" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3);"><i class="bi bi-hourglass-split me-1"></i>Dismissed (Pending)</span>';
+                            } else if (appStatus === "Rejected") {
+                                return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);"><i class="bi bi-x-circle me-1"></i>Dismissal Rejected</span>';
+                            }
+                            return '<span class="badge badge-soft-secondary font-size-11" style="background-color: rgba(108, 117, 125, 0.1); color: #6c757d; border: 1px solid rgba(108, 117, 125, 0.2);">Dismissed</span>';
+                        } else if (data === "Reject" || data === "Suspended") {
+                            var label = (data === "Suspended" ? "Suspended" : "Rejected");
+                            if (appStatus === "Pending") {
+                                return '<span class="badge font-size-11" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3);"><i class="bi bi-hourglass-split me-1"></i>' + label + ' (Pending)</span>';
+                            } else if (appStatus === "Rejected") {
+                                return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);"><i class="bi bi-x-circle me-1"></i>' + label + ' Disapproved</span>';
+                            }
+                            return '<span class="badge badge-soft-danger font-size-11" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);">' + label + '</span>';
                         } else if (data === "Started") {
                             return '<span class="badge badge-soft-info font-size-11" style="background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; border: 1px solid rgba(23, 162, 184, 0.2);">Started</span>';
                         } else if (data === "Hold") {
                             return '<span class="badge badge-soft-warning font-size-11" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.2);">Hold</span>';
                         } else if (data === "DetailedVerifyRequest") {
                             return '<span class="badge badge-soft-info font-size-11" style="background-color: rgba(13, 202, 240, 0.15); color: #0891b2; border: 1px solid rgba(13, 202, 240, 0.3);"><i class="fas fa-file-export me-1"></i> Doc Requested</span>';
-                        } else if (data === "DetailedVerify") {
-                            return '<span class="badge badge-soft-warning font-size-11" style="background-color: rgba(255, 152, 0, 0.15); color: #e65100; border: 1px solid rgba(255, 152, 0, 0.3);"><i class="fas fa-file-contract me-1"></i> Detailed Verify</span>';
                         } else {
                             return '<span class="badge badge-soft-primary font-size-11" style="background-color: rgba(0, 123, 255, 0.1); color: #007bff; border: 1px solid rgba(0, 123, 255, 0.2);">' + (data || 'Pending') + '</span>';
                         }
@@ -617,7 +667,7 @@
         });
 
         // Trigger redraw on filter change
-        $('#staffFilter, #callStatusFilter, #interestStatusFilter, #scheduleFilter').on('change', function () {
+        $('#genderFilter, #staffFilter, #callStatusFilter, #verificationStatusFilter, #scheduleFilter').on('change', function () {
             table.ajax.reload(null, true);
         });
 
@@ -882,7 +932,7 @@
                         
                         // Populate personal info
                         var profileIdToUse = d.id || profileId;
-                        $('#detailRegisterNumber').html('<a href="/admin/staff/profile/' + profileIdToUse + '" target="_blank" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (d.registerNumber || 'N/A') + '</a>');
+                        $('#detailRegisterNumber').html('<a href="/admin/staff/profile/' + profileIdToUse + '" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (d.registerNumber || 'N/A') + '</a>');
                         $('#detailName').text(d.name);
                         $('#detailGender').text(d.gender);
                         $('#detailAge').text(d.age || 'N/A');
@@ -979,6 +1029,16 @@
                     statusValue = f.latestRenewalInterestStatus;
                 }
 
+                var appStatus = f.latestAdminApprovalStatus || f.LatestAdminApprovalStatus || 'None';
+                var approvalBadgeHtml = '';
+                if (appStatus === 'Pending') {
+                    approvalBadgeHtml = ' <span class="badge bg-warning text-dark font-size-10 ms-1"><i class="bi bi-hourglass-split me-0.5"></i>Pending Approval</span>';
+                } else if (appStatus === 'Approved') {
+                    approvalBadgeHtml = ' <span class="badge bg-success font-size-10 ms-1"><i class="bi bi-check-circle-fill me-0.5"></i>Approved</span>';
+                } else if (appStatus === 'Rejected') {
+                    approvalBadgeHtml = ' <span class="badge bg-danger font-size-10 ms-1"><i class="bi bi-x-circle-fill me-0.5"></i>Rejected</span>';
+                }
+
                 var contactHtml = '';
                 if (f.latestContactType && f.latestContactType !== "N/A" && f.latestContactType !== "None" && f.latestContactType !== "") {
                     contactHtml = `
@@ -993,7 +1053,7 @@
                             </div>
                             <div class="col-4">
                                 <span class="text-muted d-block font-size-11">${statusLabel}</span>
-                                <span class="fw-semibold text-dark">${statusValue}</span>
+                                <span class="fw-semibold text-dark">${statusValue}${approvalBadgeHtml}</span>
                             </div>
                         </div>
                     `;

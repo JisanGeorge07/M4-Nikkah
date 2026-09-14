@@ -240,6 +240,7 @@
                                 <th>Incentive</th>
                                 <th>Leave Ded.</th>
                                 <th>Complaint Ded.</th>
+                                <th>Deleted Prof. Ded.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -275,6 +276,30 @@
                                     <td class="text-end text-success fw-semibold">₹@row.IncentivePayable.ToString("N0")</td>
                                     <td class="text-end text-danger">₹@row.LeaveDeductions.ToString("N0")</td>
                                     <td class="text-end text-danger">₹@row.ComplaintDeductions.ToString("N0")</td>
+                                    <td class="text-end text-danger text-nowrap">
+                                        @if (row.DeletedProfileDeductions > 0 || row.DeletedProfileItems.Any())
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 btn-view-deleted-deductions"
+                                                    data-staff-name="@row.StaffName"
+                                                    data-items='@System.Text.Json.JsonSerializer.Serialize(row.DeletedProfileItems.Select(i => new {
+                                                        profileId = i.ProfileId,
+                                                        registerNumber = i.RegisterNumber,
+                                                        profileName = i.ProfileName,
+                                                        gender = i.Gender,
+                                                        verificationType = i.VerificationType,
+                                                        verifiedDate = i.VerifiedDate.HasValue ? i.VerifiedDate.Value.ToString("dd MMM yyyy") : "—",
+                                                        deletionStatus = i.DeletionStatus,
+                                                        deductionAmount = i.DeductionAmount
+                                                    }))'
+                                                    title="View Deleted Profile Deductions (@row.DeletedProfileItems.Count profile(s))">
+                                                <i class="fas fa-user-slash me-1"></i>₹@row.DeletedProfileDeductions.ToString("N0")
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">₹0</span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -557,7 +582,28 @@
                                         }
                                     </td>
                                     <td class="text-end text-success">+₹@pr.TotalIncentive.ToString("N0")</td>
-                                    <td class="text-end text-danger">-₹@pr.TotalDeduction.ToString("N0")</td>
+                                    <td class="text-end text-danger text-nowrap">
+                                        -₹@pr.TotalDeduction.ToString("N0")
+                                        @if (pr.DeletedProfileItems.Any())
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1 ms-1 btn-view-deleted-deductions"
+                                                    data-staff-name="@pr.StaffName"
+                                                    data-items='@System.Text.Json.JsonSerializer.Serialize(pr.DeletedProfileItems.Select(i => new {
+                                                        profileId = i.ProfileId,
+                                                        registerNumber = i.RegisterNumber,
+                                                        profileName = i.ProfileName,
+                                                        gender = i.Gender,
+                                                        verificationType = i.VerificationType,
+                                                        verifiedDate = i.VerifiedDate.HasValue ? i.VerifiedDate.Value.ToString("dd MMM yyyy") : "—",
+                                                        deletionStatus = i.DeletionStatus,
+                                                        deductionAmount = i.DeductionAmount
+                                                    }))'
+                                                    title="View Deleted Profile Deductions (@pr.DeletedProfileItems.Count profile(s))">
+                                                <i class="fas fa-user-slash"></i>
+                                                <span class="badge bg-danger text-white rounded-pill ms-1" style="font-size: 10px;">@pr.DeletedProfileItems.Count</span>
+                                            </button>
+                                        }
+                                    </td>
                                     <td class="text-end fw-bold">₹@pr.EstimatedPayroll.ToString("N0")</td>
                                     <td class="text-end fw-bold text-primary">₹@pr.ApprovedPayroll.ToString("N0")</td>
                                     <td>
@@ -726,6 +772,67 @@
                         <p class="text-muted mt-2">Loading audit log...</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- DELETED PROFILES DEDUCTION MODAL                        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="deletedProfilesDeductionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-danger text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white"><i class="fas fa-user-slash me-2"></i>Deleted Profile Incentive Deductions</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0 fw-bold" id="delModalStaffName"></h6>
+                        <small class="text-muted">Staff Member</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-soft-danger text-danger fs-6 px-3 py-2 fw-bold" id="delModalTotalAmount">₹0</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center" style="font-size: 13px; border-radius: 8px;">
+                    <i class="fas fa-exclamation-triangle fs-5 text-warning me-2"></i>
+                    <div>
+                        <strong>Incentive Clawback:</strong> Profiles below were verified in this period but were subsequently deleted, recycled, or deactivated. The incentive awarded has been deducted from the monthly payroll.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;" class="text-center">#</th>
+                                <th>Register ID</th>
+                                <th>Profile Name</th>
+                                <th>Gender</th>
+                                <th>Verification Type</th>
+                                <th>Verified Date</th>
+                                <th>Status / Reason</th>
+                                <th class="text-end">Deduction (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delModalTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="7" class="text-end">Total Clawback / Deduction:</td>
+                                <td class="text-end text-danger" id="delModalTableFooterTotal">₹0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
             </div>
         </div>
     </div>
@@ -1196,125 +1303,43 @@
                 });
             });
 
-            // ─── Salary Slip PDF ──────────────────────────────
-            $(document).on('click', '.btn-salary-slip', function () {
-                var $btn = $(this);
-                var payrollId = $btn.data('payroll-id');
-                var staffName = $btn.data('staff-name') || 'Staff';
-                var originalHtml = $btn.html();
+            // ─── Deleted Profiles Deduction Popup ─────────────
+            $(document).on('click', '.btn-view-deleted-deductions', function () {
+                var staffName = $(this).data('staff-name') || 'Staff';
+                var items = $(this).data('items') || [];
 
-                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Loading...');
+                $('#delModalStaffName').text(staffName);
+                var $tbody = $('#delModalTableBody');
+                $tbody.empty();
 
-                $.get('/admin/staff/cross-comparison/export/salary-slip/' + payrollId)
-                    .done(function (data) {
-                        if (!data) {
-                            Swal.fire('Error', 'Could not retrieve salary slip data.', 'error');
-                            return;
-                        }
+                var totalAmt = 0;
+                if (items.length === 0) {
+                    $tbody.html('<tr><td colspan="8" class="text-center text-muted py-3">No deleted profiles found for this period.</td></tr>');
+                } else {
+                    items.forEach(function (item, idx) {
+                        totalAmt += (parseFloat(item.deductionAmount) || 0);
+                        var genderBadge = item.gender === 'Male'
+                            ? '<span class="badge badge-soft-primary">Male</span>'
+                            : '<span class="badge badge-soft-danger">Female</span>';
 
-                        var fmt = function (val) {
-                            var n = parseFloat(val) || 0;
-                            return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        };
-
-                        var printWin = window.open('', '_blank', 'width=800,height=900');
-                        if (!printWin) {
-                            Swal.fire('Blocked', 'Popup blocker prevented opening the receipt. Please allow popups.', 'warning');
-                            return;
-                        }
-
-                        var html = '<!DOCTYPE html><html><head>' +
-                            '<title>Salary Slip - ' + (data.staffName || staffName) + '</title>' +
-                            '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">' +
-                            '<style>' +
-                            'body { padding: 40px; font-family: "Segoe UI", sans-serif; background: #fff; color: #212529; }' +
-                            '.header-title { color: #00662d; font-weight: 700; }' +
-                            '.table-custom th { background-color: #00662d !important; color: #fff !important; }' +
-                            '@@page { size: portrait; margin: 15mm; }' +
-                            '</style></head><body>' +
-                            '<div class="text-center mb-4">' +
-                            '<h2 class="header-title">M4 NIKAH — SALARY SLIP</h2>' +
-                            '<p class="text-muted mb-0">' + (data.month || '') + ' ' + (data.year || '') + '</p><hr></div>' +
-                            '<div class="row mb-4 fs-6">' +
-                            '<div class="col-6"><strong>Staff Name:</strong> ' + (data.staffName || 'N/A') + '</div>' +
-                            '<div class="col-6"><strong>Department:</strong> ' + (data.department || 'N/A') + '</div>' +
-                            '<div class="col-6 mt-2"><strong>Designation:</strong> ' + (data.designation || 'N/A') + '</div>' +
-                            '<div class="col-6 mt-2"><strong>Status:</strong> <span class="badge bg-success">' + (data.status || 'N/A') + '</span></div>' +
-                            '</div>' +
-                            '<table class="table table-bordered align-middle table-custom">' +
-                            '<thead><tr><th>Salary Component</th><th class="text-end">Amount (₹)</th></tr></thead>' +
-                            '<tbody>' +
-                            '<tr><td>Basic Salary</td><td class="text-end">₹' + fmt(data.basicSalary) + '</td></tr>' +
-                            '<tr><td>Premium Incentive (Boys)</td><td class="text-end">₹' + fmt(data.premiumIncentiveBoys) + '</td></tr>' +
-                            '<tr><td>Premium Incentive (Girls)</td><td class="text-end">₹' + fmt(data.premiumIncentiveGirls) + '</td></tr>' +
-                            '<tr><td>Verification Incentive</td><td class="text-end">₹' + fmt(data.verificationIncentive) + '</td></tr>' +
-                            (data.dailyTargetIncentive > 0 ? '<tr><td>Daily Target Incentive</td><td class="text-end">₹' + fmt(data.dailyTargetIncentive) + '</td></tr>' : '');
-
-                        // Render individual admin incentive items
-                        if (data.adminIncentiveItems && data.adminIncentiveItems.length > 0) {
-                            data.adminIncentiveItems.forEach(function (item) {
-                                html += '<tr><td>Admin Incentive' + (item.label ? ' <small class="text-muted">(' + item.label + ')</small>' : '') + '</td><td class="text-end text-success">+₹' + fmt(item.amount) + '</td></tr>';
-                            });
-                        } else if (data.adminIncentive > 0) {
-                            // Fallback for old payrolls without items
-                            html += '<tr><td>Admin Given Incentive' + (data.adminIncentiveRemarks ? ' <small class="text-muted">(' + data.adminIncentiveRemarks + ')</small>' : '') + '</td><td class="text-end text-success">+₹' + fmt(data.adminIncentive) + '</td></tr>';
-                        }
-
-                        html +=
-                            '<tr class="fw-bold table-light"><td>Total Incentive</td><td class="text-end text-success">₹' + fmt(data.totalIncentive) + '</td></tr>' +
-                            '<tr class="text-danger"><td>(−) Leave Deduction</td><td class="text-end">₹' + fmt(data.leaveDeduction) + '</td></tr>' +
-                            '<tr class="text-danger"><td>(−) Complaint Deduction</td><td class="text-end">₹' + fmt(data.complaintDeduction) + '</td></tr>' +
-                            '<tr class="fw-bold table-light text-danger"><td>Total Deduction</td><td class="text-end">₹' + fmt(data.totalDeduction) + '</td></tr>' +
-                            '<tr><td>Estimated Payroll</td><td class="text-end">₹' + fmt(data.estimatedPayroll) + '</td></tr>' +
-                            '<tr class="fw-bold table-success fs-5"><td>Approved / Net Payable</td><td class="text-end text-success">₹' + fmt(data.netPayable) + '</td></tr>' +
-                            '</tbody></table>' +
-                            '<div class="text-center mt-5 text-muted small">' +
-                            '<em>This is a computer-generated document. No signature required.</em></div>' +
-                            '<script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };<\/script>' +
-                            '</body></html>';
-
-                        printWin.document.write(html);
-                        printWin.document.close();
-                    })
-                    .fail(function () {
-                        Swal.fire('Error', 'Error fetching salary slip details.', 'error');
-                    })
-                    .always(function () {
-                        $btn.prop('disabled', false).html(originalHtml);
+                        var row = '<tr>' +
+                            '<td class="text-center">' + (idx + 1) + '</td>' +
+                            '<td><span class="fw-bold text-primary">' + $('<span>').text(item.registerNumber).html() + '</span></td>' +
+                            '<td class="fw-semibold">' + $('<span>').text(item.profileName).html() + '</td>' +
+                            '<td>' + genderBadge + '</td>' +
+                            '<td><span class="badge badge-soft-info">' + $('<span>').text(item.verificationType).html() + '</span></td>' +
+                            '<td>' + (item.verifiedDate || '—') + '</td>' +
+                            '<td><span class="badge badge-soft-warning">' + $('<span>').text(item.deletionStatus).html() + '</span></td>' +
+                            '<td class="text-end text-danger fw-bold">-₹' + (parseFloat(item.deductionAmount) || 0).toLocaleString('en-IN') + '</td>' +
+                            '</tr>';
+                        $tbody.append(row);
                     });
-            });
+                }
 
-            // ─── Export Payroll Register (Excel via DataTables) ─
-            $('#btnExportRegister').on('click', function () {
-                $.get('/admin/staff/cross-comparison/export/payroll-register?year=@Model.FilterYear&month=@Model.FilterMonth', function (data) {
-                    if (!data || data.length === 0) {
-                        Swal.fire('Info', 'No payroll data found for selected period.', 'info');
-                        return;
-                    }
-                    // Create CSV and trigger download
-                    var headers = ['Staff Name', 'Department', 'Designation', 'Basic Salary', 'Admin Incentive', 'Total Incentive', 'Total Deduction', 'Estimated Payroll', 'Approved Payroll', 'Net Payable', 'Status'];
-                    var csv = headers.join(',') + '\n';
-                    data.forEach(function (row) {
-                        csv += [
-                            '"' + row.staffName + '"',
-                            '"' + row.department + '"',
-                            '"' + row.designation + '"',
-                            row.basicSalary,
-                            row.adminIncentive || 0,
-                            row.totalIncentive,
-                            row.totalDeduction,
-                            row.estimatedPayroll,
-                            row.approvedPayroll,
-                            row.netPayable,
-                            '"' + row.status + '"'
-                        ].join(',') + '\n';
-                    });
-                    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    var link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'PayrollRegister_@(monthNames[Model.FilterMonth])_@(Model.FilterYear).csv';
-                    link.click();
-                });
+                $('#delModalTotalAmount').text('Total Deduction: ₹' + totalAmt.toLocaleString('en-IN'));
+                $('#delModalTableFooterTotal').text('-₹' + totalAmt.toLocaleString('en-IN'));
+
+                new bootstrap.Modal('#deletedProfilesDeductionModal').show();
             });
 
             // ─── Fix select defaults on page load ─────────────
@@ -1322,3 +1347,4 @@
         });
     </script>
 }
+

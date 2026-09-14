@@ -18,6 +18,7 @@ namespace Domain
         public DateTime? NextFollowUpDate { get; set; }
         public long? AssignedStaffId { get; set; }
         public AdminApprovalStatus? LatestAdminApprovalStatus { get; set; }
+        public string? VerificationGrade { get; set; } // "A", "B", "C", "D" (Admin assigned on approval for Female Profile Verification)
 
         // Payment handling fields (set by staff when status reaches Converted/Renewed)
         public string? PaymentMode { get; set; } // "Online" or "Offline"

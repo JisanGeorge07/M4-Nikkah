@@ -63,24 +63,32 @@
 <!-- Create Modal -->
 <div class="modal fade" id="createColdLeadModal" tabindex="-1" aria-labelledby="createColdLeadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createColdLeadModalLabel">Add New Cold Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-primary text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white" id="createColdLeadModalLabel">
+                    <i class="fas fa-user-plus me-2"></i> Add New Cold Lead
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="createColdLeadForm">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label for="createName" class="form-label">User / Prospect Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createName" name="name" required placeholder="Enter name" />
+                        <label for="createName" class="form-label fw-semibold">User / Prospect Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="createName" name="name" required placeholder="Enter prospect name" style="border-radius: 6px;" />
                     </div>
                     <div class="mb-3">
-                        <label for="createPhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createPhoneNumber" name="phoneNumber" required placeholder="Enter phone number" />
+                        <label for="createPhoneNumber" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="createPhoneNumber" name="phoneNumber" required placeholder="Enter phone number" autocomplete="off" style="border-radius: 6px 0 0 6px;" />
+                            <span class="input-group-text d-none bg-light" id="createPhoneCheckSpinner" style="border-radius: 0 6px 6px 0;">
+                                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                            </span>
+                        </div>
+                        <div id="createPhoneValidationMsg" class="mt-2" style="display: none; font-size: 13px;"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="createStaffId" class="form-label">Assign Staff <span class="text-danger">*</span></label>
-                        <select class="form-select" id="createStaffId" name="assignedStaffId" required>
+                        <label for="createStaffId" class="form-label fw-semibold">Assign Staff <span class="text-danger">*</span></label>
+                        <select class="form-select" id="createStaffId" name="assignedStaffId" required style="border-radius: 6px;">
                             <option value="">-- Select Staff --</option>
                             @if (ViewBag.StaffList != null)
                             {
@@ -92,13 +100,15 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="createRemarks" class="form-label">Remarks / Notes</label>
-                        <textarea class="form-control" id="createRemarks" name="remarks" rows="3" placeholder="Enter optional remarks"></textarea>
+                        <label for="createRemarks" class="form-label fw-semibold">Remarks / Notes</label>
+                        <textarea class="form-control" id="createRemarks" name="remarks" rows="3" placeholder="Enter optional remarks or lead source" style="border-radius: 6px; resize: none;"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Create Cold Lead</button>
+                <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+                    <button type="submit" id="btnCreateColdLeadSubmit" class="btn btn-primary d-flex align-items-center gap-1" style="border-radius: 6px;">
+                        <i class="fas fa-check-circle"></i> Create Cold Lead
+                    </button>
                 </div>
             </form>
         </div>
@@ -108,25 +118,33 @@
 <!-- Edit Modal -->
 <div class="modal fade" id="editColdLeadModal" tabindex="-1" aria-labelledby="editColdLeadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editColdLeadModalLabel">Edit Cold Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-info text-white py-3 px-4" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title fw-bold text-white" id="editColdLeadModalLabel">
+                    <i class="fas fa-edit me-2"></i> Edit Cold Lead
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editColdLeadForm">
                 <input type="hidden" id="editId" name="id" />
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label for="editName" class="form-label">User / Prospect Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="editName" name="name" required />
+                        <label for="editName" class="form-label fw-semibold">User / Prospect Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editName" name="name" required style="border-radius: 6px;" />
                     </div>
                     <div class="mb-3">
-                        <label for="editPhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="editPhoneNumber" name="phoneNumber" required />
+                        <label for="editPhoneNumber" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="editPhoneNumber" name="phoneNumber" required autocomplete="off" style="border-radius: 6px 0 0 6px;" />
+                            <span class="input-group-text d-none bg-light" id="editPhoneCheckSpinner" style="border-radius: 0 6px 6px 0;">
+                                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                            </span>
+                        </div>
+                        <div id="editPhoneValidationMsg" class="mt-2" style="display: none; font-size: 13px;"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="editStaffId" class="form-label">Assigned Staff <span class="text-danger">*</span></label>
-                        <select class="form-select" id="editStaffId" name="assignedStaffId" required>
+                        <label for="editStaffId" class="form-label fw-semibold">Assigned Staff <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editStaffId" name="assignedStaffId" required style="border-radius: 6px;">
                             <option value="">-- Select Staff --</option>
                             @if (ViewBag.StaffList != null)
                             {
@@ -138,8 +156,8 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="editStatus" class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select" id="editStatus" name="status" required>
+                        <label for="editStatus" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editStatus" name="status" required style="border-radius: 6px;">
                             <option value="0">Pending</option>
                             <option value="1">Partially Completed</option>
                             <option value="2">Completed</option>
@@ -147,13 +165,15 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="editRemarks" class="form-label">Remarks / Notes</label>
-                        <textarea class="form-control" id="editRemarks" name="remarks" rows="3"></textarea>
+                        <label for="editRemarks" class="form-label fw-semibold">Remarks / Notes</label>
+                        <textarea class="form-control" id="editRemarks" name="remarks" rows="3" style="border-radius: 6px; resize: none;"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="modal-footer border-top px-4 py-3" style="background-color: #f8fafc;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+                    <button type="submit" id="btnEditColdLeadSubmit" class="btn btn-info text-white d-flex align-items-center gap-1" style="border-radius: 6px;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -163,6 +183,12 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            var isCreatePhoneValid = true;
+            var isEditPhoneValid = true;
+            var originalEditPhone = '';
+            var createPhoneTypingTimer;
+            var editPhoneTypingTimer;
+
             var table = $('#coldLeadTable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -177,7 +203,12 @@
                 columns: [
                     { data: null, render: function (data, type, row, meta) { return meta.row + 1; } },
                     { data: 'name' },
-                    { data: 'phoneNumber' },
+                    { 
+                        data: 'phoneNumber',
+                        render: function (data) {
+                            return '<a href="tel:' + data + '" class="text-decoration-none fw-semibold"><i class="fas fa-phone-alt text-success me-1"></i>' + data + '</a>';
+                        }
+                    },
                     { 
                         data: 'assignedStaffName', 
                         render: function (data) { 
@@ -224,9 +255,118 @@
                 table.draw();
             });
 
+            // Reusable phone availability check function
+            function checkPhoneAvailability(phone, $input, $spinner, $msg, $btn, isEdit) {
+                var cleanPhone = (phone || '').trim();
+                if (!cleanPhone) {
+                    $input.removeClass('is-invalid is-valid');
+                    $msg.hide().empty();
+                    $btn.prop('disabled', false);
+                    if (isEdit) isEditPhoneValid = true; else isCreatePhoneValid = true;
+                    return;
+                }
+
+                if (isEdit && cleanPhone === originalEditPhone) {
+                    $input.removeClass('is-invalid is-valid');
+                    $msg.hide().empty();
+                    $btn.prop('disabled', false);
+                    isEditPhoneValid = true;
+                    return;
+                }
+
+                $spinner.removeClass('d-none');
+
+                $.ajax({
+                    url: '@Url.Action("CheckPhone", "Home")',
+                    type: 'GET',
+                    data: { phone: cleanPhone },
+                    success: function (response) {
+                        $spinner.addClass('d-none');
+                        // response === true means phone is available (no registered profile)
+                        // response === false means phone already exists in registered profiles
+                        if (response === true) {
+                            $input.removeClass('is-invalid').addClass('is-valid');
+                            $msg.html('<span class="text-success"><i class="fas fa-check-circle me-1"></i> Phone number is available.</span>').show();
+                            $btn.prop('disabled', false);
+                            if (isEdit) isEditPhoneValid = true; else isCreatePhoneValid = true;
+                        } else {
+                            $input.removeClass('is-valid').addClass('is-invalid');
+                            $msg.html('<div class="alert alert-danger py-2 px-3 mb-0 font-size-13"><i class="fas fa-exclamation-triangle me-1"></i> <strong>Warning:</strong> A registered profile already exists with this phone number. You cannot create a cold lead for an existing profile.</div>').show();
+                            $btn.prop('disabled', true);
+                            if (isEdit) isEditPhoneValid = false; else isCreatePhoneValid = false;
+                        }
+                    },
+                    error: function () {
+                        $spinner.addClass('d-none');
+                        $input.removeClass('is-valid is-invalid');
+                        $msg.hide().empty();
+                        $btn.prop('disabled', false);
+                        if (isEdit) isEditPhoneValid = true; else isCreatePhoneValid = true;
+                    }
+                });
+            }
+
+            // Real-time phone check on Create Cold Lead
+            $('#createPhoneNumber').on('input keyup change', function () {
+                clearTimeout(createPhoneTypingTimer);
+                var phone = $(this).val();
+                createPhoneTypingTimer = setTimeout(function () {
+                    checkPhoneAvailability(
+                        phone,
+                        $('#createPhoneNumber'),
+                        $('#createPhoneCheckSpinner'),
+                        $('#createPhoneValidationMsg'),
+                        $('#createColdLeadForm button[type="submit"]'),
+                        false
+                    );
+                }, 350);
+            });
+
+            // Real-time phone check on Edit Cold Lead
+            $('#editPhoneNumber').on('input keyup change', function () {
+                clearTimeout(editPhoneTypingTimer);
+                var phone = $(this).val();
+                editPhoneTypingTimer = setTimeout(function () {
+                    checkPhoneAvailability(
+                        phone,
+                        $('#editPhoneNumber'),
+                        $('#editPhoneCheckSpinner'),
+                        $('#editPhoneValidationMsg'),
+                        $('#editColdLeadForm button[type="submit"]'),
+                        true
+                    );
+                }, 350);
+            });
+
+            // Modal reset hooks
+            $('#createColdLeadModal').on('show.bs.modal', function () {
+                isCreatePhoneValid = true;
+                $('#createPhoneNumber').removeClass('is-invalid is-valid');
+                $('#createPhoneCheckSpinner').addClass('d-none');
+                $('#createPhoneValidationMsg').hide().empty();
+                $('#createColdLeadForm button[type="submit"]').prop('disabled', false);
+            });
+
+            $('#editColdLeadModal').on('show.bs.modal', function () {
+                isEditPhoneValid = true;
+                $('#editPhoneNumber').removeClass('is-invalid is-valid');
+                $('#editPhoneCheckSpinner').addClass('d-none');
+                $('#editPhoneValidationMsg').hide().empty();
+                $('#editColdLeadForm button[type="submit"]').prop('disabled', false);
+            });
+
             // Create Form Submission
             $('#createColdLeadForm').submit(function (e) {
                 e.preventDefault();
+                if (!isCreatePhoneValid) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Existing Profile Found',
+                        text: 'A registered profile already exists with this phone number. You cannot create a cold lead for an existing profile.'
+                    });
+                    return false;
+                }
+
                 var $btn = $(this).find('button[type="submit"]');
                 var originalHtml = $btn.html();
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Creating...');
@@ -240,9 +380,15 @@
                             Swal.fire('Success', res.message, 'success');
                             $('#createColdLeadModal').modal('hide');
                             $('#createColdLeadForm')[0].reset();
+                            $('#createPhoneNumber').removeClass('is-invalid is-valid');
+                            $('#createPhoneValidationMsg').hide().empty();
                             table.draw();
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Cannot Create Lead',
+                                text: res.message
+                            });
                         }
                     },
                     error: function () {
@@ -257,6 +403,7 @@
             // Edit button click
             $(document).on('click', '.edit-lead-btn', function () {
                 var lead = $(this).data('lead');
+                originalEditPhone = (lead.phoneNumber || '').trim();
                 $('#editId').val(lead.id);
                 $('#editName').val(lead.name);
                 $('#editPhoneNumber').val(lead.phoneNumber);
@@ -269,6 +416,15 @@
             // Edit Form Submission
             $('#editColdLeadForm').submit(function (e) {
                 e.preventDefault();
+                if (!isEditPhoneValid) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Existing Profile Found',
+                        text: 'A registered profile already exists with this phone number.'
+                    });
+                    return false;
+                }
+
                 var $btn = $(this).find('button[type="submit"]');
                 var originalHtml = $btn.html();
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Updating...');
@@ -283,7 +439,11 @@
                             $('#editColdLeadModal').modal('hide');
                             table.draw();
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Cannot Update Lead',
+                                text: res.message
+                            });
                         }
                     },
                     error: function () {

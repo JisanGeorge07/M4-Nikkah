@@ -260,53 +260,97 @@
                         </div>
                     </div>
 
-                    <!-- 2. Female Normal Profile Verification -->
+                    <!-- 2. Female Grade A Profile Verification -->
                     <div class="incentive-box">
-                        <div class="incentive-title"><i class="fas fa-user-check me-1"></i> 2. Female Normal Profile Verification Incentive</div>
+                        <div class="incentive-title"><i class="fas fa-medal text-warning me-1"></i> 2. Female Grade A Profile Verification Incentive</div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Type</label>
-                                <select class="form-select" name="FemaleVerificationType" id="femaleVerifTypeSelect" onchange="toggleIncentiveFields('femaleVerif')">
-                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
-                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                <select class="form-select" name="FemaleGradeAVerificationType" id="femaleGradeAVerifTypeSelect" onchange="toggleIncentiveFields('femaleGradeAVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleGradeAVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleGradeAVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3" id="femaleVerifTargetCol">
+                            <div class="col-md-4 mb-3" id="femaleGradeAVerifTargetCol">
                                 <label class="form-label font-weight-bold">Target Count</label>
-                                <input type="number" min="0" class="form-control" name="FemaleVerificationTarget" value="@(Model.IncentiveConfig.FemaleVerificationTarget ?? 0)" placeholder="e.g. 50" />
+                                <input type="number" min="0" class="form-control" name="FemaleGradeAVerificationTarget" value="@(Model.IncentiveConfig.FemaleGradeAVerificationTarget ?? 0)" placeholder="e.g. 20" />
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleVerificationAmount" value="@(Model.IncentiveConfig.FemaleVerificationAmount > 0 ? Model.IncentiveConfig.FemaleVerificationAmount.ToString("G29") : "")" placeholder="e.g. 500" />
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleGradeAVerificationAmount" value="@(Model.IncentiveConfig.FemaleGradeAVerificationAmount > 0 ? Model.IncentiveConfig.FemaleGradeAVerificationAmount.ToString("G29") : "")" placeholder="e.g. 500" />
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. Female Document Profile Verification -->
+                    <!-- 3. Female Grade B Profile Verification -->
                     <div class="incentive-box">
-                        <div class="incentive-title"><i class="fas fa-id-card me-1"></i> 3. Female Document Profile Verification Incentive</div>
+                        <div class="incentive-title"><i class="fas fa-medal text-primary me-1"></i> 3. Female Grade B Profile Verification Incentive</div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Type</label>
-                                <select class="form-select" name="FemaleDocVerificationType" id="femaleDocVerifTypeSelect" onchange="toggleIncentiveFields('femaleDocVerif')">
-                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleDocVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
-                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleDocVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                <select class="form-select" name="FemaleGradeBVerificationType" id="femaleGradeBVerifTypeSelect" onchange="toggleIncentiveFields('femaleGradeBVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleGradeBVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleGradeBVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3" id="femaleDocVerifTargetCol">
+                            <div class="col-md-4 mb-3" id="femaleGradeBVerifTargetCol">
                                 <label class="form-label font-weight-bold">Target Count</label>
-                                <input type="number" min="0" class="form-control" name="FemaleDocVerificationTarget" value="@(Model.IncentiveConfig.FemaleDocVerificationTarget ?? 0)" placeholder="e.g. 20" />
+                                <input type="number" min="0" class="form-control" name="FemaleGradeBVerificationTarget" value="@(Model.IncentiveConfig.FemaleGradeBVerificationTarget ?? 0)" placeholder="e.g. 20" />
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleDocVerificationAmount" value="@(Model.IncentiveConfig.FemaleDocVerificationAmount > 0 ? Model.IncentiveConfig.FemaleDocVerificationAmount.ToString("G29") : "")" placeholder="e.g. 500" />
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleGradeBVerificationAmount" value="@(Model.IncentiveConfig.FemaleGradeBVerificationAmount > 0 ? Model.IncentiveConfig.FemaleGradeBVerificationAmount.ToString("G29") : "")" placeholder="e.g. 400" />
                             </div>
                         </div>
                     </div>
 
-                    <!-- 4. Male Premium Conversion -->
+                    <!-- 4. Female Grade C Profile Verification -->
                     <div class="incentive-box">
-                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 4. Male Premium Conversion Incentive</div>
+                        <div class="incentive-title"><i class="fas fa-medal text-info me-1"></i> 4. Female Grade C Profile Verification Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="FemaleGradeCVerificationType" id="femaleGradeCVerifTypeSelect" onchange="toggleIncentiveFields('femaleGradeCVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleGradeCVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleGradeCVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="femaleGradeCVerifTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="FemaleGradeCVerificationTarget" value="@(Model.IncentiveConfig.FemaleGradeCVerificationTarget ?? 0)" placeholder="e.g. 20" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleGradeCVerificationAmount" value="@(Model.IncentiveConfig.FemaleGradeCVerificationAmount > 0 ? Model.IncentiveConfig.FemaleGradeCVerificationAmount.ToString("G29") : "")" placeholder="e.g. 300" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Female Grade D Profile Verification -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-medal text-secondary me-1"></i> 5. Female Grade D Profile Verification Incentive</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Type</label>
+                                <select class="form-select" name="FemaleGradeDVerificationType" id="femaleGradeDVerifTypeSelect" onchange="toggleIncentiveFields('femaleGradeDVerif')">
+                                    <option value="TargetBasis" selected="@(Model.IncentiveConfig.FemaleGradeDVerificationType == "TargetBasis")">Target Basis (Target & Amount)</option>
+                                    <option value="ProfileBasis" selected="@(Model.IncentiveConfig.FemaleGradeDVerificationType == "ProfileBasis")">Profile Basis (Per Profile Amount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" id="femaleGradeDVerifTargetCol">
+                                <label class="form-label font-weight-bold">Target Count</label>
+                                <input type="number" min="0" class="form-control" name="FemaleGradeDVerificationTarget" value="@(Model.IncentiveConfig.FemaleGradeDVerificationTarget ?? 0)" placeholder="e.g. 20" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold">Incentive Amount (₹)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="FemaleGradeDVerificationAmount" value="@(Model.IncentiveConfig.FemaleGradeDVerificationAmount > 0 ? Model.IncentiveConfig.FemaleGradeDVerificationAmount.ToString("G29") : "")" placeholder="e.g. 200" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Male Premium Conversion -->
+                    <div class="incentive-box">
+                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 6. Male Premium Conversion Incentive</div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Type</label>
@@ -326,9 +370,9 @@
                         </div>
                     </div>
 
-                    <!-- 5. Female Premium Conversion -->
+                    <!-- 7. Female Premium Conversion -->
                     <div class="incentive-box">
-                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 5. Female Premium Conversion Incentive</div>
+                        <div class="incentive-title"><i class="fas fa-crown me-1"></i> 7. Female Premium Conversion Incentive</div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label font-weight-bold">Incentive Type</label>
@@ -486,12 +530,18 @@
             if (prefix === "maleVerif") {
                 selectId = "maleVerifTypeSelect";
                 targetColId = "maleVerifTargetCol";
-            } else if (prefix === "femaleVerif") {
-                selectId = "femaleVerifTypeSelect";
-                targetColId = "femaleVerifTargetCol";
-            } else if (prefix === "femaleDocVerif") {
-                selectId = "femaleDocVerifTypeSelect";
-                targetColId = "femaleDocVerifTargetCol";
+            } else if (prefix === "femaleGradeAVerif") {
+                selectId = "femaleGradeAVerifTypeSelect";
+                targetColId = "femaleGradeAVerifTargetCol";
+            } else if (prefix === "femaleGradeBVerif") {
+                selectId = "femaleGradeBVerifTypeSelect";
+                targetColId = "femaleGradeBVerifTargetCol";
+            } else if (prefix === "femaleGradeCVerif") {
+                selectId = "femaleGradeCVerifTypeSelect";
+                targetColId = "femaleGradeCVerifTargetCol";
+            } else if (prefix === "femaleGradeDVerif") {
+                selectId = "femaleGradeDVerifTypeSelect";
+                targetColId = "femaleGradeDVerifTargetCol";
             } else if (prefix === "maleConv") {
                 selectId = "maleConvTypeSelect";
                 targetColId = "maleConvTargetCol";
@@ -515,8 +565,10 @@
         document.addEventListener("DOMContentLoaded", function () {
             calculatePerDaySalary();
             toggleIncentiveFields('maleVerif');
-            toggleIncentiveFields('femaleVerif');
-            toggleIncentiveFields('femaleDocVerif');
+            toggleIncentiveFields('femaleGradeAVerif');
+            toggleIncentiveFields('femaleGradeBVerif');
+            toggleIncentiveFields('femaleGradeCVerif');
+            toggleIncentiveFields('femaleGradeDVerif');
             toggleIncentiveFields('maleConv');
             toggleIncentiveFields('femaleConv');
         });

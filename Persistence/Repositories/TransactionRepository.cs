@@ -26,8 +26,21 @@ namespace Persistence.Repositories
         }
         public async Task<Transaction> GetTransactionByTxnIdAsync(string txnId)
         {
+            if (string.IsNullOrWhiteSpace(txnId))
+                return null;
+
+            var cleanTxnId = txnId.Trim();
             return await _dbContext.Transaction
-                .FirstOrDefaultAsync(t => t.TxnId == txnId);
+                .FirstOrDefaultAsync(t => t.TxnId != null && t.TxnId.ToLower() == cleanTxnId.ToLower());
+        }
+        public async Task<bool> IsTransactionIdExistsAsync(string txnId)
+        {
+            if (string.IsNullOrWhiteSpace(txnId))
+                return false;
+
+            var cleanTxnId = txnId.Trim();
+            return await _dbContext.Transaction
+                .AnyAsync(t => t.TxnId != null && t.TxnId.ToLower() == cleanTxnId.ToLower());
         }
         public async Task<List<Transaction>> GetAllTransactionsAsync()
         {

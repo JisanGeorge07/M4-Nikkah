@@ -194,7 +194,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         && (
                             f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                             || f.PaymentCompleted
-                            || staffTransactions.Any(t => t.userId == f.ProfileId)
+                            || staffTransactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
                         ))
                     .ToList();
 
@@ -307,6 +307,12 @@ namespace URMARRY.Areas.Admin.Controllers
                 var staffSalaryConfig = salaryConfigs.FirstOrDefault(c => c.StaffId == staffId);
                 bool isIncentiveEligible = staffSalaryConfig?.IncentiveEligibility ?? true;
 
+                if (staffSalaryConfig?.IncentiveEffectiveDate.HasValue == true 
+                    && DateTime.UtcNow < staffSalaryConfig.IncentiveEffectiveDate.Value)
+                {
+                    isIncentiveEligible = false;
+                }
+
                 // ── Incentive Calculation ──────────────────────────
                 var staffIncentiveConfig = incentiveConfigs.FirstOrDefault(c => c.StaffId == staffId);
 
@@ -319,17 +325,23 @@ namespace URMARRY.Areas.Admin.Controllers
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase));
 
-                int femaleNormalVerifs = verificationFollowUps.Count(f => f.Profile != null 
-                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify
+                var approvedFemaleVerifs = verificationFollowUps.Where(f => f.Profile != null 
+                    && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-                int femaleDocVerifs = verificationFollowUps.Count(f => f.Profile != null 
-                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify
-                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+                int femaleGradeAVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "A", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrEmpty(f.VerificationGrade) && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify));
 
-                int femaleVerifications = femaleNormalVerifs + femaleDocVerifs;
+                int femaleGradeBVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "B", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrEmpty(f.VerificationGrade) && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify));
+
+                int femaleGradeCVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "C", StringComparison.OrdinalIgnoreCase));
+
+                int femaleGradeDVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "D", StringComparison.OrdinalIgnoreCase));
+
+                int femaleVerifications = femaleGradeAVerifs + femaleGradeBVerifs + femaleGradeCVerifs + femaleGradeDVerifs;
 
                 if (isIncentiveEligible && staffIncentiveConfig != null)
                 {
@@ -347,31 +359,59 @@ namespace URMARRY.Areas.Admin.Controllers
                         }
                     }
 
-                    // 2. Female Normal Profile Verification Incentive
-                    if (string.Equals(staffIncentiveConfig.FemaleVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    // 2. Female Grade A Profile Verification Incentive
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeAVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentive += femaleNormalVerifs * staffIncentiveConfig.FemaleVerificationAmount;
+                        verifIncentive += femaleGradeAVerifs * staffIncentiveConfig.FemaleGradeAVerificationAmount;
                     }
                     else
                     {
-                        int baseTarget = staffIncentiveConfig.FemaleVerificationTarget ?? 0;
-                        if (femaleNormalVerifs > baseTarget)
+                        int baseTarget = staffIncentiveConfig.FemaleGradeAVerificationTarget ?? 0;
+                        if (femaleGradeAVerifs > baseTarget)
                         {
-                            verifIncentive += (femaleNormalVerifs - baseTarget) * staffIncentiveConfig.FemaleVerificationAmount;
+                            verifIncentive += (femaleGradeAVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeAVerificationAmount;
                         }
                     }
 
-                    // 3. Female Document Profile Verification Incentive
-                    if (string.Equals(staffIncentiveConfig.FemaleDocVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    // 3. Female Grade B Profile Verification Incentive
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeBVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentive += femaleDocVerifs * staffIncentiveConfig.FemaleDocVerificationAmount;
+                        verifIncentive += femaleGradeBVerifs * staffIncentiveConfig.FemaleGradeBVerificationAmount;
                     }
                     else
                     {
-                        int baseTarget = staffIncentiveConfig.FemaleDocVerificationTarget ?? 0;
-                        if (femaleDocVerifs > baseTarget)
+                        int baseTarget = staffIncentiveConfig.FemaleGradeBVerificationTarget ?? 0;
+                        if (femaleGradeBVerifs > baseTarget)
                         {
-                            verifIncentive += (femaleDocVerifs - baseTarget) * staffIncentiveConfig.FemaleDocVerificationAmount;
+                            verifIncentive += (femaleGradeBVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeBVerificationAmount;
+                        }
+                    }
+
+                    // 4. Female Grade C Profile Verification Incentive
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeCVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentive += femaleGradeCVerifs * staffIncentiveConfig.FemaleGradeCVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleGradeCVerificationTarget ?? 0;
+                        if (femaleGradeCVerifs > baseTarget)
+                        {
+                            verifIncentive += (femaleGradeCVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeCVerificationAmount;
+                        }
+                    }
+
+                    // 5. Female Grade D Profile Verification Incentive
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeDVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentive += femaleGradeDVerifs * staffIncentiveConfig.FemaleGradeDVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleGradeDVerificationTarget ?? 0;
+                        if (femaleGradeDVerifs > baseTarget)
+                        {
+                            verifIncentive += (femaleGradeDVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeDVerificationAmount;
                         }
                     }
 
@@ -475,9 +515,88 @@ namespace URMARRY.Areas.Admin.Controllers
                 var staffComplaints = complaintRecords.Where(c => c.StaffId == staffId && c.IsApproved).ToList();
                 decimal complaintDeduction = staffComplaints.Sum(c => c.DeductionAmount);
 
+                // ── Deleted Profile Incentive Deductions ──────────
+                var verifiedFollowUps = verificationFollowUps
+                    .Where(f => f.Profile != null 
+                        && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+                        && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    .DistinctBy(f => f.ProfileId)
+                    .ToList();
+
+                var deletedProfileItems = new List<DeletedProfileDeductionItem>();
+                decimal deletedProfileDeduction = 0;
+
+                foreach (var vf in verifiedFollowUps)
+                {
+                    var profile = vf.Profile!;
+                    bool isDeleted = profile.IsDeleted 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation 
+                        || profile.DeleteReasonId != null 
+                        || !profile.IsActive;
+
+                    if (isDeleted)
+                    {
+                        bool isMale = string.Equals(profile.Gender, "Male", StringComparison.OrdinalIgnoreCase);
+                        bool isDocVerify = vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify;
+
+                        decimal unitDeduction = 0;
+                        string verifType;
+
+                        if (isMale)
+                        {
+                            verifType = isDocVerify ? "Male Document Verification" : "Male Verification";
+                            unitDeduction = isIncentiveEligible && staffIncentiveConfig != null ? staffIncentiveConfig.MaleVerificationAmount : 0;
+                        }
+                        else
+                        {
+                            string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade) 
+                                ? vf.VerificationGrade.Trim().ToUpper() 
+                                : (isDocVerify ? "A" : "B");
+                            verifType = $"Female Grade {grade} Verification";
+
+                            if (isIncentiveEligible && staffIncentiveConfig != null)
+                            {
+                                unitDeduction = grade switch
+                                {
+                                    "A" => staffIncentiveConfig.FemaleGradeAVerificationAmount,
+                                    "B" => staffIncentiveConfig.FemaleGradeBVerificationAmount,
+                                    "C" => staffIncentiveConfig.FemaleGradeCVerificationAmount,
+                                    "D" => staffIncentiveConfig.FemaleGradeDVerificationAmount,
+                                    _ => staffIncentiveConfig.FemaleGradeBVerificationAmount > 0 ? staffIncentiveConfig.FemaleGradeBVerificationAmount : staffIncentiveConfig.FemaleVerificationAmount
+                                };
+                            }
+                        }
+
+                        string delStatus = !string.IsNullOrEmpty(profile.DeleteReasonText) 
+                            ? profile.DeleteReasonText 
+                            : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled" 
+                                : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation" 
+                                : (profile.IsDeleted ? "Profile Deleted" : "Deactivated")));
+
+                        deletedProfileItems.Add(new DeletedProfileDeductionItem
+                        {
+                            ProfileId = profile.Id,
+                            RegisterNumber = !string.IsNullOrEmpty(profile.RegisterNumber) ? profile.RegisterNumber : ("ID #" + profile.Id),
+                            ProfileName = !string.IsNullOrEmpty(profile.Name) ? profile.Name : "Profile #" + profile.Id,
+                            Gender = profile.Gender ?? "N/A",
+                            VerificationType = verifType,
+                            VerifiedDate = vf.ModifiedOn != default ? vf.ModifiedOn : vf.CreatedOn,
+                            DeletionStatus = delStatus,
+                            DeductionAmount = unitDeduction
+                        });
+
+                        deletedProfileDeduction += unitDeduction;
+                    }
+                }
+
                 // ── Performance Score (composite) ──────────────────
-                decimal perfScore = (totalConversions * 10) + (totalCollection / 1000) +
-                    (gradeA * 4 + gradeB * 3 + gradeC * 2 + gradeD) + dailyTargetPercent;
+                // Normalized performance score (0-100, matching Staff API formula)
+                int totalVerificationsForScore = gradeA + gradeB + gradeC + gradeD;
+                decimal conversionScore = Math.Min(40, totalConversions * 8);
+                decimal verificationScore = Math.Min(30, totalVerificationsForScore * 5);
+                decimal targetScore = Math.Min(30, (dailyTargetPercent / 100) * 30);
+                decimal perfScore = Math.Round(conversionScore + verificationScore + targetScore, 2);
 
                 var row = new StaffComparisonRow
                 {
@@ -501,6 +620,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     IncentivePayable = totalIncentive,
                     LeaveDeductions = leaveDeduction,
                     ComplaintDeductions = complaintDeduction,
+                    DeletedProfileDeductions = deletedProfileDeduction,
+                    DeletedProfileItems = deletedProfileItems,
                     PerformanceScore = perfScore
                 };
 
@@ -574,7 +695,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     var staffSalConfig = salaryConfigs.FirstOrDefault(c => c.StaffId == staff.Id);
                     decimal basicSalary = staffSalConfig?.BasicMonthlySalary ?? 0;
                     decimal totalInc = staffRow?.IncentivePayable ?? 0;
-                    decimal totalDed = (staffRow?.LeaveDeductions ?? 0) + (staffRow?.ComplaintDeductions ?? 0);
+                    decimal totalDed = (staffRow?.LeaveDeductions ?? 0) + (staffRow?.ComplaintDeductions ?? 0) + (staffRow?.DeletedProfileDeductions ?? 0);
                     decimal estimated = basicSalary + totalInc - totalDed;
 
                     var newPayroll = new StaffPayroll
@@ -592,6 +713,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         TotalIncentive = totalInc,
                         LeaveDeduction = staffRow?.LeaveDeductions ?? 0,
                         ComplaintDeduction = staffRow?.ComplaintDeductions ?? 0,
+                        DeletedProfileDeduction = staffRow?.DeletedProfileDeductions ?? 0,
                         TotalDeduction = totalDed,
                         EstimatedPayroll = estimated,
                         ApprovedPayroll = 0,
@@ -608,7 +730,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     decimal basicSalary = staffSalConfig?.BasicMonthlySalary ?? 0;
                     decimal adminInc = existingPayroll.AdminIncentive;
                     decimal totalInc = (staffRow?.IncentivePayable ?? 0) + adminInc;
-                    decimal totalDed = (staffRow?.LeaveDeductions ?? 0) + (staffRow?.ComplaintDeductions ?? 0);
+                    decimal totalDed = (staffRow?.LeaveDeductions ?? 0) + (staffRow?.ComplaintDeductions ?? 0) + (staffRow?.DeletedProfileDeductions ?? 0);
 
                     existingPayroll.BasicSalary = basicSalary;
                     existingPayroll.PremiumIncentiveBoys = staffRow?.PremiumIncentiveBoys ?? 0;
@@ -619,6 +741,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     existingPayroll.TotalIncentive = totalInc;
                     existingPayroll.LeaveDeduction = staffRow?.LeaveDeductions ?? 0;
                     existingPayroll.ComplaintDeduction = staffRow?.ComplaintDeductions ?? 0;
+                    existingPayroll.DeletedProfileDeduction = staffRow?.DeletedProfileDeductions ?? 0;
                     existingPayroll.TotalDeduction = totalDed;
                     existingPayroll.EstimatedPayroll = basicSalary + totalInc - totalDed;
                 }
@@ -646,6 +769,8 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 adminIncentiveItemsMap.TryGetValue(payroll.Id, out var items);
 
+                var staffRow = model.StaffRows.FirstOrDefault(r => r.StaffId == payroll.StaffId);
+
                 model.PayrollRows.Add(new StaffPayrollRow
                 {
                     PayrollId = payroll.Id,
@@ -665,6 +790,10 @@ namespace URMARRY.Areas.Admin.Controllers
                         CreatedOn = i.CreatedOn
                     }).OrderBy(i => i.CreatedOn).ToList() ?? new List<AdminIncentiveItemRow>(),
                     TotalIncentive = payroll.TotalIncentive,
+                    LeaveDeduction = payroll.LeaveDeduction,
+                    ComplaintDeduction = payroll.ComplaintDeduction,
+                    DeletedProfileDeduction = payroll.DeletedProfileDeduction > 0 ? payroll.DeletedProfileDeduction : (staffRow?.DeletedProfileDeductions ?? 0),
+                    DeletedProfileItems = staffRow?.DeletedProfileItems ?? new List<DeletedProfileDeductionItem>(),
                     TotalDeduction = payroll.TotalDeduction,
                     EstimatedPayroll = payroll.EstimatedPayroll,
                     ApprovedPayroll = payroll.ApprovedPayroll,
@@ -1001,6 +1130,7 @@ namespace URMARRY.Areas.Admin.Controllers
                 totalIncentive = payroll.TotalIncentive,
                 leaveDeduction = payroll.LeaveDeduction,
                 complaintDeduction = payroll.ComplaintDeduction,
+                deletedProfileDeduction = payroll.DeletedProfileDeduction,
                 totalDeduction = payroll.TotalDeduction,
                 estimatedPayroll = payroll.EstimatedPayroll,
                 approvedPayroll = payroll.ApprovedPayroll,
@@ -1036,6 +1166,9 @@ namespace URMARRY.Areas.Admin.Controllers
                     basicSalary = p.BasicSalary,
                     adminIncentive = p.AdminIncentive,
                     totalIncentive = p.TotalIncentive,
+                    leaveDeduction = p.LeaveDeduction,
+                    complaintDeduction = p.ComplaintDeduction,
+                    deletedProfileDeduction = p.DeletedProfileDeduction,
                     totalDeduction = p.TotalDeduction,
                     estimatedPayroll = p.EstimatedPayroll,
                     approvedPayroll = p.ApprovedPayroll,

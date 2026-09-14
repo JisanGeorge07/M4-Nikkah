@@ -17,17 +17,20 @@ namespace URMARRY.Areas.Admin.Controllers
     public class ColdLeadController : Controller
     {
         private readonly IRepository<ColdLead> _coldLeadRepo;
+        private readonly IRepository<Registration> _registrationRepo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<ColdLeadController> _logger;
 
         public ColdLeadController(
             IRepository<ColdLead> coldLeadRepo,
+            IRepository<Registration> registrationRepo,
             UserManager<ApplicationUser> userManager,
             IMapper mapper,
             ILogger<ColdLeadController> logger)
         {
             _coldLeadRepo = coldLeadRepo;
+            _registrationRepo = registrationRepo;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
@@ -132,10 +135,25 @@ namespace URMARRY.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Name and Phone Number are required." });
                 }
 
+                var cleanPhone = phoneNumber.Trim();
+
+                // Check if a registered profile already exists with this phone number
+                var existingProfile = await _registrationRepo.GetQueryable()
+                    .Where(x => !x.IsDeleted && x.Phone == cleanPhone && x.IsVerified)
+                    .FirstOrDefaultAsync();
+
+                if (existingProfile != null)
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone}). You cannot create a cold lead for an existing profile." 
+                    });
+                }
+
                 var coldLead = new ColdLead
                 {
                     Name = name.Trim(),
-                    PhoneNumber = phoneNumber.Trim(),
+                    PhoneNumber = cleanPhone,
                     AssignedStaffId = assignedStaffId,
                     Status = ColdLeadStatus.Pending,
                     Remarks = remarks?.Trim(),
@@ -166,8 +184,26 @@ namespace URMARRY.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Cold Lead not found." });
                 }
 
+                var cleanPhone = phoneNumber?.Trim();
+                if (!string.IsNullOrWhiteSpace(cleanPhone) && cleanPhone != coldLead.PhoneNumber)
+                {
+                    // Check if a registered profile exists with this new phone number
+                    var existingProfile = await _registrationRepo.GetQueryable()
+                        .Where(x => !x.IsDeleted && x.Phone == cleanPhone && x.IsVerified)
+                        .FirstOrDefaultAsync();
+
+                    if (existingProfile != null)
+                    {
+                        return Json(new { 
+                            success = false, 
+                            message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone})." 
+                        });
+                    }
+
+                    coldLead.PhoneNumber = cleanPhone;
+                }
+
                 if (!string.IsNullOrWhiteSpace(name)) coldLead.Name = name.Trim();
-                if (!string.IsNullOrWhiteSpace(phoneNumber)) coldLead.PhoneNumber = phoneNumber.Trim();
                 coldLead.AssignedStaffId = assignedStaffId;
                 coldLead.Status = status;
                 coldLead.Remarks = remarks?.Trim();

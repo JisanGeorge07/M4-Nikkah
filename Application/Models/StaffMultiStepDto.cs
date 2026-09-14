@@ -30,12 +30,32 @@ namespace Application.Models
         public int? MaleVerificationTarget { get; set; }
         public decimal MaleVerificationAmount { get; set; }
 
-        // 2. Female Normal Profile Verification
+        // 2. Female Grade A Profile Verification
+        public string FemaleGradeAVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
+        public int? FemaleGradeAVerificationTarget { get; set; }
+        public decimal FemaleGradeAVerificationAmount { get; set; }
+
+        // 3. Female Grade B Profile Verification
+        public string FemaleGradeBVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
+        public int? FemaleGradeBVerificationTarget { get; set; }
+        public decimal FemaleGradeBVerificationAmount { get; set; }
+
+        // 4. Female Grade C Profile Verification
+        public string FemaleGradeCVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
+        public int? FemaleGradeCVerificationTarget { get; set; }
+        public decimal FemaleGradeCVerificationAmount { get; set; }
+
+        // 5. Female Grade D Profile Verification
+        public string FemaleGradeDVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
+        public int? FemaleGradeDVerificationTarget { get; set; }
+        public decimal FemaleGradeDVerificationAmount { get; set; }
+
+        // Legacy Female Normal Profile Verification (Kept for DB compatibility)
         public string FemaleVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
         public int? FemaleVerificationTarget { get; set; }
         public decimal FemaleVerificationAmount { get; set; }
 
-        // 3. Female Document Profile Verification
+        // Legacy Female Document Profile Verification (Kept for DB compatibility)
         public string FemaleDocVerificationType { get; set; } = "TargetBasis"; // "TargetBasis" or "ProfileBasis"
         public int? FemaleDocVerificationTarget { get; set; }
         public decimal FemaleDocVerificationAmount { get; set; }

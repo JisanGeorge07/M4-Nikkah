@@ -469,8 +469,19 @@ namespace URMARRY.Controllers.Api.Staff
         {
             try
             {
+                var profile = await _registrationRepo.Get(profileId);
+                if (profile == null || profile.IsDeleted)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        data = Array.Empty<object>(),
+                        message = "Profile not found or deleted."
+                    });
+                }
+
                 var followUps = await _followUpRepo.GetQueryable()
-                    .Where(f => f.ProfileId == profileId && !f.IsDeleted)
+                    .Where(f => f.ProfileId == profileId && !f.IsDeleted && f.Profile != null && !f.Profile.IsDeleted)
                     .Include(f => f.Timelines)
                     .Include(f => f.Profile)
                     .OrderByDescending(f => f.CreatedOn)
@@ -556,7 +567,7 @@ namespace URMARRY.Controllers.Api.Staff
             try
             {
                 IQueryable<FollowUp> query = _followUpRepo.GetQueryable()
-                    .Where(f => f.AssignedStaffId == staffId && !f.IsDeleted)
+                    .Where(f => f.AssignedStaffId == staffId && !f.IsDeleted && f.Profile != null && !f.Profile.IsDeleted)
                     .Include(f => f.Profile);
 
                 if (type.HasValue)
@@ -567,6 +578,9 @@ namespace URMARRY.Controllers.Api.Staff
                 query = query.OrderByDescending(f => f.CreatedOn).ThenByDescending(f => f.Id);
 
                 var followUps = await query.ToListAsync();
+
+                // Defensive in-memory check to ensure deleted profiles are excluded
+                followUps = followUps.Where(f => f.Profile != null && !f.Profile.IsDeleted).ToList();
 
                 // Batch fetch latest Transaction and PlanPurchase details for these profiles
                 var profileIds = followUps.Select(f => f.ProfileId).Distinct().ToList();
@@ -1625,6 +1639,39 @@ namespace URMARRY.Controllers.Api.Staff
         }
 
         /// <summary>
+        /// Checks if a transaction ID is already used in Transactions or pending FollowUps.
+        /// </summary>
+        [HttpGet("check-txnid-availability")]
+        public async Task<IActionResult> CheckTxnIdAvailability([FromQuery] string txnId, [FromQuery] long? followUpId = null)
+        {
+            if (string.IsNullOrWhiteSpace(txnId))
+            {
+                return BadRequest(new { available = false, message = "Transaction ID cannot be empty." });
+            }
+
+            var cleanTxnId = txnId.Trim();
+            bool isUsedInTxn = await _dbContext.Transaction.AnyAsync(t => t.TxnId != null && t.TxnId.ToLower() == cleanTxnId.ToLower());
+            if (isUsedInTxn)
+            {
+                return Ok(new { available = false, message = "This Transaction ID is already used for another transaction." });
+            }
+
+            var followUpQuery = _dbContext.FollowUps.Where(f => !f.IsDeleted && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+            if (followUpId.HasValue && followUpId.Value > 0)
+            {
+                followUpQuery = followUpQuery.Where(f => f.Id != followUpId.Value);
+            }
+
+            bool isUsedInFollowUp = await followUpQuery.AnyAsync();
+            if (isUsedInFollowUp)
+            {
+                return Ok(new { available = false, message = "This Transaction ID is already submitted in a staff follow-up payment." });
+            }
+
+            return Ok(new { available = true, message = "Transaction ID is available." });
+        }
+
+        /// <summary>
         /// Logs / updates a follow-up call/interaction.
         /// </summary>
         [HttpPost("update-followup")]
@@ -1741,9 +1788,23 @@ namespace URMARRY.Controllers.Api.Staff
                     {
                         if (string.Equals(model.PaymentMode, "Offline", StringComparison.OrdinalIgnoreCase))
                         {
+                            if (string.IsNullOrWhiteSpace(model.TransactionId))
+                            {
+                                return BadRequest(new { success = false, message = "Transaction ID is required for offline payment." });
+                            }
+
+                            var cleanTxnId = model.TransactionId.Trim();
+                            bool isUsedInTxn = await _dbContext.Transaction.AnyAsync(t => t.TxnId != null && t.TxnId.ToLower() == cleanTxnId.ToLower());
+                            bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.Id != followUp.Id && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+
+                            if (isUsedInTxn || isUsedInFollowUp)
+                            {
+                                return BadRequest(new { success = false, message = "This Transaction ID is already used for another transaction. Please enter a unique Transaction ID." });
+                            }
+
                             followUp.PaymentMode = "Offline";
                             followUp.OfflinePaymentType = model.OfflinePaymentType;
-                            followUp.TransactionId = model.TransactionId;
+                            followUp.TransactionId = cleanTxnId;
                             followUp.PaymentAmount = model.PaymentAmount;
                             followUp.PaymentCompleted = false;
                             followUp.LatestAdminApprovalStatus = AdminApprovalStatus.Pending;
@@ -1752,7 +1813,7 @@ namespace URMARRY.Controllers.Api.Staff
                             {
                                 FollowUpId = followUp.Id,
                                 Status = AdminApprovalStatus.Pending,
-                                Remarks = $"Pending admin review for offline payment ({staffName}). TxnId: {model.TransactionId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
+                                Remarks = $"Pending admin review for offline payment ({staffName}). TxnId: {cleanTxnId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
                                 ActionDate = null,
                                 ActionBy = null,
                                 IsActive = true
@@ -1761,8 +1822,8 @@ namespace URMARRY.Controllers.Api.Staff
                             await _dbContext.SaveChangesAsync();
 
                             timeline.Remarks = string.IsNullOrEmpty(timeline.Remarks)
-                                ? $"Offline payment details submitted (Txn: {model.TransactionId}, Amount: {model.PaymentAmount})"
-                                : $"{timeline.Remarks} [Offline Payment: {model.TransactionId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
+                                ? $"Offline payment details submitted (Txn: {cleanTxnId}, Amount: {model.PaymentAmount})"
+                                : $"{timeline.Remarks} [Offline Payment: {cleanTxnId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
                         }
                         else
                         {
@@ -1847,9 +1908,23 @@ namespace URMARRY.Controllers.Api.Staff
                     {
                         if (string.Equals(model.PaymentMode, "Offline", StringComparison.OrdinalIgnoreCase))
                         {
+                            if (string.IsNullOrWhiteSpace(model.TransactionId))
+                            {
+                                return BadRequest(new { success = false, message = "Transaction ID is required for offline renewal payment." });
+                            }
+
+                            var cleanTxnId = model.TransactionId.Trim();
+                            bool isUsedInTxn = await _dbContext.Transaction.AnyAsync(t => t.TxnId != null && t.TxnId.ToLower() == cleanTxnId.ToLower());
+                            bool isUsedInFollowUp = await _dbContext.FollowUps.AnyAsync(f => !f.IsDeleted && f.Id != followUp.Id && f.TransactionId != null && f.TransactionId.ToLower() == cleanTxnId.ToLower());
+
+                            if (isUsedInTxn || isUsedInFollowUp)
+                            {
+                                return BadRequest(new { success = false, message = "This Transaction ID is already used for another transaction. Please enter a unique Transaction ID." });
+                            }
+
                             followUp.PaymentMode = "Offline";
                             followUp.OfflinePaymentType = model.OfflinePaymentType;
-                            followUp.TransactionId = model.TransactionId;
+                            followUp.TransactionId = cleanTxnId;
                             followUp.PaymentAmount = model.PaymentAmount;
                             followUp.PaymentCompleted = false;
                             followUp.LatestAdminApprovalStatus = AdminApprovalStatus.Pending;
@@ -1858,7 +1933,7 @@ namespace URMARRY.Controllers.Api.Staff
                             {
                                 FollowUpId = followUp.Id,
                                 Status = AdminApprovalStatus.Pending,
-                                Remarks = $"Pending admin review for offline renewal payment ({staffName}). TxnId: {model.TransactionId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
+                                Remarks = $"Pending admin review for offline renewal payment ({staffName}). TxnId: {cleanTxnId}, Type: {model.OfflinePaymentType}, Amount: {model.PaymentAmount}. Remarks: {model.Remarks}",
                                 ActionDate = null,
                                 ActionBy = null,
                                 IsActive = true
@@ -1867,8 +1942,8 @@ namespace URMARRY.Controllers.Api.Staff
                             await _dbContext.SaveChangesAsync();
 
                             timeline.Remarks = string.IsNullOrEmpty(timeline.Remarks)
-                                ? $"Offline payment details submitted (Txn: {model.TransactionId}, Amount: {model.PaymentAmount})"
-                                : $"{timeline.Remarks} [Offline Payment: {model.TransactionId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
+                                ? $"Offline payment details submitted (Txn: {cleanTxnId}, Amount: {model.PaymentAmount})"
+                                : $"{timeline.Remarks} [Offline Payment: {cleanTxnId}, Amount: {model.PaymentAmount}, Type: {model.OfflinePaymentType}]";
                         }
                         else
                         {
@@ -2887,7 +2962,7 @@ namespace URMARRY.Controllers.Api.Staff
                         && (
                             f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                             || f.PaymentCompleted
-                            || transactions.Any(t => t.userId == f.ProfileId)
+                            || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
                         ))
                     .ToList();
 
@@ -2970,17 +3045,23 @@ namespace URMARRY.Controllers.Api.Staff
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase));
 
-                int femaleNormalVerifs = verificationFollowUps.Count(f => f.Profile != null 
-                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify
+                var approvedFemaleVerifs = verificationFollowUps.Where(f => f.Profile != null 
+                    && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-                int femaleDocVerifs = verificationFollowUps.Count(f => f.Profile != null 
-                    && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify
-                    && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                    && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase));
+                int femaleGradeAVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "A", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrEmpty(f.VerificationGrade) && f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify));
 
-                int verifGirls = femaleNormalVerifs + femaleDocVerifs;
+                int femaleGradeBVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "B", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrEmpty(f.VerificationGrade) && f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify));
+
+                int femaleGradeCVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "C", StringComparison.OrdinalIgnoreCase));
+
+                int femaleGradeDVerifs = approvedFemaleVerifs.Count(f => string.Equals(f.VerificationGrade, "D", StringComparison.OrdinalIgnoreCase));
+
+                int verifGirls = femaleGradeAVerifs + femaleGradeBVerifs + femaleGradeCVerifs + femaleGradeDVerifs;
                 int totalApprovedVerifications = verifBoys + verifGirls;
 
                 // 8. Salary Config & Eligibility Flags
@@ -3024,8 +3105,10 @@ namespace URMARRY.Controllers.Api.Staff
                 var staffIncentiveConfig = await _dbContext.StaffIncentiveConfigs.FirstOrDefaultAsync(c => c.StaffId == targetStaffId && !c.IsDeleted);
 
                 decimal verifIncentiveBoys = 0;
-                decimal verifIncentiveGirlsNormal = 0;
-                decimal verifIncentiveGirlsDoc = 0;
+                decimal verifIncentiveGirlsGradeA = 0;
+                decimal verifIncentiveGirlsGradeB = 0;
+                decimal verifIncentiveGirlsGradeC = 0;
+                decimal verifIncentiveGirlsGradeD = 0;
                 decimal premiumIncentiveBoys = 0;
                 decimal premiumIncentiveGirls = 0;
 
@@ -3045,31 +3128,59 @@ namespace URMARRY.Controllers.Api.Staff
                         }
                     }
 
-                    // Female Normal Verification (Requires Admin Approval)
-                    if (string.Equals(staffIncentiveConfig.FemaleVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    // Female Grade A Verification (Requires Admin Approval)
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeAVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentiveGirlsNormal += femaleNormalVerifs * staffIncentiveConfig.FemaleVerificationAmount;
+                        verifIncentiveGirlsGradeA += femaleGradeAVerifs * staffIncentiveConfig.FemaleGradeAVerificationAmount;
                     }
                     else
                     {
-                        int baseTarget = staffIncentiveConfig.FemaleVerificationTarget ?? 0;
-                        if (femaleNormalVerifs > baseTarget)
+                        int baseTarget = staffIncentiveConfig.FemaleGradeAVerificationTarget ?? 0;
+                        if (femaleGradeAVerifs > baseTarget)
                         {
-                            verifIncentiveGirlsNormal += (femaleNormalVerifs - baseTarget) * staffIncentiveConfig.FemaleVerificationAmount;
+                            verifIncentiveGirlsGradeA += (femaleGradeAVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeAVerificationAmount;
                         }
                     }
 
-                    // Female Document Verification (Requires Admin Approval)
-                    if (string.Equals(staffIncentiveConfig.FemaleDocVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    // Female Grade B Verification (Requires Admin Approval)
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeBVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
                     {
-                        verifIncentiveGirlsDoc += femaleDocVerifs * staffIncentiveConfig.FemaleDocVerificationAmount;
+                        verifIncentiveGirlsGradeB += femaleGradeBVerifs * staffIncentiveConfig.FemaleGradeBVerificationAmount;
                     }
                     else
                     {
-                        int baseTarget = staffIncentiveConfig.FemaleDocVerificationTarget ?? 0;
-                        if (femaleDocVerifs > baseTarget)
+                        int baseTarget = staffIncentiveConfig.FemaleGradeBVerificationTarget ?? 0;
+                        if (femaleGradeBVerifs > baseTarget)
                         {
-                            verifIncentiveGirlsDoc += (femaleDocVerifs - baseTarget) * staffIncentiveConfig.FemaleDocVerificationAmount;
+                            verifIncentiveGirlsGradeB += (femaleGradeBVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeBVerificationAmount;
+                        }
+                    }
+
+                    // Female Grade C Verification (Requires Admin Approval)
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeCVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentiveGirlsGradeC += femaleGradeCVerifs * staffIncentiveConfig.FemaleGradeCVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleGradeCVerificationTarget ?? 0;
+                        if (femaleGradeCVerifs > baseTarget)
+                        {
+                            verifIncentiveGirlsGradeC += (femaleGradeCVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeCVerificationAmount;
+                        }
+                    }
+
+                    // Female Grade D Verification (Requires Admin Approval)
+                    if (string.Equals(staffIncentiveConfig.FemaleGradeDVerificationType, "ProfileBasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        verifIncentiveGirlsGradeD += femaleGradeDVerifs * staffIncentiveConfig.FemaleGradeDVerificationAmount;
+                    }
+                    else
+                    {
+                        int baseTarget = staffIncentiveConfig.FemaleGradeDVerificationTarget ?? 0;
+                        if (femaleGradeDVerifs > baseTarget)
+                        {
+                            verifIncentiveGirlsGradeD += (femaleGradeDVerifs - baseTarget) * staffIncentiveConfig.FemaleGradeDVerificationAmount;
                         }
                     }
 
@@ -3102,7 +3213,7 @@ namespace URMARRY.Controllers.Api.Staff
                     }
                 }
 
-                decimal verifIncentiveGirls = verifIncentiveGirlsNormal + verifIncentiveGirlsDoc;
+                decimal verifIncentiveGirls = verifIncentiveGirlsGradeA + verifIncentiveGirlsGradeB + verifIncentiveGirlsGradeC + verifIncentiveGirlsGradeD;
                 decimal totalVerifIncentive = verifIncentiveBoys + verifIncentiveGirls;
                 decimal totalIncentivePayable = premiumIncentiveBoys + premiumIncentiveGirls + totalVerifIncentive;
 
@@ -3141,7 +3252,83 @@ namespace URMARRY.Controllers.Api.Staff
                     .Where(c => c.StaffId == targetStaffId && !c.IsDeleted && c.IsApproved && c.ComplaintDate >= startDate && c.ComplaintDate <= endDate)
                     .ToListAsync();
                 decimal complaintDeduction = complaintRecords.Sum(c => c.DeductionAmount);
-                decimal totalDeduction = leaveDeduction + complaintDeduction;
+
+                // Deleted Profile Incentive Deductions
+                var verifiedFollowUps = verificationFollowUps
+                    .Where(f => f.Profile != null 
+                        && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+                        && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    .DistinctBy(f => f.ProfileId)
+                    .ToList();
+
+                var deletedProfileItems = new List<object>();
+                decimal deletedProfileDeduction = 0;
+
+                foreach (var vf in verifiedFollowUps)
+                {
+                    var profile = vf.Profile!;
+                    bool isDeleted = profile.IsDeleted 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation 
+                        || profile.DeleteReasonId != null 
+                        || !profile.IsActive;
+
+                    if (isDeleted)
+                    {
+                        bool isMale = string.Equals(profile.Gender, "Male", StringComparison.OrdinalIgnoreCase);
+                        bool isDocVerify = vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify;
+
+                        decimal unitDeduction = 0;
+                        string verifType;
+
+                        if (isMale)
+                        {
+                            verifType = isDocVerify ? "Male Document Verification" : "Male Verification";
+                            unitDeduction = isIncentiveEligible && staffIncentiveConfig != null ? staffIncentiveConfig.MaleVerificationAmount : 0;
+                        }
+                        else
+                        {
+                            string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade) 
+                                ? vf.VerificationGrade.Trim().ToUpper() 
+                                : (isDocVerify ? "A" : "B");
+                            verifType = $"Female Grade {grade} Verification";
+
+                            if (isIncentiveEligible && staffIncentiveConfig != null)
+                            {
+                                unitDeduction = grade switch
+                                {
+                                    "A" => staffIncentiveConfig.FemaleGradeAVerificationAmount,
+                                    "B" => staffIncentiveConfig.FemaleGradeBVerificationAmount,
+                                    "C" => staffIncentiveConfig.FemaleGradeCVerificationAmount,
+                                    "D" => staffIncentiveConfig.FemaleGradeDVerificationAmount,
+                                    _ => staffIncentiveConfig.FemaleGradeBVerificationAmount > 0 ? staffIncentiveConfig.FemaleGradeBVerificationAmount : staffIncentiveConfig.FemaleVerificationAmount
+                                };
+                            }
+                        }
+
+                        string delStatus = !string.IsNullOrEmpty(profile.DeleteReasonText) 
+                            ? profile.DeleteReasonText 
+                            : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled" 
+                                : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation" 
+                                : (profile.IsDeleted ? "Profile Deleted" : "Deactivated")));
+
+                        deletedProfileItems.Add(new
+                        {
+                            profileId = profile.Id,
+                            registerNumber = !string.IsNullOrEmpty(profile.RegisterNumber) ? profile.RegisterNumber : ("ID #" + profile.Id),
+                            profileName = !string.IsNullOrEmpty(profile.Name) ? profile.Name : "Profile #" + profile.Id,
+                            gender = profile.Gender ?? "N/A",
+                            verificationType = verifType,
+                            verifiedDate = (vf.ModifiedOn != default ? vf.ModifiedOn : vf.CreatedOn).ToString("yyyy-MM-dd"),
+                            deletionStatus = delStatus,
+                            deductionAmount = Math.Round(unitDeduction, 2)
+                        });
+
+                        deletedProfileDeduction += unitDeduction;
+                    }
+                }
+
+                decimal totalDeduction = leaveDeduction + complaintDeduction + deletedProfileDeduction;
 
                 var payrollRecord = await _dbContext.StaffPayrolls
                     .FirstOrDefaultAsync(p => p.StaffId == targetStaffId && p.Year == filterYear && p.Month == filterMonth && !p.IsDeleted);
@@ -3239,8 +3426,12 @@ namespace URMARRY.Controllers.Api.Staff
                         {
                             verificationBoys = verifBoys,
                             verificationGirls = verifGirls,
-                            femaleNormalVerifications = femaleNormalVerifs,
-                            femaleDocVerifications = femaleDocVerifs,
+                            femaleGradeAVerifications = femaleGradeAVerifs,
+                            femaleGradeBVerifications = femaleGradeBVerifs,
+                            femaleGradeCVerifications = femaleGradeCVerifs,
+                            femaleGradeDVerifications = femaleGradeDVerifs,
+                            femaleNormalVerifications = femaleGradeBVerifs,
+                            femaleDocVerifications = femaleGradeAVerifs,
                             totalApprovedVerifications = totalApprovedVerifications,
                             gradeA = gradeA,
                             gradeB = gradeB,
@@ -3313,8 +3504,12 @@ namespace URMARRY.Controllers.Api.Staff
                         incentives = new
                         {
                             verificationIncentiveBoys = Math.Round(verifIncentiveBoys, 2),
-                            verificationIncentiveGirlsNormal = Math.Round(verifIncentiveGirlsNormal, 2),
-                            verificationIncentiveGirlsDoc = Math.Round(verifIncentiveGirlsDoc, 2),
+                            verificationIncentiveGirlsGradeA = Math.Round(verifIncentiveGirlsGradeA, 2),
+                            verificationIncentiveGirlsGradeB = Math.Round(verifIncentiveGirlsGradeB, 2),
+                            verificationIncentiveGirlsGradeC = Math.Round(verifIncentiveGirlsGradeC, 2),
+                            verificationIncentiveGirlsGradeD = Math.Round(verifIncentiveGirlsGradeD, 2),
+                            verificationIncentiveGirlsNormal = Math.Round(verifIncentiveGirlsGradeB, 2),
+                            verificationIncentiveGirlsDoc = Math.Round(verifIncentiveGirlsGradeA, 2),
                             verificationIncentiveGirls = Math.Round(verifIncentiveGirls, 2),
                             totalVerificationIncentive = Math.Round(totalVerifIncentive, 2),
                             premiumIncentiveBoys = Math.Round(premiumIncentiveBoys, 2),
@@ -3334,6 +3529,8 @@ namespace URMARRY.Controllers.Api.Staff
                             unpaidLeavesCount = unpaidLeavesCount,
                             leaveDeduction = Math.Round(leaveDeduction, 2),
                             complaintDeduction = Math.Round(complaintDeduction, 2),
+                            deletedProfileDeduction = Math.Round(deletedProfileDeduction, 2),
+                            deletedProfileDeductions = deletedProfileItems,
                             totalDeduction = Math.Round(totalDeduction, 2),
                             estimatedNetSalary = Math.Round(estimatedNetSalary, 2),
                             payrollStatus = payrollStatus

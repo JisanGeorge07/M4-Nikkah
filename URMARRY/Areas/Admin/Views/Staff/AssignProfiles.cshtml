@@ -963,6 +963,16 @@
                     statusValue = f.latestRenewalInterestStatus;
                 }
 
+                var appStatus = f.latestAdminApprovalStatus || f.LatestAdminApprovalStatus || 'None';
+                var approvalBadgeHtml = '';
+                if (appStatus === 'Pending') {
+                    approvalBadgeHtml = ' <span class="badge bg-warning text-dark font-size-10 ms-1"><i class="bi bi-hourglass-split me-0.5"></i>Pending Approval</span>';
+                } else if (appStatus === 'Approved') {
+                    approvalBadgeHtml = ' <span class="badge bg-success font-size-10 ms-1"><i class="bi bi-check-circle-fill me-0.5"></i>Approved</span>';
+                } else if (appStatus === 'Rejected') {
+                    approvalBadgeHtml = ' <span class="badge bg-danger font-size-10 ms-1"><i class="bi bi-x-circle-fill me-0.5"></i>Rejected</span>';
+                }
+
                 var contactHtml = '';
                 if (f.latestContactType && f.latestContactType !== "N/A" && f.latestContactType !== "None" && f.latestContactType !== "") {
                     contactHtml = `
@@ -977,7 +987,7 @@
                             </div>
                             <div class="col-4">
                                 <span class="text-muted d-block font-size-11">${statusLabel}</span>
-                                <span class="fw-semibold text-dark">${statusValue || 'N/A'}</span>
+                                <span class="fw-semibold text-dark">${(statusValue || 'N/A')}${approvalBadgeHtml}</span>
                             </div>
                         </div>
                     `;
