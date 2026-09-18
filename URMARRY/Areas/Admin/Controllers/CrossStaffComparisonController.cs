@@ -787,6 +787,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         Id = i.Id,
                         Amount = i.Amount,
                         Label = i.Label,
+                        IsRead = i.IsRead,
                         CreatedOn = i.CreatedOn
                     }).OrderBy(i => i.CreatedOn).ToList() ?? new List<AdminIncentiveItemRow>(),
                     TotalIncentive = payroll.TotalIncentive,

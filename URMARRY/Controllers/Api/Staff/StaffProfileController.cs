@@ -575,7 +575,7 @@ namespace URMARRY.Controllers.Api.Staff
                     query = query.Where(f => f.FollowUpType == type.Value);
                 }
 
-                query = query.OrderByDescending(f => f.CreatedOn).ThenByDescending(f => f.Id);
+                query = query.OrderByDescending(f => f.ModifiedOn > f.CreatedOn ? f.ModifiedOn : f.CreatedOn).ThenByDescending(f => f.Id);
 
                 var followUps = await query.ToListAsync();
 
@@ -669,7 +669,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                             return double.MaxValue;
                         })
-                        .ThenByDescending(f => f.CreatedOn)
+                        .ThenByDescending(f => f.ModifiedOn > f.CreatedOn ? f.ModifiedOn : f.CreatedOn)
                         .ThenByDescending(f => f.Id)
                         .ToList();
                 }
@@ -3343,7 +3343,7 @@ namespace URMARRY.Controllers.Api.Staff
                     var items = await _dbContext.StaffPayrollAdminIncentiveItems
                         .Where(i => i.StaffPayrollId == payrollRecord.Id && !i.IsDeleted)
                         .OrderBy(i => i.CreatedOn)
-                        .Select(i => new { amount = Math.Round(i.Amount, 2), label = i.Label ?? "", createdOn = i.CreatedOn })
+                        .Select(i => new { id = i.Id, amount = Math.Round(i.Amount, 2), label = i.Label ?? "", isRead = i.IsRead, createdOn = i.CreatedOn })
                         .ToListAsync();
                     adminIncentiveItems.AddRange(items);
                 }
@@ -4153,6 +4153,489 @@ namespace URMARRY.Controllers.Api.Staff
             {
                 _logger.LogError(ex, "Error creating or updating follow-ups for staff assignment (ProfileId: {ProfileId}, StaffId: {StaffId})", profileId, staffId);
             }
+        }
+
+        #endregion
+
+        #region Staff Admin Bonus / Incentive Notification API
+
+        /// <summary>
+        /// Fetches unread admin bonus/incentive items for the authenticated staff member.
+        /// Useful for displaying notification popups / banners in the staff panel.
+        /// </summary>
+        [HttpGet("admin-bonuses/unread")]
+        public async Task<IActionResult> GetUnreadAdminBonuses([FromQuery] long? staffId)
+        {
+            try
+            {
+                long targetStaffId = staffId ?? GetCurrentStaffId();
+                if (targetStaffId <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Invalid Staff ID." });
+                }
+
+                // Get all active payroll IDs for this staff member
+                var staffPayrollIds = await _dbContext.StaffPayrolls
+                    .Where(p => p.StaffId == targetStaffId && !p.IsDeleted)
+                    .Select(p => p.Id)
+                    .ToListAsync();
+
+                if (!staffPayrollIds.Any())
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "No payroll records found for staff.",
+                        unreadCount = 0,
+                        data = new List<object>()
+                    });
+                }
+
+                // Fetch unread bonus items
+                var unreadBonusItems = await _dbContext.StaffPayrollAdminIncentiveItems
+                    .Where(i => staffPayrollIds.Contains(i.StaffPayrollId) && !i.IsDeleted && !i.IsRead)
+                    .OrderByDescending(i => i.CreatedOn)
+                    .Select(i => new
+                    {
+                        id = i.Id,
+                        staffPayrollId = i.StaffPayrollId,
+                        amount = Math.Round(i.Amount, 2),
+                        label = i.Label ?? "",
+                        isRead = i.IsRead,
+                        createdOn = i.CreatedOn
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    unreadCount = unreadBonusItems.Count,
+                    data = unreadBonusItems
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching unread admin bonuses for staff ID: {StaffId}", staffId);
+                return StatusCode(500, new { success = false, message = "An error occurred while fetching unread admin bonuses." });
+            }
+        }
+
+        /// <summary>
+        /// Marks admin bonus item(s) as read.
+        /// If itemId is provided, marks that specific bonus item as read.
+        /// If itemId is null or 0, marks all unread bonus items for the staff member as read.
+        /// </summary>
+        [HttpPost("admin-bonuses/mark-as-read")]
+        public async Task<IActionResult> MarkAdminBonusAsRead([FromBody] MarkAdminBonusAsReadRequest? model)
+        {
+            try
+            {
+                long targetStaffId = model?.StaffId > 0 ? model.StaffId.Value : GetCurrentStaffId();
+                if (targetStaffId <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Invalid Staff ID." });
+                }
+
+                var staffPayrollIds = await _dbContext.StaffPayrolls
+                    .Where(p => p.StaffId == targetStaffId && !p.IsDeleted)
+                    .Select(p => p.Id)
+                    .ToListAsync();
+
+                if (!staffPayrollIds.Any())
+                {
+                    return NotFound(new { success = false, message = "No payroll records found for this staff member." });
+                }
+
+                if (model?.ItemId.HasValue == true && model.ItemId.Value > 0)
+                {
+                    var item = await _dbContext.StaffPayrollAdminIncentiveItems
+                        .FirstOrDefaultAsync(i => i.Id == model.ItemId.Value && staffPayrollIds.Contains(i.StaffPayrollId) && !i.IsDeleted);
+
+                    if (item == null)
+                    {
+                        return NotFound(new { success = false, message = "Admin bonus item not found or does not belong to this staff member." });
+                    }
+
+                    item.IsRead = true;
+                    item.ModifiedOn = DateTime.UtcNow;
+                    _dbContext.StaffPayrollAdminIncentiveItems.Update(item);
+                }
+                else
+                {
+                    var unreadItems = await _dbContext.StaffPayrollAdminIncentiveItems
+                        .Where(i => staffPayrollIds.Contains(i.StaffPayrollId) && !i.IsDeleted && !i.IsRead)
+                        .ToListAsync();
+
+                    foreach (var item in unreadItems)
+                    {
+                        item.IsRead = true;
+                        item.ModifiedOn = DateTime.UtcNow;
+                    }
+
+                    if (unreadItems.Any())
+                    {
+                        _dbContext.StaffPayrollAdminIncentiveItems.UpdateRange(unreadItems);
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+
+                // Get remaining unread count
+                var remainingUnreadCount = await _dbContext.StaffPayrollAdminIncentiveItems
+                    .CountAsync(i => staffPayrollIds.Contains(i.StaffPayrollId) && !i.IsDeleted && !i.IsRead);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Admin bonus marked as read successfully.",
+                    unreadCount = remainingUnreadCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking admin bonus as read for staff");
+                return StatusCode(500, new { success = false, message = "An error occurred while marking admin bonus as read." });
+            }
+        }
+
+        /// <summary>
+        /// Convenience route to mark a specific bonus item as read by route parameter.
+        /// </summary>
+        [HttpPost("admin-bonuses/{itemId:long}/mark-as-read")]
+        public async Task<IActionResult> MarkSingleAdminBonusAsRead(long itemId)
+        {
+            return await MarkAdminBonusAsRead(new MarkAdminBonusAsReadRequest { ItemId = itemId });
+        }
+
+        #endregion
+
+        #region Staff Deleted Profile Deductions API
+
+        /// <summary>
+        /// Fetches the list and breakdown of deleted profile verification incentive deductions (clawbacks)
+        /// for the authenticated staff member (or specified staffId) for a target year/month/period.
+        /// </summary>
+        [HttpGet("deleted-profile-deductions")]
+        public async Task<IActionResult> GetDeletedProfileDeductions(
+            [FromQuery] long? staffId,
+            [FromQuery] int? year,
+            [FromQuery] int? month,
+            [FromQuery] string? period = "Month",
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null)
+        {
+            try
+            {
+                // 1. Resolve Staff ID
+                long targetStaffId = staffId ?? GetCurrentStaffId();
+                if (targetStaffId <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Invalid Staff ID." });
+                }
+
+                // 2. Resolve Staff User & Staff Detail
+                var staffUser = await _userManager.FindByIdAsync(targetStaffId.ToString());
+                if (staffUser == null)
+                {
+                    return NotFound(new { success = false, message = "Staff member not found." });
+                }
+                string staffName = staffUser.NormalizedUserName ?? staffUser.UserName ?? "Staff Member";
+                string staffEmail = staffUser.Email ?? string.Empty;
+
+                var staffDetail = await _dbContext.StaffDetails
+                    .FirstOrDefaultAsync(s => s.UserId == targetStaffId && !s.IsDeleted);
+                string department = staffDetail?.Department ?? "General Operations";
+
+                // 3. Resolve Date Filters
+                int filterYear = year ?? DateTime.UtcNow.Year;
+                int filterMonth = month ?? DateTime.UtcNow.Month;
+                DateTime startDate;
+                DateTime endDate;
+
+                if (dateFrom.HasValue && dateTo.HasValue)
+                {
+                    startDate = dateFrom.Value.Date;
+                    endDate = dateTo.Value.Date.AddDays(1).AddTicks(-1);
+                }
+                else
+                {
+                    string cleanPeriod = (period ?? "Month").Trim();
+                    if (cleanPeriod.Equals("Day", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var localTodayStartUtc = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local).ToUniversalTime();
+                        startDate = localTodayStartUtc < DateTime.UtcNow.Date ? localTodayStartUtc : DateTime.UtcNow.Date;
+                        var localTodayEnd = DateTime.Today.AddDays(1).AddTicks(-1);
+                        var utcTodayEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+                        endDate = localTodayEnd > utcTodayEnd ? localTodayEnd : utcTodayEnd;
+                    }
+                    else if (cleanPeriod.Equals("Week", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int diff = (int)DateTime.UtcNow.DayOfWeek - (int)DayOfWeek.Monday;
+                        if (diff < 0) diff += 7;
+                        startDate = DateTime.UtcNow.Date.AddDays(-1 * diff);
+                        endDate = startDate.AddDays(7).AddTicks(-1);
+                    }
+                    else if (cleanPeriod.Equals("Year", StringComparison.OrdinalIgnoreCase))
+                    {
+                        startDate = new DateTime(filterYear, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        endDate = new DateTime(filterYear, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                    }
+                    else // Default Month
+                    {
+                        startDate = new DateTime(filterYear, filterMonth, 1, 0, 0, 0, DateTimeKind.Utc);
+                        int daysInMonth = DateTime.DaysInMonth(filterYear, filterMonth);
+                        endDate = new DateTime(filterYear, filterMonth, daysInMonth, 23, 59, 59, DateTimeKind.Utc);
+                    }
+                }
+
+                // 4. Incentive & Salary Config
+                var salaryConfig = await _dbContext.StaffSalaryConfigs.FirstOrDefaultAsync(c => c.StaffId == targetStaffId && !c.IsDeleted);
+                bool isIncentiveEligible = salaryConfig?.IncentiveEligibility ?? true;
+                if (salaryConfig?.IncentiveEffectiveDate.HasValue == true && DateTime.UtcNow < salaryConfig.IncentiveEffectiveDate.Value)
+                {
+                    isIncentiveEligible = false;
+                }
+
+                var staffIncentiveConfig = await _dbContext.StaffIncentiveConfigs.FirstOrDefaultAsync(c => c.StaffId == targetStaffId && !c.IsDeleted);
+
+                // 5. Follow-ups & Timelines
+                var staffFollowUps = await _followUpRepo.GetQueryable()
+                    .Where(f => f.AssignedStaffId == targetStaffId && !f.IsDeleted)
+                    .Include(f => f.Profile)
+                        .ThenInclude(p => p.DeleteReason)
+                    .ToListAsync();
+
+                var staffTimelines = await _followUpTimelineRepo.GetQueryable()
+                    .Where(t => t.StaffId == targetStaffId && !t.IsDeleted && t.CreatedOn >= startDate && t.CreatedOn <= endDate)
+                    .ToListAsync();
+
+                var additionalFollowUpIds = staffTimelines
+                    .Select(t => t.FollowUpId)
+                    .Where(fId => !staffFollowUps.Any(f => f.Id == fId))
+                    .Distinct()
+                    .ToList();
+
+                if (additionalFollowUpIds.Any())
+                {
+                    var extraFollowUps = await _followUpRepo.GetQueryable()
+                        .Where(f => additionalFollowUpIds.Contains(f.Id) && !f.IsDeleted)
+                        .Include(f => f.Profile)
+                            .ThenInclude(p => p.DeleteReason)
+                        .ToListAsync();
+                    staffFollowUps.AddRange(extraFollowUps);
+                }
+
+                var timelineStaffFollowUpIds = staffTimelines
+                    .Select(t => t.FollowUpId)
+                    .Distinct()
+                    .ToHashSet();
+
+                // 6. Verification Follow-ups in Period
+                var verificationFollowUps = staffFollowUps
+                    .Where(f => f.FollowUpType == FollowUpType.ProfileVerification
+                        && (
+                            timelineStaffFollowUpIds.Contains(f.Id)
+                            || (f.CreatedOn >= startDate && f.CreatedOn <= endDate)
+                            || (f.ModifiedOn >= startDate && f.ModifiedOn <= endDate)
+                        ))
+                    .ToList();
+
+                var verifiedFollowUps = verificationFollowUps
+                    .Where(f => f.Profile != null 
+                        && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+                        && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    .DistinctBy(f => f.ProfileId)
+                    .ToList();
+
+                // 7. Calculate Deductions for Deleted/Recycled/Inactive Profiles
+                var deletedProfileItems = new List<object>();
+                decimal totalDeletedDeduction = 0;
+                decimal maleDeduction = 0;
+                int maleDeletedCount = 0;
+                decimal femaleDeduction = 0;
+                int femaleDeletedCount = 0;
+                int femaleGradeACount = 0;
+                decimal femaleGradeAAmount = 0;
+                int femaleGradeBCount = 0;
+                decimal femaleGradeBAmount = 0;
+                int femaleGradeCCount = 0;
+                decimal femaleGradeCAmount = 0;
+                int femaleGradeDCount = 0;
+                decimal femaleGradeDAmount = 0;
+
+                foreach (var vf in verifiedFollowUps)
+                {
+                    var profile = vf.Profile!;
+                    bool isDeleted = profile.IsDeleted 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled 
+                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation 
+                        || profile.DeleteReasonId != null 
+                        || !profile.IsActive;
+
+                    if (isDeleted)
+                    {
+                        bool isMale = string.Equals(profile.Gender, "Male", StringComparison.OrdinalIgnoreCase);
+                        bool isDocVerify = vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify;
+
+                        decimal unitDeduction = 0;
+                        string verifType;
+                        string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade) 
+                            ? vf.VerificationGrade.Trim().ToUpper() 
+                            : (isDocVerify ? "A" : "B");
+
+                        if (isMale)
+                        {
+                            verifType = isDocVerify ? "Male Document Verification" : "Male Verification";
+                            unitDeduction = isIncentiveEligible && staffIncentiveConfig != null ? staffIncentiveConfig.MaleVerificationAmount : 0;
+                            maleDeduction += unitDeduction;
+                            maleDeletedCount++;
+                        }
+                        else
+                        {
+                            verifType = $"Female Grade {grade} Verification";
+
+                            if (isIncentiveEligible && staffIncentiveConfig != null)
+                            {
+                                unitDeduction = grade switch
+                                {
+                                    "A" => staffIncentiveConfig.FemaleGradeAVerificationAmount,
+                                    "B" => staffIncentiveConfig.FemaleGradeBVerificationAmount,
+                                    "C" => staffIncentiveConfig.FemaleGradeCVerificationAmount,
+                                    "D" => staffIncentiveConfig.FemaleGradeDVerificationAmount,
+                                    _ => staffIncentiveConfig.FemaleGradeBVerificationAmount > 0 ? staffIncentiveConfig.FemaleGradeBVerificationAmount : staffIncentiveConfig.FemaleVerificationAmount
+                                };
+                            }
+
+                            femaleDeduction += unitDeduction;
+                            femaleDeletedCount++;
+
+                            switch (grade)
+                            {
+                                case "A":
+                                    femaleGradeACount++;
+                                    femaleGradeAAmount += unitDeduction;
+                                    break;
+                                case "B":
+                                    femaleGradeBCount++;
+                                    femaleGradeBAmount += unitDeduction;
+                                    break;
+                                case "C":
+                                    femaleGradeCCount++;
+                                    femaleGradeCAmount += unitDeduction;
+                                    break;
+                                case "D":
+                                    femaleGradeDCount++;
+                                    femaleGradeDAmount += unitDeduction;
+                                    break;
+                            }
+                        }
+
+                        string delStatus = !string.IsNullOrEmpty(profile.DeleteReason?.Reason)
+                            ? profile.DeleteReason.Reason
+                            : (!string.IsNullOrEmpty(profile.DeleteReasonText) 
+                                ? profile.DeleteReasonText 
+                                : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled" 
+                                    : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation" 
+                                    : (profile.IsDeleted ? "Profile Deleted" : "Deactivated"))));
+
+                        DateTime verifiedDate = vf.ModifiedOn != default ? vf.ModifiedOn : vf.CreatedOn;
+
+                        deletedProfileItems.Add(new
+                        {
+                            profileId = profile.Id,
+                            registerNumber = !string.IsNullOrEmpty(profile.RegisterNumber) ? profile.RegisterNumber : ("ID #" + profile.Id),
+                            profileName = !string.IsNullOrEmpty(profile.Name) ? profile.Name : "Profile #" + profile.Id,
+                            gender = profile.Gender ?? "N/A",
+                            photoUrl = profile.ImagePath,
+                            phone = profile.Phone,
+                            email = profile.Email,
+                            verificationType = verifType,
+                            verificationGrade = isMale ? "Male" : grade,
+                            verificationStatus = vf.LatestProfileVerificationStatus.ToString(),
+                            adminApprovalStatus = vf.LatestAdminApprovalStatus.ToString(),
+                            verifiedDate = verifiedDate.ToString("yyyy-MM-dd"),
+                            verifiedDateTime = verifiedDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                            deletionStatus = delStatus,
+                            deletionReason = delStatus,
+                            deleteReasonText = profile.DeleteReasonText,
+                            deleteReasonId = profile.DeleteReasonId,
+                            isRecycled = profile.DisabledReason == Application.Constants.DisabledReason.Recycled,
+                            isReportedViolation = profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation,
+                            isActive = profile.IsActive,
+                            isDeleted = profile.IsDeleted,
+                            followUpId = vf.Id,
+                            deductionAmount = Math.Round(unitDeduction, 2)
+                        });
+
+                        totalDeletedDeduction += unitDeduction;
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Deleted profile verification deductions fetched successfully.",
+                    data = new
+                    {
+                        staff = new
+                        {
+                            staffId = targetStaffId,
+                            staffName = staffName,
+                            email = staffEmail,
+                            department = department
+                        },
+                        filter = new
+                        {
+                            period = period ?? "Month",
+                            year = filterYear,
+                            month = filterMonth,
+                            startDate = startDate.ToString("yyyy-MM-dd"),
+                            endDate = endDate.ToString("yyyy-MM-dd")
+                        },
+                        summary = new
+                        {
+                            totalDeductionAmount = Math.Round(totalDeletedDeduction, 2),
+                            totalDeletedProfiles = deletedProfileItems.Count,
+                            maleDeductionAmount = Math.Round(maleDeduction, 2),
+                            maleDeletedCount = maleDeletedCount,
+                            femaleDeductionAmount = Math.Round(femaleDeduction, 2),
+                            femaleDeletedCount = femaleDeletedCount,
+                            femaleBreakdown = new
+                            {
+                                gradeA = new { count = femaleGradeACount, amount = Math.Round(femaleGradeAAmount, 2) },
+                                gradeB = new { count = femaleGradeBCount, amount = Math.Round(femaleGradeBAmount, 2) },
+                                gradeC = new { count = femaleGradeCCount, amount = Math.Round(femaleGradeCAmount, 2) },
+                                gradeD = new { count = femaleGradeDCount, amount = Math.Round(femaleGradeDAmount, 2) }
+                            }
+                        },
+                        deletedProfiles = deletedProfileItems
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching deleted profile deductions for staff");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "An error occurred while fetching deleted profile deductions."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Convenience route to fetch deleted profile verification incentive deductions by route parameter staffId.
+        /// </summary>
+        [HttpGet("deleted-profile-deductions/{staffId:long}")]
+        public async Task<IActionResult> GetDeletedProfileDeductionsByStaffId(
+            long staffId,
+            [FromQuery] int? year,
+            [FromQuery] int? month,
+            [FromQuery] string? period = "Month",
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null)
+        {
+            return await GetDeletedProfileDeductions(staffId, year, month, period, dateFrom, dateTo);
         }
 
         #endregion

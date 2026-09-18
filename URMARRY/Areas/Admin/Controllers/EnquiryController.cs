@@ -50,6 +50,7 @@ public class EnquiryController : Controller
     private readonly IRepository<HomeContent> _homeContentRepo;
     private readonly IRepository<Contact> _contactRepo;
     private readonly IRepository<MatchingProfiles> _matchingProfilesRepo;
+    private readonly IMatchingProfileRepo _matchingProfileRepo;
     private readonly IFileService _fileService;
     private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment _hostingEnvironment;
     private readonly ITransactionRepository _transactionRepository;
@@ -85,6 +86,7 @@ public class EnquiryController : Controller
         IRepository<HomeContent> homeContentRepo,
         IRepository<Contact> contactRepo,
         IRepository<MatchingProfiles> matchingProfilesRepo,
+        IMatchingProfileRepo matchingProfileRepo,
         IFileService fileService,
         ITransactionRepository transactionRepository,
         Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment,
@@ -118,6 +120,7 @@ public class EnquiryController : Controller
         _homeContentRepo = homeContentRepo;
         _contactRepo = contactRepo;
         _matchingProfilesRepo = matchingProfilesRepo;
+        _matchingProfileRepo = matchingProfileRepo;
         _fileService = fileService;
         _hostingEnvironment = hostingEnvironment;
         _planPurchaseRepository = planPurchaseRepository;
@@ -980,9 +983,20 @@ public class EnquiryController : Controller
 
         var contactViews = await _userContactViewRepo.WhereActive(x => x.ViewerUserId == id);
         var shortlists = await _userStarProfileRepo.WhereActive(x => x.UserId == id);
-        var likes = await _userFavouriteProfileRepo.WhereActive(x => x.UserId == id);
+        var sentLikes = await _userFavouriteProfileRepo.WhereActive(x => x.UserId == id);
+        var receivedLikes = await _userFavouriteProfileRepo.WhereActive(x => x.LikedId == id);
         var notLikes = await _userNotLikeProfileRepo.WhereActive(x => x.UserId == id);
         var reports = await _userReportRepo.WhereActive(x => x.ReporterUserId == id);
+        
+        List<MatchingProfilesResponseDto> matchingProfiles = new();
+        try
+        {
+            matchingProfiles = await _matchingProfileRepo.GetMatchingUsersWithPercentage(Convert.ToInt32(id));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error fetching matching profiles for user {UserId}", id);
+        }
 
         var successStories = await _successStoryRepo.WhereActive(x => x.SubmittedByUserId == id || x.PartnerUserId == id);
         var successStoryPartnerIds = successStories
@@ -991,9 +1005,11 @@ public class EnquiryController : Controller
 
         var allViewedIds = contactViews.Select(x => x.ViewedUserId)
             .Union(shortlists.Select(x => x.StarId))
-            .Union(likes.Select(x => x.LikedId))
+            .Union(sentLikes.Select(x => x.LikedId))
+            .Union(receivedLikes.Select(x => x.UserId))
             .Union(notLikes.Select(x => x.NotLikedId))
             .Union(reports.Select(x => x.ReportedUserId))
+            .Union(matchingProfiles.Select(x => (long)x.Id))
             .Distinct()
             .ToList();
 
@@ -1035,7 +1051,7 @@ public class EnquiryController : Controller
                 RegisterNumber = profileDict.ContainsKey(x.StarId) ? profileDict[x.StarId].RegisterNumber : "N/A",
                 ActionDate = x.CreatedOn
             }).ToList(),
-            Liked = likes.OrderByDescending(x => x.CreatedOn).Select(x => new ActivityDetail
+            Liked = sentLikes.OrderByDescending(x => x.CreatedOn).Select(x => new ActivityDetail
             {
                 ProfileId = x.LikedId,
                 ProfileName = profileDict.ContainsKey(x.LikedId) ? profileDict[x.LikedId].Name : "Unknown",
@@ -1044,6 +1060,16 @@ public class EnquiryController : Controller
                 InterestStatus = x.Status,
                 UserFavouriteProfileId = x.Id,
                 HasSubmittedSuccessStory = successStoryPartnerIds.Contains(x.LikedId)
+            }).ToList(),
+            LikedBy = receivedLikes.OrderByDescending(x => x.CreatedOn).Select(x => new ActivityDetail
+            {
+                ProfileId = x.UserId,
+                ProfileName = profileDict.ContainsKey(x.UserId) ? profileDict[x.UserId].Name : "Unknown",
+                RegisterNumber = profileDict.ContainsKey(x.UserId) ? profileDict[x.UserId].RegisterNumber : "N/A",
+                ActionDate = x.CreatedOn,
+                InterestStatus = x.Status,
+                UserFavouriteProfileId = x.Id,
+                HasSubmittedSuccessStory = successStoryPartnerIds.Contains(x.UserId)
             }).ToList(),
             NotLiked = notLikes.OrderByDescending(x => x.CreatedOn).Select(x => new ActivityDetail
             {
@@ -1059,6 +1085,25 @@ public class EnquiryController : Controller
                 RegisterNumber = profileDict.ContainsKey(x.ReportedUserId) ? profileDict[x.ReportedUserId].RegisterNumber : "N/A",
                 ActionDate = x.CreatedOn,
                 Details = x.Reason
+            }).ToList(),
+            MatchingProfiles = matchingProfiles.Select(x => new MatchingProfileActivityDetail
+            {
+                ProfileId = x.Id,
+                ProfileName = x.name,
+                RegisterNumber = profileDict.ContainsKey(x.Id) ? profileDict[x.Id].RegisterNumber : "N/A",
+                Gender = x.gender,
+                Age = x.age,
+                Height = x.height,
+                Education = !string.IsNullOrWhiteSpace(x.highest_education) ? x.highest_education : x.education,
+                Profession = x.profession,
+                MaritalStatus = x.maritalstatus,
+                District = x.district,
+                State = profileDict.ContainsKey(x.Id) ? profileDict[x.Id].State : null,
+                TotalMatchingScore = x.total_matching_score,
+                ProfilePicture = x.profile_picture,
+                IsLiked = x.IsLiked,
+                IsStarred = x.IsStarred,
+                CreatedOn = x.CreatedOn
             }).ToList()
         };
 

@@ -1,6 +1,7 @@
 @model List<URMARRY.Areas.Admin.Models.ActivityDetail>
 @{
     var tabType = ViewData["TabType"] as string;
+    bool isLikedTab = tabType == "Liked" || tabType == "LikedBy";
 }
 
 <table class="table table-striped dt-responsive nowrap w-100 datatable-analytics">
@@ -8,6 +9,10 @@
         <tr>
             <th>Profile Name</th>
             <th>ID</th>
+            @if (isLikedTab)
+            {
+                <th>Status</th>
+            }
             <th>Date</th>
             <th>Action</th>
         </tr>
@@ -18,11 +23,28 @@
             <tr>
                 <td>@item.ProfileName</td>
                 <td>@item.RegisterNumber</td>
+                @if (isLikedTab)
+                {
+                    <td>
+                        @if (item.InterestStatus == Domain.InterestStatus.Accepted)
+                        {
+                            <span class="badge bg-success">Accepted</span>
+                        }
+                        else if (item.InterestStatus == Domain.InterestStatus.Declined)
+                        {
+                            <span class="badge bg-danger">Declined</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        }
+                    </td>
+                }
                 <td>@item.ActionDate.ToString("dd-MM-yyyy HH:mm")</td>
                 <td>
                     <div class="d-flex gap-1 align-items-center">
                         <a asp-action="Get" asp-route-id="@item.ProfileId" class="btn btn-soft-primary btn-xs" target="_blank">View</a>
-                        @if (tabType == "Liked" && item.InterestStatus == Domain.InterestStatus.Accepted && item.UserFavouriteProfileId.HasValue && !item.HasSubmittedSuccessStory)
+                        @if (isLikedTab && item.InterestStatus == Domain.InterestStatus.Accepted && item.UserFavouriteProfileId.HasValue && !item.HasSubmittedSuccessStory)
                         {
                             <button type="button" class="btn btn-soft-danger btn-xs btn-trigger-prompt" data-fav-id="@item.UserFavouriteProfileId.Value" onclick="triggerTestimonialPrompt(this)">
                                 Trigger Prompt

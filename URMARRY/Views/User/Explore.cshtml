@@ -16,6 +16,7 @@
             <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="contactviewed" class="explore-tab">Contact Viewed</a></li>
             <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="reported" class="explore-tab">Reported Profiles</a></li>
             <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="closeprofiles" class="explore-tab">Closed Profiles</a></li>
+            <li class="breadcrumb-item text-capitalize"><a href="javascript:void(0)" data-type="profilevisitors" class="explore-tab">Profile Visitors</a></li>
         </ul>
     </nav>
 </div>
@@ -461,6 +462,13 @@
                                 <button type="button" class="btn main-tab" onclick="showMainTab('close')">
                                     Close Profiles
                                 </button>
+                                <button type="button" class="btn main-tab d-inline-flex align-items-center justify-content-center gap-1" onclick="showMainTab('visitors')">
+                                    Profile Visitors
+                                    @if (!Model.Registration.IsPremiumMember)
+                                    {
+                                        <i class="uil uil-lock-alt text-warning fs-14 ms-1"></i>
+                                    }
+                                </button>
                             </div>
                         </div>
 
@@ -579,6 +587,108 @@
         </div>
     </div>
 
+    <!-- Upgrade Premium Modal for Visitors -->
+    <div id="upgradeVisitorsModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hideUpgradeVisitorsModal()">
+        <div class="upgrade-modal-card">
+            <div class="modal-close-btn" onclick="hideUpgradeVisitorsModal()">
+                <i class="uil uil-times"></i>
+            </div>
+    
+            <div class="modal-body-scroll">
+                @if (!string.IsNullOrEmpty(Model.Registration.ImagePath))
+                {
+                    <div class="modal-image-blur-wrapper" style="width: 100px; height: 100px; border-radius: 50%;">
+                        <img src="@Html.Raw("/" + Model.Registration.ImagePath)" alt="Profile"
+                            class="modal-profile-img" onerror="this.src='/assets/images/default-user-men.png'">
+                    </div>
+                }
+                else
+                {
+                    <img src="@Url.Content(string.Equals(Model.Registration.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" alt="Profile"
+                        class="modal-profile-img">
+                }
+    
+                <h4 class="fw-medium fs-18 mb-1" style="color: #000;">@Html.Raw(Model.Registration.Name)</h4>
+                <p class="text-muted fs-14 fw-normal mb-0">@Model.Registration.RegisterNumber</p>
+    
+                <div class="modal-inner-box">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="position-relative d-flex align-items-center gap-2">
+                            <img src="/assets/images/icon/birds.png">
+                        </div>
+                    </div>
+    
+                    <p class="mb-4 small px-3" style="color:#3E3E3E;line-height: 1.6; font-weight: 500;">
+                        To view your profile visitors, you must be a premium member.
+                    </p>
+                </div>
+                <button class="btn btn-upgrade-now shadow" style="font-size: 17px;" onclick="showPackagesModal('visitors')">Upgrade Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Package Details Modal -->
+    <div id="packagesModal" class="upgrade-modal-overlay" onclick="if(event.target === this) hidePackagesModal()">
+        <div class="upgrade-modal-card" style="max-width: 630px;">
+            <div class="modal-close-btn" onclick="hidePackagesModal()">
+                <i class="uil uil-times"></i>
+            </div>
+    
+            <div class="modal-body-scroll">
+                @if (!string.IsNullOrEmpty(Model.Registration.ImagePath))
+                {
+                    <div class="modal-image-blur-wrapper" style="width: 100px; height: 100px; border-radius: 50%;">
+                        <img src="@Html.Raw("/" + Model.Registration.ImagePath)" alt="Profile"
+                            class="modal-profile-img" onerror="this.src='/assets/images/default-user-men.png'">
+                    </div>
+                }
+                else
+                {
+                    <img src="@Url.Content(string.Equals(Model.Registration.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")" alt="Profile"
+                        class="modal-profile-img">
+                }
+    
+                <h5 class="fw-medium fs-18 mb-2 px-3" style="color: #000;" id="packagesLocalModalTitle">Upgrade to premium membership to view profile visitors</h5>
+                <p class="text-muted fs-12 mb-3 px-4" id="packagesLocalModalSubTitle">Unlock access to see who visited your profile by upgrading to premium! Get closer to meaningful connections.</p>
+    
+                <div class="package-details-inner">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="position-relative d-flex align-items-center gap-2">
+                            <img src="/assets/images/icon/birds.png">
+                        </div>
+                    </div>
+    
+                    <h6 class="fw-medium fs-18 mb-2 text-uppercase" style="letter-spacing: 1px;">Membership Package</h6>
+    
+                    <div class="package-pill-days">180 DAYS</div><br>
+                    <div class="package-pill-price">₹ 2000</div>
+    
+                    <div class="mt-3 mb-3">
+                        <p class="fw-bold mb-3" style="font-size: 14px;">Features</p>
+                        <div class="d-flex justify-content-center">
+                            <div class="package-feature-list">
+                                <div class="package-feature-item">
+                                    <i class="uil uil-mobile-android"></i>
+                                    <span>View mobile numbers 50</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-camera"></i>
+                                    <span>Send photo unlock requests</span>
+                                </div>
+                                <div class="package-feature-item">
+                                    <i class="uil uil-eye"></i>
+                                    <span>See profile visitors</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <a asp-action="MakePayment" asp-controller="Transaction" class="btn btn-pay-online shadow" style="font-size: 17px;">Pay Online</a>
+            </div>
+        </div>
+    </div>
+
      <!-- MODAL SECTIONS ENDS -->
 
 @section Scripts
@@ -614,11 +724,17 @@
             'liked': 'liked',
             'contacted': 'contactviewed',
             'reported': 'reported',
-            'close': 'closeprofiles'
+            'close': 'closeprofiles',
+            'visitors': 'profilevisitors'
         };
 
         // --- Override showMainTab for Explore-specific behavior ---
         window.showMainTab = function(tabId) {
+            if (tabId === 'visitors' && !isPremiumMember) {
+                showUpgradeVisitorsModal();
+                return;
+            }
+
             // Update tab button styles
             document.querySelectorAll(".main-tab").forEach((btn) => {
                 btn.classList.remove("active");
@@ -1242,14 +1358,57 @@
 
         // Photo Unlock Modal script integration
         let selectedPhotoOwnerId = null;
+        window.showUpgradeVisitorsModal = function() {
+            const modal = document.getElementById("upgradeVisitorsModal");
+            if (modal) {
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        };
+
+        window.hideUpgradeVisitorsModal = function() {
+            const modal = document.getElementById("upgradeVisitorsModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        };
+
+        window.showPackagesModal = function(mode) {
+            hideUpgradeVisitorsModal();
+            const modal = document.getElementById("packagesModal");
+            if (modal) {
+                const titleElem = document.getElementById('packagesLocalModalTitle');
+                const subTitleElem = document.getElementById('packagesLocalModalSubTitle');
+                if (titleElem && subTitleElem) {
+                    if (mode === 'visitors') {
+                        titleElem.innerText = 'Upgrade to premium membership to view profile visitors';
+                        subTitleElem.innerText = 'Unlock access to see who visited your profile by upgrading to premium! Get closer to meaningful connections.';
+                    } else if (mode === 'photo') {
+                        titleElem.innerText = 'Upgrade to premium membership to request photo unlock';
+                        subTitleElem.innerText = 'Unlock the ability to request photo access by upgrading to premium! Connect with your perfect match today.';
+                    } else {
+                        titleElem.innerText = 'Upgrade to premium membership to view contact details';
+                        subTitleElem.innerText = 'Unlock access to contact details by upgrading to premium! Get closer to meaningful connections.';
+                    }
+                }
+                modal.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+        };
+
+        window.hidePackagesModal = function() {
+            const modal = document.getElementById("packagesModal");
+            if (modal) {
+                modal.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        };
+
         window.showPhotoUnlockModal = function(ownerId, ownerName) {
             if (typeof event !== 'undefined' && event) event.stopPropagation();
-            if (typeof window.isPremiumMember !== 'undefined' && !window.isPremiumMember) {
-                if (typeof showPackagesLayoutModal === 'function') {
-                    showPackagesLayoutModal('photo');
-                } else {
-                    alert('Please upgrade to premium membership to request photo unlock.');
-                }
+            if (typeof isPremiumMember !== 'undefined' && !isPremiumMember) {
+                showPackagesModal('photo');
                 return;
             }
             selectedPhotoOwnerId = ownerId;

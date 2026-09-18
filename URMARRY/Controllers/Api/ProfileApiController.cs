@@ -37,6 +37,7 @@ namespace URMARRY.Controllers.Api
         private readonly IRepository<PhotoUnlockRequest> _photoUnlockRequestRepo;
         private readonly IRepository<Images> _imagesRepo;
         private readonly IRepository<UserStarProfile> _userStarProfileRepo;
+        private readonly IRepository<Notification> _notificationRepo;
         private readonly INotifcationRepository _notificationPageRepo;
         private readonly IRepository<MatchStatusUpdate> _matchStatusUpdateRepo;
         private readonly IRepository<SuccessStory> _successStoryRepo;
@@ -76,6 +77,7 @@ namespace URMARRY.Controllers.Api
             IRepository<PhotoUnlockRequest> photoUnlockRequestRepo,
             IRepository<Images> imagesRepo,
             IRepository<UserStarProfile> userStarProfileRepo,
+            IRepository<Notification> notificationRepo,
             INotifcationRepository notificationPageRepo,
             IRepository<MatchStatusUpdate> matchStatusUpdateRepo,
             IRepository<SuccessStory> successStoryRepo,
@@ -114,6 +116,7 @@ namespace URMARRY.Controllers.Api
             _photoUnlockRequestRepo = photoUnlockRequestRepo;
             _imagesRepo = imagesRepo;
             _userStarProfileRepo = userStarProfileRepo;
+            _notificationRepo = notificationRepo;
             _notificationPageRepo = notificationPageRepo;
             _matchStatusUpdateRepo = matchStatusUpdateRepo;
             _successStoryRepo = successStoryRepo;
@@ -322,6 +325,8 @@ namespace URMARRY.Controllers.Api
                             .Take(pageSize)
                             .ToList();
                         break;
+
+
                 }
 
                 // Load lookup data for resolving IDs to display text
@@ -670,6 +675,39 @@ namespace URMARRY.Controllers.Api
                             .ToList();
 
                         list = orderedClosed
+                            .Skip(skip)
+                            .Take(pageSize)
+                            .ToList();
+                        break;
+
+                    case "profilevisitors":
+                        if (!viewerIsPremium)
+                        {
+                            list = new List<Registration>();
+                            break;
+                        }
+
+                        var viewNotifs = (await _notificationRepo.WhereActive(x =>
+                            x.Notify_Id == userId &&
+                            x.Notify_Message != null &&
+                            x.Notify_Message.Contains("viewed your profile")))
+                            .OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn)
+                            .ToList();
+
+                        var visitorUserIds = viewNotifs
+                            .Select(x => x.UserId)
+                            .Distinct()
+                            .ToList();
+
+                        var visitorRegs = await _registrationRepo.GetAllByIds(visitorUserIds);
+                        var visibleVisitorRegs = visitorRegs.Where(x => x.IsVisible).ToList();
+                        var visitorDict = visibleVisitorRegs.ToDictionary(x => x.Id);
+                        var orderedVisitors = visitorUserIds
+                            .Where(id => visitorDict.ContainsKey(id))
+                            .Select(id => visitorDict[id])
+                            .ToList();
+
+                        list = orderedVisitors
                             .Skip(skip)
                             .Take(pageSize)
                             .ToList();
@@ -1411,6 +1449,38 @@ namespace URMARRY.Controllers.Api
                 // 9. Check if they have already reported this profile
                 var existingReport = await _userReportRepo.FirstOrDefaultActive(x => x.ReporterUserId == userId && x.ReportedUserId == profileId);
                 bool alreadyReported = existingReport != null;
+
+                // 10. Record "viewed your profile" notification if viewing someone else's profile
+                if (userId != profileId)
+                {
+                    try
+                    {
+                        string message = $"{viewer.Name} viewed your profile";
+                        var existingNotif = await _notificationRepo.FirstOrDefaultActive(
+                            x => x.UserId == userId && x.Notify_Id == profileId && x.Notify_Message == message);
+
+                        if (existingNotif == null)
+                        {
+                            var notification = new Notification
+                            {
+                                UserId = userId,
+                                Notify_Id = profileId,
+                                Notify_Message = message,
+                                CreatedOn = DateTime.UtcNow,
+                                ModifiedOn = DateTime.UtcNow
+                            };
+                            await _notificationRepo.Add(notification);
+                        }
+                        else
+                        {
+                            existingNotif.CreatedOn = DateTime.UtcNow;
+                            existingNotif.ModifiedOn = DateTime.UtcNow;
+                            await _notificationRepo.Update(existingNotif);
+                        }
+                        await _notificationRepo.SaveChanges();
+                    }
+                    catch { }
+                }
 
                 // Return all the structured data!
                 return Ok(new

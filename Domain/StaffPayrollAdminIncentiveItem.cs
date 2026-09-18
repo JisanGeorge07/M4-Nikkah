@@ -7,5 +7,6 @@ namespace Domain
         public long StaffPayrollId { get; set; }
         public decimal Amount { get; set; }
         public string? Label { get; set; }
+        public bool IsRead { get; set; } = false;
     }
 }

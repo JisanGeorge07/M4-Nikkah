@@ -2180,7 +2180,7 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 if (string.IsNullOrEmpty(sortColumnIndex))
                 {
-                    query = query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                    query = query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
                 else if (sortColumn == "Name")
                 {
@@ -2233,8 +2233,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 else
                 {
                     query = isAscending 
-                        ? query.OrderBy(x => x.CreatedOn).ThenBy(x => x.Id) 
-                        : query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                        : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
                 var dbList = await query.Skip(start).Take(length).ToListAsync();
@@ -2542,7 +2542,7 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 if (string.IsNullOrEmpty(sortColumnIndex))
                 {
-                    query = query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                    query = query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
                 else if (sortColumn == "Name")
                 {
@@ -2577,8 +2577,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 else
                 {
                     query = isAscending 
-                        ? query.OrderBy(x => x.CreatedOn).ThenBy(x => x.Id) 
-                        : query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                        : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
                 var dbList = await query.Skip(start).Take(length).ToListAsync();
@@ -2821,7 +2821,7 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 if (string.IsNullOrEmpty(sortColumnIndex))
                 {
-                    query = query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                    query = query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
                 else if (sortColumn == "Name")
                 {
@@ -2856,8 +2856,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 else
                 {
                     query = isAscending 
-                        ? query.OrderBy(x => x.CreatedOn).ThenBy(x => x.Id) 
-                        : query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                        : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
                 var dbList = await query.Skip(start).Take(length).ToListAsync();
@@ -3351,7 +3351,9 @@ namespace URMARRY.Areas.Admin.Controllers
         public async Task<IActionResult> AdminReviewPanelData(
             long? staffId,
             int? approvalStatus,
-            string searchName)
+            string searchName,
+            string? filterDate,
+            string? sortOrder)
         {
             try
             {
@@ -3368,6 +3370,9 @@ namespace URMARRY.Areas.Admin.Controllers
                 string? searchValue = isPost ? Request.Form["search[value]"] : Request.Query["search[value]"];
                 string? sortColumnIndex = isPost ? Request.Form["order[0][column]"] : Request.Query["order[0][column]"];
                 string? sortDirection = isPost ? Request.Form["order[0][dir]"] : Request.Query["order[0][dir]"];
+
+                string? formFilterDate = isPost && Request.Form.ContainsKey("filterDate") ? Request.Form["filterDate"].ToString() : (filterDate ?? Request.Query["filterDate"].ToString());
+                string? formSortOrder = isPost && Request.Form.ContainsKey("sortOrder") ? Request.Form["sortOrder"].ToString() : (sortOrder ?? Request.Query["sortOrder"].ToString());
 
                 // Base query: Only followups that have a LatestAdminApprovalStatus
                 IQueryable<FollowUp> query = _followUpRepo.GetQueryable()
@@ -3387,6 +3392,18 @@ namespace URMARRY.Areas.Admin.Controllers
                     query = query.Where(x => x.LatestAdminApprovalStatus == status);
                 }
 
+                // Filter by Specific Date
+                if (!string.IsNullOrWhiteSpace(formFilterDate) && DateTime.TryParse(formFilterDate, out var parsedDate))
+                {
+                    var dateStart = parsedDate.Date;
+                    var dateEnd = dateStart.AddDays(1).AddTicks(-1);
+                    query = query.Where(x =>
+                        (x.ModifiedOn >= dateStart && x.ModifiedOn <= dateEnd) ||
+                        (x.CreatedOn >= dateStart && x.CreatedOn <= dateEnd) ||
+                        x.Timelines.Any(t => !t.IsDeleted && t.CreatedOn >= dateStart && t.CreatedOn <= dateEnd)
+                    );
+                }
+
                 // Search Filter (by Name, ID, or Phone)
                 string search = !string.IsNullOrEmpty(searchValue) ? searchValue : searchName;
                 if (!string.IsNullOrEmpty(search))
@@ -3404,35 +3421,58 @@ namespace URMARRY.Areas.Admin.Controllers
                     .CountAsync();
                 int recordsFiltered = await query.CountAsync();
 
-                string sortColumn = sortColumnIndex switch
-                {
-                    "0" => "RegisterNumber",
-                    "1" => "Name",
-                    _ => "CreatedOn"
-                };
                 bool isAscending = sortDirection == "asc";
 
-                if (string.IsNullOrEmpty(sortColumnIndex))
+                if (!string.IsNullOrEmpty(formSortOrder) && formSortOrder != "default")
                 {
-                    query = query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                    switch (formSortOrder.ToLower())
+                    {
+                        case "latest":
+                            query = query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                            break;
+                        case "oldest":
+                            query = query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id);
+                            break;
+                        case "name_asc":
+                            query = query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty);
+                            break;
+                        case "name_desc":
+                            query = query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
+                            break;
+                        default:
+                            query = query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                            break;
+                    }
                 }
-                else if (sortColumn == "Name")
+                else if (!string.IsNullOrEmpty(sortColumnIndex))
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
-                        : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
-                }
-                else if (sortColumn == "RegisterNumber")
-                {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
-                        : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
+                    switch (sortColumnIndex)
+                    {
+                        case "0": // RegisterNumber
+                            query = isAscending 
+                                ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
+                                : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
+                            break;
+                        case "1": // Customer Name
+                            query = isAscending 
+                                ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
+                                : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
+                            break;
+                        case "6": // Last Updated
+                            query = isAscending 
+                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id) 
+                                : query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                            break;
+                        default:
+                            query = isAscending 
+                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id) 
+                                : query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                            break;
+                    }
                 }
                 else
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.CreatedOn).ThenBy(x => x.Id) 
-                        : query.OrderByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
+                    query = query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
                 var dbList = await query.Skip(start).Take(length).ToListAsync();
@@ -3457,6 +3497,17 @@ namespace URMARRY.Areas.Admin.Controllers
                         d.OriginalFileName
                     }).ToList());
 
+                var followUpIds = dbList.Select(x => x.Id).ToList();
+                var latestTimelines = await _followUpTimelineRepo.GetQueryable()
+                    .Where(t => followUpIds.Contains(t.FollowUpId) && !t.IsDeleted)
+                    .GroupBy(t => t.FollowUpId)
+                    .Select(g => new
+                    {
+                        FollowUpId = g.Key,
+                        LatestDate = g.Max(t => t.CreatedOn)
+                    })
+                    .ToDictionaryAsync(t => t.FollowUpId, t => t.LatestDate);
+
                 var data = dbList.Select(x =>
                 {
                     var staffName = "Unassigned";
@@ -3476,6 +3527,20 @@ namespace URMARRY.Areas.Admin.Controllers
 
                     docsDict.TryGetValue(x.ProfileId, out var userDocs);
 
+                    DateTime? latestDate = null;
+                    if (latestTimelines.TryGetValue(x.Id, out var timelineDate) && timelineDate != default && timelineDate != DateTime.MinValue)
+                    {
+                        latestDate = timelineDate;
+                    }
+                    else if (x.ModifiedOn != default && x.ModifiedOn != DateTime.MinValue)
+                    {
+                        latestDate = x.ModifiedOn;
+                    }
+                    else
+                    {
+                        latestDate = x.CreatedOn;
+                    }
+
                     return new
                     {
                         x.Id,
@@ -3489,6 +3554,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         FollowUpType = x.FollowUpType.ToString(),
                         EndStatus = endStatusDesc,
                         LatestRemarks = x.LatestRemarks ?? "N/A",
+                        LatestUpdatedOn = latestDate?.ToString("dd MMM yyyy, hh:mm tt") ?? "N/A",
                         ApprovalStatus = x.LatestAdminApprovalStatus?.ToString() ?? "Pending",
                         LatestInterestStatus = x.LatestInterestStatus?.ToString(),
                         LatestRenewalInterestStatus = x.LatestRenewalInterestStatus?.ToString(),
@@ -3554,10 +3620,17 @@ namespace URMARRY.Areas.Admin.Controllers
                 // Update followUp's latest admin approval status
                 followUp.LatestAdminApprovalStatus = approvalStatus;
 
-                // Assign Verification Grade if approved for Profile Verification
-                if (model.IsApproved && followUp.FollowUpType == FollowUpType.ProfileVerification && !string.IsNullOrWhiteSpace(model.VerificationGrade))
+                // Assign Verification Grade if approved for Profile Verification (Only for Verify and DetailedVerify)
+                if (model.IsApproved && followUp.FollowUpType == FollowUpType.ProfileVerification 
+                    && (followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
+                    && !string.IsNullOrWhiteSpace(model.VerificationGrade))
                 {
                     followUp.VerificationGrade = model.VerificationGrade.Trim().ToUpper();
+                }
+                else if (followUp.FollowUpType == FollowUpType.ProfileVerification 
+                    && (followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Suspended || followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Dismissed))
+                {
+                    followUp.VerificationGrade = null;
                 }
 
                 // Add FollowUpAdminApproval record

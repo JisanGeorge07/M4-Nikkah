@@ -21,7 +21,7 @@
                     </div>
 
                     <!-- Staff Filter -->
-                    <select id="staffFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
+                    <select id="staffFilter" class="form-select form-select-sm" style="width: 170px; border-radius: 6px;">
                         <option value="">All Staff</option>
                         @if (ViewBag.StaffList != null)
                         {
@@ -33,11 +33,25 @@
                     </select>
 
                     <!-- Approval Status Filter -->
-                    <select id="approvalStatusFilter" class="form-select form-select-sm" style="width: 180px; border-radius: 6px;">
+                    <select id="approvalStatusFilter" class="form-select form-select-sm" style="width: 160px; border-radius: 6px;">
                         <option value="">All Decisions</option>
                         <option value="0" selected>Pending Review</option>
                         <option value="1">Approved</option>
                         <option value="2">Rejected</option>
+                    </select>
+
+                    <!-- Date Filter -->
+                    <div class="d-flex align-items-center gap-1" style="min-width: 165px;" title="Filter by Updated Date">
+                        <input type="date" id="dateFilter" class="form-control form-control-sm" style="border-radius: 6px;" />
+                        <button type="button" id="btnClearDate" class="btn btn-outline-secondary btn-sm" style="border-radius: 6px;" title="Clear Date Filter"><i class="bi bi-x"></i></button>
+                    </div>
+
+                    <!-- Sort Order Dropdown -->
+                    <select id="sortOrderFilter" class="form-select form-select-sm" style="width: 175px; border-radius: 6px;">
+                        <option value="latest" selected>Date: Newest First</option>
+                        <option value="oldest">Date: Oldest First</option>
+                        <option value="name_asc">Name: A to Z</option>
+                        <option value="name_desc">Name: Z to A</option>
                     </select>
                 </div>
             </div>
@@ -47,14 +61,15 @@
                     <table id="adminReviewTable" class="table table-hover table-striped w-100 align-middle">
                         <thead class="table-light text-uppercase font-size-12">
                             <tr>
-                                <th width="12%">Profile ID</th>
-                                <th width="15%">Customer</th>
-                                <th width="15%">Assigned Staff</th>
-                                <th width="15%">Follow-up Type</th>
-                                <th width="15%">Reached End Status</th>
-                                <th width="15%">Latest Remarks</th>
-                                <th width="8%">Decision</th>
-                                <th width="8%" class="text-center sorting_disabled">Action</th>
+                                <th width="10%">Profile ID</th>
+                                <th width="13%">Customer</th>
+                                <th width="13%">Assigned Staff</th>
+                                <th width="12%">Follow-up Type</th>
+                                <th width="13%">Reached End Status</th>
+                                <th width="13%">Latest Remarks</th>
+                                <th width="12%">Last Updated</th>
+                                <th width="7%">Decision</th>
+                                <th width="7%" class="text-center sorting_disabled">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,6 +113,14 @@
                                 <div class="col-6 mt-2">
                                     <span class="text-muted font-size-11 text-uppercase fw-semibold d-block">End Status reached</span>
                                     <span id="reviewEndStatus" class="fw-bold text-danger"></span>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted font-size-11 text-uppercase fw-semibold d-block">Staff In-Charge</span>
+                                    <span id="reviewStaffName" class="fw-bold text-dark font-size-12"></span>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted font-size-11 text-uppercase fw-semibold d-block">Last Updated</span>
+                                    <span id="reviewLatestUpdatedOn" class="fw-bold text-primary font-size-12"><i class="bi bi-clock-history me-1"></i><span id="reviewLatestUpdatedOnText"></span></span>
                                 </div>
                                 <div class="col-12 mt-2">
                                     <span class="text-muted font-size-11 text-uppercase fw-semibold d-block">Staff Remarks</span>
@@ -184,6 +207,8 @@
                     d.staffId = $('#staffFilter').val() || null;
                     d.approvalStatus = $('#approvalStatusFilter').val() !== "" ? parseInt($('#approvalStatusFilter').val()) : null;
                     d.searchName = $('#searchInput').val();
+                    d.filterDate = $('#dateFilter').val() || null;
+                    d.sortOrder = $('#sortOrderFilter').val() || null;
                 }
             },
             columns: [
@@ -233,6 +258,13 @@
                     }
                 },
                 {
+                    data: "latestUpdatedOn",
+                    render: function (data, type, row) {
+                        if (!data || data === 'N/A') return '<span class="text-muted font-size-11">N/A</span>';
+                        return '<span class="font-size-12 fw-medium text-dark text-nowrap"><i class="bi bi-clock-history me-1 text-primary"></i>' + data + '</span>';
+                    }
+                },
+                {
                     data: "approvalStatus",
                     render: function (data, type, row) {
                         if (data === "Approved") {
@@ -257,11 +289,16 @@
                     }
                 }
             ],
-            order: []
+            order: [[6, "desc"]]
         });
 
         // Trigger table refresh on filter change
-        $('#staffFilter, #approvalStatusFilter').change(function () {
+        $('#staffFilter, #approvalStatusFilter, #sortOrderFilter, #dateFilter').change(function () {
+            table.ajax.reload();
+        });
+
+        $('#btnClearDate').click(function () {
+            $('#dateFilter').val('');
             table.ajax.reload();
         });
 
@@ -286,6 +323,8 @@
             $('#reviewRegisterNumber').html('<a href="/admin/staff/profile/' + profileId + '" class="fw-bold text-primary text-decoration-underline" title="View Full Profile Details">' + (rowData.registerNumber || 'N/A') + '</a>');
             $('#reviewFollowUpType').text(rowData.followUpType);
             $('#reviewEndStatus').text(rowData.endStatus);
+            $('#reviewStaffName').text(rowData.staffName || 'Unassigned');
+            $('#reviewLatestUpdatedOnText').text(rowData.latestUpdatedOn || 'N/A');
             $('#reviewStaffRemarks').text(rowData.latestRemarks);
             $('#reviewAdminRemarks').val('');
 
@@ -329,7 +368,8 @@
             }
 
             var isFemale = (rowData.gender && rowData.gender.toLowerCase() === "female");
-            if (isProfileVerification && isFemale) {
+            var isVerifiedStatus = (rowData.latestProfileVerificationStatus === "Verify" || rowData.latestProfileVerificationStatus === "DetailedVerify");
+            if (isProfileVerification && isFemale && isVerifiedStatus) {
                 $('#reviewGradeSection').show();
                 if (rowData.verificationGrade) {
                     $('#reviewVerificationGrade').val(rowData.verificationGrade);
@@ -434,9 +474,10 @@
         $('#btnApprove').click(function () {
             var isProfileVerification = currentSelectedRow && (currentSelectedRow.followUpType === "ProfileVerification");
             var isFemale = currentSelectedRow && currentSelectedRow.gender && (currentSelectedRow.gender.toLowerCase() === "female");
+            var isVerifiedStatus = currentSelectedRow && (currentSelectedRow.latestProfileVerificationStatus === "Verify" || currentSelectedRow.latestProfileVerificationStatus === "DetailedVerify");
             var extraParams = {};
 
-            if (isProfileVerification && isFemale) {
+            if (isProfileVerification && isFemale && isVerifiedStatus) {
                 var selectedGrade = $('#reviewVerificationGrade').val();
                 if (!selectedGrade) {
                     Swal.fire({
