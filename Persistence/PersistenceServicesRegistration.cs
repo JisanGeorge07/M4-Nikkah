@@ -40,6 +40,8 @@ public static class PersistenceServicesRegistration
        
         services.AddTransient<ITransactionRepository, TransactionRepository>();
         services.AddTransient<INotifcationRepository, NotificationRepository>();
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<ICallService, CallService>();
         
 
         return services;

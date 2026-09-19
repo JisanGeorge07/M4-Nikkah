@@ -78,6 +78,9 @@ namespace Persistence;
     public DbSet<StaffComplaintRecord> StaffComplaintRecords { get; set; }
     public DbSet<VerificationDocument> VerificationDocuments { get; set; }
     public DbSet<LoginOtpVerification> LoginOtpVerifications { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<CallLog> CallLogs { get; set; }
 
 
 
@@ -116,6 +119,27 @@ namespace Persistence;
             .HasOne<StaffPayroll>()
             .WithMany(p => p.AdminIncentiveItems)
             .HasForeignKey(i => i.StaffPayrollId);
+
+        modelBuilder.Entity<Conversation>()
+            .HasIndex(c => new { c.User1Id, c.User2Id });
+
+        modelBuilder.Entity<Conversation>()
+            .HasIndex(c => new { c.Type, c.SupportStatus });
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => new { m.ConversationId, m.SentAt });
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CallLog>()
+            .HasIndex(c => new { c.CallerId, c.StartedAt });
+
+        modelBuilder.Entity<CallLog>()
+            .HasIndex(c => new { c.ReceiverId, c.StartedAt });
     }
 
 
