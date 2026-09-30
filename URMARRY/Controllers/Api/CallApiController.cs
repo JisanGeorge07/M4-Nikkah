@@ -59,6 +59,22 @@ namespace URMARRY.Controllers.Api
         }
 
         /// <summary>
+        /// Returns the user's current audio call contact credits and video call minutes status.
+        /// </summary>
+        [HttpGet("credits")]
+        public async Task<IActionResult> GetCallCredits()
+        {
+            var userId = ResolveCurrentUserId();
+            if (!userId.HasValue || userId.Value <= 0)
+            {
+                return Unauthorized(new { message = "Authentication required." });
+            }
+
+            var status = await _callService.GetCallCreditStatusAsync(userId.Value);
+            return Ok(status);
+        }
+
+        /// <summary>
         /// Validates whether the current user is eligible to call the target user (active plan / mutual interest).
         /// </summary>
         [HttpGet("check-permission/{targetUserId:long}")]
@@ -285,12 +301,26 @@ namespace URMARRY.Controllers.Api
 
         private long? ResolveCurrentUserId()
         {
+            // 1. Check custom X-User-Id header (for mobile apps & testing tools)
+            if (HttpContext.Request.Headers.TryGetValue("X-User-Id", out var hUserId) && long.TryParse(hUserId, out var headerId) && headerId > 0)
+            {
+                return headerId;
+            }
+
+            // 2. Check userId query parameter (for direct browser/test requests)
+            if (HttpContext.Request.Query.TryGetValue("userId", out var qUserId) && long.TryParse(qUserId, out var queryId) && queryId > 0)
+            {
+                return queryId;
+            }
+
+            // 3. Check web session cookie
             var cookieUserId = _cookieHelper.GetUserIdFromCookie(HttpContext);
             if (cookieUserId.HasValue && cookieUserId.Value > 0)
             {
                 return cookieUserId.Value;
             }
 
+            // 4. Check JWT / Identity claims
             if (User != null)
             {
                 var idClaim = User.FindFirst(ClaimTypes.Name)?.Value

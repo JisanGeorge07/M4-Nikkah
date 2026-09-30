@@ -3,381 +3,25 @@
 @{
     var loggedInUserPresenceId = CookieHelper.GetUserIdFromCookie(Context);
 }
-@*
+
+
+
 <!doctype html>
 <html lang="en" dir="ltr">
+
 <head>
-    <meta charset="utf-8"/>
-    <title>M4NIKAH - We help you find your perfect life partner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="M4NIKAH - We help you find your perfect life partner"
-    <meta name="keywords" content=""/>
-    <meta name="author" content=""/>
-    <meta name="email" content=""/>
-    <meta name="website" content=""/>
-    <meta name="Version" content=""/>
-
-    <!-- favicon -->
-    <link rel="shortcut icon" href="~/assets/images/favicon.png"/>
-    <!-- Css -->
-    <link href="~/assets/account/assets/libs/simplebar/simplebar.min.css" rel="stylesheet">
-    <!-- Bootstrap Css -->
-    <link href="~/assets/account/assets/css/bootstrap.min.css" class="theme-opt" rel="stylesheet" type="text/css"/>
-    <!-- Icons Css -->
-    <link href="~/assets/account/assets/libs/%40mdi/font/css/materialdesignicons.min.css" rel="stylesheet"
-          type="text/css">
-    <link href="~/assets/account/assets/css/icons.min.css" rel="stylesheet" type="text/css"/>
-    <link href="~/assets/account/assets/libs/%40iconscout/unicons/css/line.css" type="text/css" rel="stylesheet"/>
-    <!-- Style Css-->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="/assets/account/assets/css/style.min.css" class="theme-opt" rel="stylesheet" type="text/css"/>
-
-    <!-- Account Section Style -->
-    <link href="/assets/account/assets/css/style-main.css" class="theme-opt" rel="stylesheet" type="text/css" />
-    <!-- Courosel-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/tiny-slider.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/range-slider.css"/>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/min/tiny-slider.js"></script>
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-X53CQBJMG6"></script>
+    <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
 
-<script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-
-        gtag('js', new Date());
-
-        gtag('config', 'G-X53CQBJMG6');
+            gtag('config', 'G-X53CQBJMG6');
     </script>
-    <!--select 2 for searching in dropdowns-->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        .searchdiv2 {
-            padding: 20px;
-        }
-
-        .searchdiv2 a {
-            background: #a5be25;
-            border: 0px;
-            -webkit-transition: all .3s ease;
-            transition: all .3s ease;
-        }
-
-        .searchdiv2 a:hover {
-            background: #00662d;
-            color: #fff !important;
-            border: 0px;
-            -webkit-transition: all .3s ease;
-            transition: all .3s ease;
-        }
-
-        .searchdiv2 a:hover i {
-            color: #00662d !important;
-        }
-
-        .searchdiv2 a i {
-            width: 36px;
-            height: 36px;
-            background-color: #f8f9fa;
-            display: -webkit-inline-box !important;
-            display: -ms-inline-flexbox !important;
-            display: inline-flex !important;
-            -webkit-box-align: center;
-            -ms-flex-align: center;
-            align-items: center;
-            -webkit-box-pack: center;
-            -ms-flex-pack: center;
-            justify-content: center;
-            font-size: 16px;
-            text-align: center;
-            border-radius: 100px !important;
-            -webkit-transition: all .3s ease;
-            transition: all .3s ease;
-        }
-    </style>
-
-</head>
-
-<body>
-
-
-<div class="page-wrapper toggled">
-    <!-- sidebar-wrapper -->
-    <nav id="sidebar" class="sidebar-wrapper">
-        <div class="sidebar-content" data-simplebar style="height: calc(100% - 60px);">
-            <div class="sidebar-brand">
-                <a asp-action="Dashboard" asp-controller="User">
-                    <img src="~/assets/images/logo.png" height="60" class="logo-light-mode" alt="">
-                </a>
-            </div>
-
-            <ul class="sidebar-menu">
-                <!-- <li class="searchdiv2 mx-2 p-2">
-                    <a asp-action="SearchProfile" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2"><i
-                            class="ti ti-search me-2 rounded-circle"></i> Search</a>
-                     <div class="sidebar-submenu">
-                            <ul>
-                                <li><a asp-action="SearchById" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile ID</a></li>
-                                <li><a asp-action="SearchProfile" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile
-Details</a></li>
-                            </ul>
-                        </div>
-                </li> -->
-
-                
-
-                <li class="searchdiv2"><div class="search-bar p-0 d-none d-md-block">
-                                <div id="search" class="menu-search mb-0 side-search-bar">
-                                    <form asp-action="SearchProfileResults" asp-controller="User" method="get" id="searchform" class="searchform">
-                                        <div class="w-100">
-                                            <input type="text" class="form-control border rounded" name="SearchQuery" id="s" placeholder="Search Keywords...">
-                                            <input type="submit" id="searchsubmit" value="Search">
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-						</li>
-
-                <li class="sidebar-dropdown">
-                        <a href="javascript:void(0)" class="btn btn-pills btn-secondary mt-2 me-2">Search</a>
-                        <div class="sidebar-submenu">
-                            <ul>
-                                <li><a asp-action="SearchById" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile ID</a></li>
-                                <li><a asp-action="SearchProfile" asp-controller="User"><i class="ti ti-user me-2"></i> Search By Profile
-Details</a></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                <li class="sidebar-dropdown">
-                    <a href="javascript:void(0)">My Profile</a>
-                    <div class="sidebar-submenu">
-                        <ul>
-                            <li><a asp-action="MyProfile" asp-controller="User"><i class="ti ti-user me-2"></i> View My
-                                    Profile</a></li>
-                            <li><a asp-action="Edit" asp-controller="User"><i class="ti ti-user me-2"></i> Edit My
-                                    Profile</a></li>
-                            <li><a asp-action="Image" asp-controller="User"><i class="ti ti-camera me-2"></i> Manage
-                                    Photos</a></li>
-                            <!-- <li><a asp-action="GetStarredProfiles" asp-controller="User"><i class="ti ti-star me-2"></i>
-                                    Shortlisted Profiles</a></li> -->
-                        </ul>
-                    </div>
-                </li>
-                <li class="sidebar-dropdown">
-                    <a href="javascript:void(0)">Account Settings</a>
-                    <div class="sidebar-submenu">
-                        <ul>
-                            <li><a asp-action="ProfileVerification" asp-controller="User"><i class="ti ti-shield-check me-2"></i>
-                                    Profile Verification</a></li>
-                            <li><a asp-action="ChangePassword" asp-controller="User"><i class="ti ti-lock me-2"></i>
-                                    Edit Password</a></li>
-                            <li><a asp-action="DeleteAccount" asp-controller="User"><i class="ti ti-trash me-2"></i>
-                                    Delete Profile</a></li>
-                        </ul>
-                    </div>
-                </li>
-
-
-            </ul>
-            <!-- sidebar-menu -->
-        </div>
-        <!-- Sidebar Footer -->
-        <ul class="sidebar-footer list-unstyled mb-0">
-            <li class="list-inline-item mb-0 w-100 text-center">
-                <a asp-action="Signout" asp-controller="User" class="btn btn-primary2 w-75 m-auto"><i
-                        class="ti ti-logout"></i> Logout</a>
-            </li>
-        </ul>
-        <!-- Sidebar Footer -->
-    </nav>
-    <!-- sidebar-wrapper -->
-    <!-- Start Page Content -->
-
-    <main class="page-content newaddbg">
-        <!-- Top Header -->
-        <div class="top-header">
-            <div class="header-bar d-flex justify-content-between">
-                <div class="d-flex align-items-center">
-                    <a href="~/" class="logo-icon me-3">
-                        <img src="~/assets/images/favicon.png" height="45" class="small" alt="">
-                        <span class="big">
-                                <img src="~/assets/images/logo.png" height="42" class="logo-light-mode" alt="">
-                            </span>
-                    </a>
-                    <a id="close-sidebar" class="btn btn-icon btn-soft-light" href="javascript:void(0)">
-                        <i class="uil uil-bars align-middle" title="Contact Details"></i>
-                    </a>
-                    <div class="searchdiv02">
-							<a asp-action="SearchProfile" asp-controller="User" class="btn btn-pills btn-secondary mt-2 me-2"><i class="ti ti-search
-me-2"></i> <span>Search</span></a>
-                        </div>
-                </div>
-                @* <form action="/SearchProfileResults" method="post" class="d-flex ms-3" style="flex-grow: 1;">
-                            <div class="form-group me-2 position-relative" style="width:100%; margin-bottom:10px;">
-                                <div class="form-group me-2 flex-grow-1 position-relative" style="max-width: 300px;">
-                                    <input type="text" name="searchQuery" class="form-control" placeholder="Name/ProfileId" id="searchInput"
-style="padding:0px;margin-top:10px; width:100%; border-width:medium;" value="@ViewBag.SearchQuery" />
-                                    <i class="bi bi-search position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);"></i> <!--
-Bootstrap icon for search -->
-                                </div>
-                            </div>
-                        </form> *@
-
-@* <form action="/SearchProfileResults" method="get" class="d-flex ms-3" style="flex-grow: 1;" id="searchForm">
-                    <div class="input-group input-group mx-3 mx-md-5">
-                        <input type="text" name="searchQuery" class="form-control"
-                               placeholder="Enter name or Profile ID"
-                               id="searchInput" value="@ViewBag.SearchQuery" />
-                        <button class="btn btn-primary" type="submit">Search</button>
-                    </div>
-                </form> *
-
-                <!--Start Topmenu-->
-					<div class="topmenu">
-                    <ul>
-
-@{
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-}
-<li><a asp-controller="User" asp-action="Dashboard" class="@(currentAction == "Dashboard" ? "active" :
-"")">Profile</a></li>
-<li><a asp-controller="User" asp-action="Explore" class="@(currentAction == "Explore" ? "active" : "")">Explore</a></li>
-
-</ul><!--end navigation menu-->
-                    </div>
-					<!--end topmenu-->
-
-
-                <ul class="list-unstyled mb-0 d-flex align-items-center">
-                    <li class="list-inline-item mb-0 dropdown me-1">
-                        <a href="javascript:void(0)" id="notificationDropdown" data-bs-toggle="dropdown"
-                           aria-expanded="false">
-                            <div class="btn btn-icon btn-pills btn-soft-primary">
-                                <i class="uil uil-bell align-middle" title="Notifications"></i>
-                            </div>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
-                            @await Component.InvokeAsync("Notifications")
-                        </div>
-                    </li>
-                    <li class="list-inline-item mb-0">
-                        <a href="javascript:void(0)" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-                           aria-controls="offcanvasRight">
-                            <div class="btn btn-icon btn-pills btn-soft-primary">
-                                <i class="uil uil-apps align-middle" title="Contact Details"></i>
-                            </div>
-                        </a>
-                    </li>
-                    @await Component.InvokeAsync("UserProfile")
-                </ul>
-            </div>
-        </div>
-
-
-        <div class="modal fade" id="payment1" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" style="z-index:100 !important">
-                <div class="modal-content rounded shadow border-0">
-                    <div class="modal-header border-bottom">
-                        <button type="button" class="btn btn-icon btn-close" data-bs-dismiss="modal" id="close-modal">
-                            <i class="uil uil-times fs-4 text-dark"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body pt-0">
-                        <div class="paymentdivv" style="text-align: center; padding: 20px;">
-                            <h7>Upgrade to Premium Membership to view contact details</h7>
-                        </div>
-                        <div class="text-center">
-                            <div class="paymentdiv align-items-center justify-content-center mx-auto"
-                                 style="background-color:#A5BE25; color:white; padding-top:10px;">
-                                <h4>Membership Package</h4>
-                                <h4>180 Days</h4>
-                                <a style="background-color: #8CA11E;">
-                                    <h3>
-                                        <span
-                                            style="background-color: #8CA11E; padding: 4px 8px; border-radius: 4px; display: inline-block;">₹ 2000</span>
-                                    </h3>
-                                </a>
-                            </div>
-                            <div class="mt-4 features_div">
-                                <h4>Features</h4>
-                                <p class="text-muted">Unlock contact details of up to 50 members - 6 months validity</p>
-                                <p class="text-muted">Like your favourite profiles</p>
-                                <p class="text-muted">Get Notifications</p>
-                                <div class="mt-4 newbtn pb-3">
-                                    <a asp-action="MakePayment" asp-controller="Transaction">
-                                        Pay Online
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="container">
-            <div class="layout-specing">
-                @RenderBody()
-            </div>
-        </div>
-        <footer class="shadow py-3">
-            <div class="container-fluid">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <div class="text-center mx-md-2">
-                            <p class="mb-0">© @DateTime.UtcNow.Year M4NIKAH. All Rights Reserved.</p>
-                        </div>
-                    </div><!--end col-->
-                </div><!--end row-->
-            </div><!--end container-->
-        </footer><!--end footer-->
-        <!-- End -->
-    </main>
-    <!--End page-content" -->
-</div>
-<!-- page-wrapper -->
-@await Component.InvokeAsync("UserFooter")
-
-<!-- javascript -->
-<!-- JAVASCRIPT -->
-<script src="/assets/account/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/assets/account/assets/libs/feather-icons/feather.min.js"></script>
-<script src="/assets/account/assets/libs/simplebar/simplebar.min.js"></script>
-<!-- Main Js -->
-<script src="/assets/account/assets/js/plugins.init.js"></script>
-<script src="/assets/account/assets/js/app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-@RenderSection("Scripts", required: false)
-</body>
-
-</html>
-*@
-
-
-<!doctype html>
-<html lang="en" dir="ltr">
-
-<head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-X53CQBJMG6"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-X53CQBJMG6');
-</script>
     <meta charset="utf-8" />
     <script>
-        window.isPremiumMember = @((Model.Registration != null ? Model.Registration.IsPremiumMember : false).ToString().ToLower());
+            window.isPremiumMember = @((Model.Registration != null ? Model.Registration.IsPremiumMember : false).ToString().ToLower());
     </script>
     <title>M4NIKAH - We help you find your perfect life partner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -431,17 +75,27 @@ Bootstrap icon for search -->
                 </div>
 
                 @{
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
                     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    var isChatActive = string.Equals(currentController, "Chat", StringComparison.OrdinalIgnoreCase);
                 }
 
                 <!-- Nav Links -->
                 <div class="d-none d-lg-flex align-items-center justify-content-center" style="flex: 2;">
                     <nav class="d-flex align-items-center nav-menu" style="gap: 2.5rem;">
                         <a asp-controller="User" asp-action="Dashboard"
-                           class="nav-link @(currentAction == "Dashboard" ? "active" : "")">Profile</a>
-                        <!-- <a href="/src/pages/Account/Chat/Chat.html" class="nav-link">Chat</a> -->
+                           class="nav-link @(currentAction == "Dashboard" && !isChatActive ? "active text-success" : "")">Profile</a>
+                        <a asp-controller="Chat" asp-action="Index"
+                           class="nav-link @(isChatActive ? "active text-success" : "") position-relative d-inline-flex align-items-center">
+                            <span>Chat</span>
+                            <span id="chatNavBadge"
+                                  class="position-absolute badge rounded-pill bg-danger chat-unread-badge"
+                                  style="top: -4px; right: -14px; font-size: 9px; padding: 2px 5px; display: none; z-index: 10; line-height: 1;">
+                                0
+                            </span>
+                        </a>
                         <a asp-controller="User" asp-action="Explore"
-                           class="nav-link @(currentAction == "Explore" ? "active" : "")">Explore</a>
+                           class="nav-link @(currentAction == "Explore" && !isChatActive ? "active text-success" : "")">Explore</a>
                     </nav>
                 </div>
 
@@ -453,7 +107,7 @@ Bootstrap icon for search -->
                        class="border-0 d-flex align-items-center justify-content-center text-white notification-icon position-relative"
                        style="width: 32px; height: 32px; border-radius: 50%; background-color: #A5BE25;">
                         <i data-lucide="bell-ring"></i>
-                        <span id="notificationBadge" class="position-absolute badge rounded-pill bg-danger" 
+                        <span id="notificationBadge" class="position-absolute badge rounded-pill bg-danger"
                               style="top: -2px; right: -2px; font-size: 9px; padding: 2px 5px; display: none; z-index: 10; line-height: 1;">
                             0
                         </span>
@@ -483,26 +137,23 @@ Bootstrap icon for search -->
                     <div class="dropdown">
                         @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
                         {
-						<img width="34"
-                            height="34" src="@Html.Raw("/" + Model.Registration?.ImagePath)"
-							 class="dropdown-toggle profile-avatar"
-							 data-bs-toggle="dropdown">
+                            <img width="34" height="34" src="@Html.Raw("/" + Model.Registration?.ImagePath)"
+                                 class="dropdown-toggle profile-avatar" data-bs-toggle="dropdown">
                         }
-                        else 
+                        else
                         {
-                            <img width="34"
-                            height="34" src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
-                                 class="dropdown-toggle profile-avatar"
-							 data-bs-toggle="dropdown">
+                            <img width="34" height="34"
+                                 src="@Url.Content(string.Equals(Model.Registration?.Gender, "Female", StringComparison.OrdinalIgnoreCase) ? "/assets/images/default-user-women.png" : "/assets/images/default-user-men.png")"
+                                 class="dropdown-toggle profile-avatar" data-bs-toggle="dropdown">
                         }
-						<ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-							<!-- <li><a class="dropdown-item" href="#">View My Profile</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+                            <!-- <li><a class="dropdown-item" href="#">View My Profile</a></li>
 							<li><a class="dropdown-item" href="#">Edit My Profile</a></li>
 							<li><a class="dropdown-item" href="#">Manage Photos</a></li>
 							<li><a class="dropdown-item" href="#">Change Password</a></li> -->
-							<li><a class="dropdown-item" asp-controller="User" asp-action="Signout">Logout</a></li>
-						</ul>
-					</div> 
+                            <li><a class="dropdown-item" asp-controller="User" asp-action="Signout">Logout</a></li>
+                        </ul>
+                    </div>
 
                     
 
@@ -518,7 +169,8 @@ Bootstrap icon for search -->
                 <div class="d-flex align-items-center gap-3">
                     @if (!string.IsNullOrEmpty(Model.Registration?.ImagePath))
                     {
-                        <img src="@Html.Raw("/" + Model.Registration?.ImagePath)" alt="Profile" class="mobile-profile-avatar">
+                        <img src="@Html.Raw("/" + Model.Registration?.ImagePath)" alt="Profile"
+                             class="mobile-profile-avatar">
                     }
                     else
                     {
@@ -539,42 +191,56 @@ Bootstrap icon for search -->
             <div class="offcanvas-body d-flex flex-column p-3">
                 <div class="mobile-nav-group">
                     <a asp-controller="User" asp-action="Dashboard"
-                       class="mobile-nav-link @(currentAction == "Dashboard" ? "active" : "")">
+                       class="mobile-nav-link @(currentAction == "Dashboard" && !isChatActive ? "active" : "")">
                         <i data-lucide="user-round"></i> Profile
                     </a>
-                    <!-- <a href="/src/pages/Account/Chat/Chat.html" class="mobile-nav-link">
-                        <i data-lucide="message-circle-more"></i> Chat
-                    </a> -->
+                    <a asp-controller="Chat" asp-action="Index"
+                       class="mobile-nav-link @(isChatActive ? "active" : "") d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <i data-lucide="message-circle-more"></i> Chat
+                        </div>
+                        <span id="mobileChatNavBadge" class="badge rounded-pill bg-danger chat-unread-badge"
+                              style="font-size: 9px; padding: 2px 5px; display: none; line-height: 1;">
+                            0
+                        </span>
+                    </a>
                     <a asp-controller="User" asp-action="Explore"
-                       class="mobile-nav-link @(currentAction == "Explore" ? "active" : "")">
+                       class="mobile-nav-link @(currentAction == "Explore" && !isChatActive ? "active" : "")">
                         <i data-lucide="users-round"></i> Explore
                     </a>
                 </div>
 
                 <div class="mobile-nav-label">Account Management</div>
                 <div class="mobile-nav-group">
-                    <a asp-action="Edit" asp-controller="User" class="mobile-nav-link @(currentAction == "Edit" ? "active" : "")">
+                    <a asp-action="Edit" asp-controller="User"
+                       class="mobile-nav-link @(currentAction == "Edit" ? "active" : "")">
                         <i data-lucide="user-round-pen"></i> View/Edit profile
                     </a>
-                    <a asp-controller="User" asp-action="SearchProfile" class="mobile-nav-link @(currentAction == "SearchProfile" ? "active" : "")">
+                    <a asp-controller="User" asp-action="SearchProfile"
+                       class="mobile-nav-link @(currentAction == "SearchProfile" ? "active" : "")">
                         <i data-lucide="search"></i> Search Profile
                     </a>
-                    <a asp-action="Image" asp-controller="User" class="mobile-nav-link @(currentAction == "Image" ? "active" : "")">
+                    <a asp-action="Image" asp-controller="User"
+                       class="mobile-nav-link @(currentAction == "Image" ? "active" : "")">
                         <i data-lucide="image-plus"></i> Manage Photos
                     </a>
                 </div>
 
                 <div class="mobile-nav-group">
-                    <a asp-action="ProfileVerification" asp-controller="User" class="mobile-nav-link @(currentAction == "ProfileVerification" ? "active" : "")">
+                    <a asp-action="ProfileVerification" asp-controller="User"
+                       class="mobile-nav-link @(currentAction == "ProfileVerification" ? "active" : "")">
                         <i data-lucide="shield-check"></i> Profile Verification
                     </a>
-                    <a asp-controller="User" asp-action="Notification" class="mobile-nav-link @(currentAction == "Notification" ? "active" : "")">
+                    <a asp-controller="User" asp-action="Notification"
+                       class="mobile-nav-link @(currentAction == "Notification" ? "active" : "")">
                         <i data-lucide="bell-ring"></i> Notifications
                     </a>
-                    <a asp-action="ChangePassword" asp-controller="User" class="mobile-nav-link @(currentAction == "ChangePassword" ? "active" : "")">
+                    <a asp-action="ChangePassword" asp-controller="User"
+                       class="mobile-nav-link @(currentAction == "ChangePassword" ? "active" : "")">
                         <i data-lucide="user-round-cog"></i>Account Settings
-                    </a> 
-                    <a asp-action="BillHistory" asp-controller="User" class="mobile-nav-link @(currentAction == "BillHistory" ? "active" : "")">
+                    </a>
+                    <a asp-action="BillHistory" asp-controller="User"
+                       class="mobile-nav-link @(currentAction == "BillHistory" ? "active" : "")">
                         <i data-lucide="receipt"></i>Billing history
                     </a>
                     <!-- <a href="/src/pages/Account/Support/Support.html" class="mobile-nav-link">
@@ -586,8 +252,8 @@ Bootstrap icon for search -->
                     <button onClick="window.location.href='@Url.Action("Signout", "User")'" class="mobile-logout-btn">
                         LOGOUT <i data-lucide="power"></i>
                     </button>
-                </div> 
-            </div> 
+                </div>
+            </div>
         </div>
 
 
@@ -675,11 +341,11 @@ Bootstrap icon for search -->
                     </ul>
                 </nav>
             </aside>
-<!-- 
+            <!-- 
             <div class="container">
                 <div class="layout-specing"> -->
-                    @RenderBody()
-                <!-- </div>
+            @RenderBody()
+            <!-- </div>
             </div> -->
 
             <aside class="d-none d-xl-block" style="width: 288px; padding: 1.5rem;">
@@ -727,12 +393,13 @@ Bootstrap icon for search -->
                         </p> *@
 
                         <!-- Upgrade Button -->
-                        @if(!Model.Registration.IsPremiumMember)
+                        @if (!Model.Registration.IsPremiumMember)
                         {
-                        <button type="button" class="btn w-100 mb-2 text-white"
-                                style="background-color: #A5BE25; border-radius: 999px; font-size: 10px; padding: 10px;" onclick="showPackagesLayoutModal()">
-                            Upgrade to Premium
-                        </button>
+                            <button type="button" class="btn w-100 mb-2 text-white"
+                                    style="background-color: #A5BE25; border-radius: 999px; font-size: 10px; padding: 10px;"
+                                    onclick="showPackagesLayoutModal()">
+                                Upgrade to Premium
+                            </button>
                         }
                         
 
@@ -767,29 +434,31 @@ Bootstrap icon for search -->
                 @* <img id="packageModalProfileImg" src="@(!string.IsNullOrEmpty(user.ImagePath) ? Html.Raw("/" + user.ImagePath) : Url.Content(imagePath))" alt="Profile"
                     class="modal-profile-img" onerror="this.src='@Url.Content(defaultImage)'"> *@
     
-                <h5 class="fw-medium fs-18 mb-2 px-3" style="color: #000;" id="packagesLayoutModalTitle">Upgrade to premium membership to view contact
+                <h5 class="fw-medium fs-18 mb-2 px-3" style="color: #000;" id="packagesLayoutModalTitle">Upgrade to
+                    premium membership to view contact
                     details</h5>
-                <p class="text-muted fs-12 mb-3 px-4" id="packagesLayoutModalSubTitle">Unlock access to contact details by upgrading to premium! Get
-                    closer to meaningful connections.</p>
+                    <p class="text-muted fs-12 mb-3 px-4" id="packagesLayoutModalSubTitle">Unlock access to contact details
+                        by upgrading to premium! Get
+                        closer to meaningful connections.</p>
     
-                <div class="package-details-inner">
-                    <!-- Illustration -->
-                    <div class="d-flex justify-content-center mb-3">
-                        <div class="position-relative d-flex align-items-center gap-2">
-                            <img src="../../../../assets/images/icon/birds.png">
-                        </div>
-                    </div>
+                        <div class="package-details-inner">
+                            <!-- Illustration -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="position-relative d-flex align-items-center gap-2">
+                                    <img src="../../../../assets/images/icon/birds.png">
+                                </div>
+                            </div>
     
-                    <h6 class="fw-medium fs-18 mb-2 text-uppercase" style="letter-spacing: 1px;">Membership Package</h6>
+                            <h6 class="fw-medium fs-18 mb-2 text-uppercase" style="letter-spacing: 1px;">Membership Package</h6>
     
-                    <div class="package-pill-days">180 DAYS</div><br>
-                    <div class="package-pill-price">₹ 2000</div>
+                            <div class="package-pill-days">180 DAYS</div><br>
+                            <div class="package-pill-price">₹ 2000</div>
     
-                    <div class="mt-3 mb-3">
-                        <p class="fw-bold mb-3" style="font-size: 14px;">Features</p>
-                        <div class="d-flex justify-content-center">
-                            <div class="package-feature-list">
-                                <!-- <div class="package-feature-item">
+                            <div class="mt-3 mb-3">
+                                <p class="fw-bold mb-3" style="font-size: 14px;">Features</p>
+                                <div class="d-flex justify-content-center">
+                                    <div class="package-feature-list">
+                                        <!-- <div class="package-feature-item">
                                     <i class="uil uil-comment-alt-notes"></i>
                                     <span>Personalised messages to 40 Members</span>
                                 </div>
@@ -797,116 +466,403 @@ Bootstrap icon for search -->
                                     <i class="uil uil-comments"></i>
                                     <span>Chat with prospects directly</span>
                                 </div> -->
-                                <div class="package-feature-item">
-                                    <i class="uil uil-mobile-android"></i>
-                                    <span>View mobile numbers 50</span>
-                                </div>
-                                <div class="package-feature-item">
-                                    <i class="uil uil-camera"></i>
-                                    <span>Send photo unlock requests</span>
+                                        <div class="package-feature-item">
+                                            <i class="uil uil-mobile-android"></i>
+                                            <span>View mobile numbers 50</span>
+                                        </div>
+                                        <div class="package-feature-item">
+                                            <i class="uil uil-camera"></i>
+                                            <span>Send photo unlock requests</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+    
+                        <a asp-action="MakePayment" asp-controller="Transaction" class="btn btn-pay-online shadow"
+                           style="font-size: 17px;">Pay Online</a>
                     </div>
                 </div>
-    
-                <a asp-action="MakePayment" asp-controller="Transaction" class="btn btn-pay-online shadow" style="font-size: 17px;">Pay Online</a>
             </div>
-        </div>
-    </div>
 
-    <!-- Lucide icon -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        lucide.createIcons();
+            <!-- Lucide icon -->
+            <script src="https://unpkg.com/lucide@latest"></script>
+            <script>
+                    lucide.createIcons();
 
-        function showPackagesLayoutModal(mode) {
-            const modal = document.getElementById('packagesModal');
-            if (modal) {
-                const titleElem = document.getElementById('packagesLayoutModalTitle');
-                const subTitleElem = document.getElementById('packagesLayoutModalSubTitle');
-                if (titleElem && subTitleElem) {
-                    if (mode === 'photo') {
-                        titleElem.innerText = 'Upgrade to premium membership to send photo unlock requests';
-                        subTitleElem.innerText = 'Unlock the ability to request photo access by upgrading to premium! Connect with your perfect match today.';
-                    } else {
-                        titleElem.innerText = 'Upgrade to premium membership to view contact details';
-                        subTitleElem.innerText = 'Unlock access to contact details by upgrading to premium! Get closer to meaningful connections.';
+                    function showPackagesLayoutModal(mode) {
+                        const modal = document.getElementById('packagesModal');
+                        if (modal) {
+                            const titleElem = document.getElementById('packagesLayoutModalTitle');
+                            const subTitleElem = document.getElementById('packagesLayoutModalSubTitle');
+                            if (titleElem && subTitleElem) {
+                                if (mode === 'photo') {
+                                    titleElem.innerText = 'Upgrade to premium membership to send photo unlock requests';
+                                    subTitleElem.innerText = 'Unlock the ability to request photo access by upgrading to premium! Connect with your perfect match today.';
+                                } else {
+                                    titleElem.innerText = 'Upgrade to premium membership to view contact details';
+                                    subTitleElem.innerText = 'Unlock access to contact details by upgrading to premium! Get closer to meaningful connections.';
+                                }
+                            }
+                            modal.classList.add('active');
+                        }
+                    }
+
+                    function hidePackagesLayoutModal() {
+                        const modal = document.getElementById('packagesModal');
+                        if (modal) {
+                            modal.classList.remove('active');
+                        }
+                    }
+            </script>
+            <!-- javascript -->
+
+            <script src="/assets/account/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+            <script src="/assets/account/assets/libs/feather-icons/feather.min.js"></script>
+            <script src="/assets/account/assets/libs/simplebar/simplebar.min.js"></script>
+            <script src="/assets/account/assets/libs/tiny-slider/min/tiny-slider.js"></script>
+            <script src="/assets/account/assets/js/plugins.init.js"></script>
+            <script src="/assets/account/assets/js/app.js"></script>
+            <script src="/assets/js/app.js"></script>
+            <!-- Select2 JS -->
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <!-- SweetAlert2 -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <!-- SignalR JS Client Library -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+            @RenderSection("Scripts", required: false)
+            <script>
+                    function updateChatUnreadBadge(count) {
+                        if (count && count > 0) {
+                            $('.chat-unread-badge').text(count > 99 ? '99+' : count).show();
+                        } else {
+                            $('.chat-unread-badge').hide();
+                        }
+                    }
+
+                    function checkUnreadChatMessages() {
+                        $.ajax({
+                            url: '/api/chat/unread-count',
+                            type: 'GET',
+                            success: function (data) {
+                                if (data && typeof data.unreadCount === 'number') {
+                                    updateChatUnreadBadge(data.unreadCount);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error fetching unread chat count:', error);
+                            }
+                        });
+                    }
+
+                    (function () {
+                        // Check unread messages on initial script evaluation
+                        checkUnreadChatMessages();
+
+                        const uid = @(loggedInUserPresenceId ?? 0);
+                        if (uid > 0) {
+                            if (typeof signalR !== 'undefined' && !window.globalPresenceConn) {
+                                window.globalPresenceConn = new signalR.HubConnectionBuilder()
+                                    .withUrl('/hubs/presence?userId=' + uid)
+                                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                                    .configureLogging(signalR.LogLevel.Warning)
+                                    .build();
+
+                                window.globalPresenceConn.start().catch(function (err) {
+                                    console.error("Global PresenceHub connection failed:", err);
+                                });
+                            }
+
+                            // Global ChatHub listener for real-time unread badge updates across all pages
+                            if (typeof signalR !== 'undefined' && !window.globalChatConn) {
+                                window.globalChatConn = new signalR.HubConnectionBuilder()
+                                    .withUrl('/hubs/chat?userId=' + uid)
+                                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                                    .configureLogging(signalR.LogLevel.Warning)
+                                    .build();
+
+                                window.globalChatConn.on('UnreadCountUpdated', function (unreadCount) {
+                                    updateChatUnreadBadge(unreadCount);
+                                });
+
+                                window.globalChatConn.on('MessagesRead', function () {
+                                    checkUnreadChatMessages();
+                                });
+
+                                window.globalChatConn.on('ReceiveNewMessageNotification', function (msg) {
+                                    checkUnreadChatMessages();
+                                });
+
+                                window.globalChatConn.on('ReceiveMessage', function (msg) {
+                                    checkUnreadChatMessages();
+                                });
+
+                                window.globalChatConn.start().catch(function (err) {
+                                    console.error("Global ChatHub connection failed:", err);
+                                });
+                            }
+
+                            // Global CallHub listener for real-time incoming voice & video calls
+                            if (typeof signalR !== 'undefined' && !window.globalCallConn) {
+                                window.globalCallConn = new signalR.HubConnectionBuilder()
+                                    .withUrl('/hubs/call?userId=' + uid)
+                                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                                    .configureLogging(signalR.LogLevel.Warning)
+                                    .build();
+
+                                window.globalCallConn.on('IncomingCall', function (callLog) {
+                                    showIncomingCallModal(callLog);
+                                });
+
+                                window.globalCallConn.on('CallEnded', function (callLog) {
+                                    hideIncomingCallModal();
+                                });
+
+                                window.globalCallConn.on('CallRejected', function (callLog) {
+                                    hideIncomingCallModal();
+                                });
+
+                                window.globalCallConn.start().catch(function (err) {
+                                    console.error("Global CallHub connection failed:", err);
+                                });
+                            }
+
+                            // Real-time offline beacon when closing browser tab or navigating away
+                            window.addEventListener('beforeunload', function () {
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon('/api/presence/offline?userId=' + uid);
+                                }
+                            });
+                            window.addEventListener('pagehide', function () {
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon('/api/presence/offline?userId=' + uid);
+                                }
+                            });
+                        }
+
+                        $(document).ready(function () {
+                            checkUnreadChatMessages();
+                        });
+
+                        window.addEventListener('pageshow', function () {
+                            checkUnreadChatMessages();
+                        });
+                    })();
+            </script>
+            <script>
+                    function checkUnreadNotifications() {
+                        $.ajax({
+                            url: '/api/notifications/unread-count',
+                            type: 'GET',
+                            success: function (data) {
+                                if (data && data.unreadCount > 0) {
+                                    $('#notificationBadge').text(data.unreadCount).show();
+                                } else {
+                                    $('#notificationBadge').hide();
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error fetching unread notification count:', error);
+                            }
+                        });
+                    }
+
+                    $(document).ready(function () {
+                        // Check immediately on load
+                        checkUnreadNotifications();
+                        checkUnreadChatMessages();
+
+                        // Poll periodically
+                        setInterval(checkUnreadNotifications, 30000);
+                        setInterval(checkUnreadChatMessages, 15000);
+                    });
+            </script>
+
+            <!-- M4Nikah Themed Global Incoming Call Modal -->
+            <div id="incomingCallModalOverlay" class="upgrade-modal-overlay" onclick="if(event.target === this) declineCurrentIncomingCall()">
+                <div class="upgrade-modal-card" style="max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+                    
+                    <!-- Close button -->
+                    <div class="modal-close-btn" onclick="declineCurrentIncomingCall()" title="Dismiss">
+                        <i class="uil uil-times"></i>
+                    </div>
+
+                    <div class="modal-body-scroll" style="padding: 36px 24px 30px;">
+                        
+                        <!-- Call Type Pill Badge -->
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3" style="background: #eef7ed; border: 1px solid #d4ecd1; border-radius: 999px; color: #007B3D; font-size: 13px; font-weight: 600;">
+                            <i class="uil uil-phone-alt fs-16" id="incomingCallTypeIcon"></i>
+                            <span id="incomingCallTypeText">Incoming Voice Call...</span>
+                        </div>
+
+                        <!-- Profile Avatar with soft pulsing effect -->
+                        <div class="position-relative my-2" style="width: 96px; height: 96px;">
+                            <div class="m4-call-avatar-pulse"></div>
+                            <img id="incomingCallerPhoto" src="/assets/images/chat-img2.jpg" alt="Caller"
+                                 style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid #007B3D; box-shadow: 0 6px 18px rgba(0, 123, 61, 0.25); background: #fff;">
+                        </div>
+
+                        <!-- Caller Name & ID -->
+                        <h5 id="incomingCallerName" class="fw-bold fs-18 mb-1 mt-2" style="color: #1e293b;">Member</h5>
+                        <p id="incomingCallerRegNo" class="text-muted fs-12 mb-4">Reg ID: M4N</p>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-center gap-3 w-100 px-2">
+                            <!-- Decline Button -->
+                            <button type="button" id="declineIncomingCallBtn" class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 text-white"
+                                    style="background-color: #E93B3B !important; border-radius: 999px; font-size: 14px; font-weight: 600; padding: 10px 18px; box-shadow: 0 4px 12px rgba(233, 59, 59, 0.25); border: none;">
+                                <i class="uil uil-phone-slash fs-18"></i>
+                                <span>Decline</span>
+                            </button>
+
+                            <!-- Accept Button -->
+                            <button type="button" id="acceptIncomingCallBtn" class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 text-white"
+                                    style="background-color: #007B3D !important; border-radius: 999px; font-size: 14px; font-weight: 600; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0, 123, 61, 0.35); animation: m4AcceptPulse 1.6s infinite; border: none;">
+                                <i class="uil uil-phone-alt fs-18"></i>
+                                <span>Accept</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .m4-call-avatar-pulse {
+                    position: absolute;
+                    inset: -8px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(0, 123, 61, 0.5);
+                    animation: m4nikahPulse 1.8s infinite ease-out;
+                }
+                @@keyframes m4nikahPulse {
+                    0% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.18); opacity: 0.3; }
+                    100% { transform: scale(1.35); opacity: 0; }
+                }
+                @@keyframes m4AcceptPulse {
+                    0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(0, 123, 61, 0.35); }
+                    50% { transform: scale(1.04); box-shadow: 0 6px 20px rgba(0, 123, 61, 0.6); }
+                }
+            </style>
+
+            <script>
+                let globalRingtoneCtx = null;
+                let globalRingtoneTimer = null;
+                let activeIncomingCallData = null;
+
+                function startGlobalRingtone() {
+                    try {
+                        if (!globalRingtoneCtx) {
+                            globalRingtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        if (globalRingtoneCtx.state === 'suspended') {
+                            globalRingtoneCtx.resume();
+                        }
+
+                        function playTonePair() {
+                            if (!globalRingtoneCtx) return;
+                            const osc1 = globalRingtoneCtx.createOscillator();
+                            const osc2 = globalRingtoneCtx.createOscillator();
+                            const gain = globalRingtoneCtx.createGain();
+
+                            osc1.type = 'sine';
+                            osc1.frequency.setValueAtTime(440, globalRingtoneCtx.currentTime);
+                            osc2.type = 'sine';
+                            osc2.frequency.setValueAtTime(480, globalRingtoneCtx.currentTime);
+
+                            gain.gain.setValueAtTime(0, globalRingtoneCtx.currentTime);
+                            gain.gain.linearRampToValueAtTime(0.18, globalRingtoneCtx.currentTime + 0.1);
+                            gain.gain.linearRampToValueAtTime(0, globalRingtoneCtx.currentTime + 1.2);
+
+                            osc1.connect(gain);
+                            osc2.connect(gain);
+                            gain.connect(globalRingtoneCtx.destination);
+
+                            osc1.start();
+                            osc2.start();
+                            osc1.stop(globalRingtoneCtx.currentTime + 1.2);
+                            osc2.stop(globalRingtoneCtx.currentTime + 1.2);
+                        }
+
+                        playTonePair();
+                        globalRingtoneTimer = setInterval(playTonePair, 2500);
+                    } catch (e) {
+                        console.warn('Ringtone sound playback notice:', e);
                     }
                 }
-                modal.classList.add('active');
-            }
-        }
 
-        function hidePackagesLayoutModal() {
-            const modal = document.getElementById('packagesModal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        }
-    </script>
-    <!-- javascript -->
-
-    <script src="/assets/account/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/account/assets/libs/feather-icons/feather.min.js"></script>
-    <script src="/assets/account/assets/libs/simplebar/simplebar.min.js"></script>
-    <script src="/assets/account/assets/libs/tiny-slider/min/tiny-slider.js"></script>
-    <script src="/assets/account/assets/js/plugins.init.js"></script>
-    <script src="/assets/account/assets/js/app.js"></script>
-        <script src="/assets/js/app.js"></script>
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- SignalR JS Client Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-    @RenderSection("Scripts", required: false)
-    <script>
-        (function () {
-            const uid = @(loggedInUserPresenceId ?? 0);
-            if (uid > 0) {
-                // Real-time offline beacon when closing browser tab or navigating away
-                window.addEventListener('beforeunload', function () {
-                    if (navigator.sendBeacon) {
-                        navigator.sendBeacon('/api/presence/offline?userId=' + uid);
+                function stopGlobalRingtone() {
+                    if (globalRingtoneTimer) {
+                        clearInterval(globalRingtoneTimer);
+                        globalRingtoneTimer = null;
                     }
-                });
-                window.addEventListener('pagehide', function () {
-                    if (navigator.sendBeacon) {
-                        navigator.sendBeacon('/api/presence/offline?userId=' + uid);
-                    }
-                });
-            }
-        })();
-    </script>
-    <script>
-        function checkUnreadNotifications() {
-            $.ajax({
-                url: '/api/notifications/unread-count',
-                type: 'GET',
-
-                success: function (data) {
-                    if (data && data.unreadCount > 0) {
-                        $('#notificationBadge').text(data.unreadCount).show();
-                    } else {
-                        $('#notificationBadge').hide();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error fetching unread notification count:', error);
                 }
-            });
-        }
 
-        $(document).ready(function () {
-            // Check immediately on load
-            checkUnreadNotifications();
+                function showIncomingCallModal(callLog) {
+                    activeIncomingCallData = callLog;
+                    const modal = document.getElementById('incomingCallModalOverlay');
+                    if (!modal) return;
 
-            // Poll every 30 seconds
-            setInterval(checkUnreadNotifications, 30000);
-        });
-    </script>
-</body>
+                    const isVideo = callLog.callType === 1 || callLog.callType === 'Video';
+                    const typeIcon = document.getElementById('incomingCallTypeIcon');
+                    const typeText = document.getElementById('incomingCallTypeText');
+                    
+                    if (typeIcon) {
+                        typeIcon.className = isVideo ? 'uil uil-video fs-16' : 'uil uil-phone-alt fs-16';
+                    }
+                    if (typeText) {
+                        typeText.textContent = isVideo ? 'Incoming Video Call...' : 'Incoming Voice Call...';
+                    }
 
-</html>
+                    document.getElementById('incomingCallerName').textContent = callLog.callerName || 'Member';
+                    document.getElementById('incomingCallerRegNo').textContent = callLog.callerRegisterNumber ? 'Reg ID: ' + callLog.callerRegisterNumber : '';
+                    if (callLog.callerPhotoUrl) {
+                        document.getElementById('incomingCallerPhoto').src = callLog.callerPhotoUrl;
+                    } else {
+                        document.getElementById('incomingCallerPhoto').src = '/assets/images/chat-img2.jpg';
+                    }
+
+                    modal.classList.add('active');
+                    startGlobalRingtone();
+
+                    document.getElementById('acceptIncomingCallBtn').onclick = function () {
+                        stopGlobalRingtone();
+                        modal.classList.remove('active');
+                        const targetUrl = isVideo 
+                            ? `/call/video/${callLog.callerId}?isIncoming=true&callLogId=${callLog.id}&roomId=${callLog.roomId}`
+                            : `/call/voice/${callLog.callerId}?isIncoming=true&callLogId=${callLog.id}&roomId=${callLog.roomId}`;
+                        window.location.href = targetUrl;
+                    };
+
+                    document.getElementById('declineIncomingCallBtn').onclick = function () {
+                        declineCurrentIncomingCall();
+                    };
+                }
+
+                function declineCurrentIncomingCall() {
+                    stopGlobalRingtone();
+                    const modal = document.getElementById('incomingCallModalOverlay');
+                    if (modal) {
+                        modal.classList.remove('active');
+                    }
+                    if (activeIncomingCallData && window.globalCallConn) {
+                        window.globalCallConn.invoke('RejectCall', { callLogId: activeIncomingCallData.id, reason: 'Declined by user' })
+                            .catch(function (err) { console.error('Error rejecting call:', err); });
+                    }
+                    activeIncomingCallData = null;
+                }
+
+                function hideIncomingCallModal() {
+                    stopGlobalRingtone();
+                    const modal = document.getElementById('incomingCallModalOverlay');
+                    if (modal) {
+                        modal.classList.remove('active');
+                    }
+                    activeIncomingCallData = null;
+                }
+            </script>
+        </body>
+
+    </html>

@@ -90,11 +90,29 @@ namespace Application.Models.Call
         public string? Reason { get; set; }
     }
 
+    public class CallCreditStatus
+    {
+        public short AudioCallContactsPurchased { get; set; }
+        public short AudioCallContactsUsed { get; set; }
+        public int AudioCallContactsRemaining => Math.Max(0, AudioCallContactsPurchased - AudioCallContactsUsed);
+
+        public short VideoCallMinutesPurchased { get; set; }
+        public short VideoCallMinutesUsed { get; set; }
+        public int VideoCallMinutesRemaining => Math.Max(0, VideoCallMinutesPurchased - VideoCallMinutesUsed);
+
+        public bool HasActivePlan { get; set; }
+        public DateTime? PlanExpiresAt { get; set; }
+    }
+
     public class CallPermissionResult
     {
         public bool Allowed { get; set; }
         public string? Reason { get; set; }
         public bool RequiresUpgrade { get; set; }
+        public bool InterestRequired { get; set; }
+        public bool AudioLimitReached { get; set; }
+        public bool VideoLimitReached { get; set; }
+        public CallCreditStatus? CreditStatus { get; set; }
     }
 
     public class CallRecordingUploadResponse

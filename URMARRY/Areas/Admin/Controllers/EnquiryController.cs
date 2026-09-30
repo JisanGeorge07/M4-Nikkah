@@ -1383,7 +1383,10 @@ public class EnquiryController : Controller
             var planPurchase = new PlanPurchase
             {
                 UserId = user.Id,
-                ViewCreditsPurchased = 50
+                ViewCreditsPurchased = 50,
+                MessageCreditsPurchased = 50,
+                AudioCallContactsPurchased = 50,
+                VideoCallMinutesPurchased = 60
             };
             await _planPurchaseRepository.Add(planPurchase);
             await _planPurchaseRepository.SaveChanges();

@@ -3056,6 +3056,8 @@ namespace URMARRY.Areas.Admin.Controllers
                             await _userRepository.SaveChanges();
                         }
                         hasReachedEndStatus = false;
+                        followUp.LatestAdminApprovalStatus = null;
+                        followUp.VerificationGrade = null;
                     }
                     else if (model.ProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     {
@@ -3069,6 +3071,12 @@ namespace URMARRY.Areas.Admin.Controllers
                                 userProfile.DocumentVerificationRejected = !model.DocumentVerificationComplete.Value;
                                 hasReachedEndStatus = true;
                             }
+                            else
+                            {
+                                hasReachedEndStatus = false;
+                                followUp.LatestAdminApprovalStatus = null;
+                                followUp.VerificationGrade = null;
+                            }
                             await _userRepository.Update(userProfile);
                             await _userRepository.SaveChanges();
                         }
@@ -3078,6 +3086,22 @@ namespace URMARRY.Areas.Admin.Controllers
                         model.ProfileVerificationStatus == ProfileVerificationStatus.Suspended)
                     {
                         hasReachedEndStatus = true;
+                    }
+                    else
+                    {
+                        // Revoked / changed back to non-end statuses (Pending, Started, Hold, etc.)
+                        hasReachedEndStatus = false;
+                        followUp.LatestAdminApprovalStatus = null;
+                        followUp.VerificationGrade = null;
+
+                        var userProfile = await _userRepository.Get(followUp.ProfileId);
+                        if (userProfile != null && !userProfile.DocumentVerificationFollowupApproved)
+                        {
+                            userProfile.DocumentVerificationComplete = false;
+                            userProfile.DocumentVerificationRejected = false;
+                            await _userRepository.Update(userProfile);
+                            await _userRepository.SaveChanges();
+                        }
                     }
                 }
                 else if (followUp.FollowUpType == FollowUpType.PremiumFollowUp)
@@ -3317,6 +3341,25 @@ namespace URMARRY.Areas.Admin.Controllers
                     await _dbContext.FollowUpAdminApprovals.AddAsync(adminApproval);
                     await _dbContext.SaveChangesAsync();
                 }
+                else
+                {
+                    // If not an end status requiring admin review, cancel any dangling active pending approvals
+                    if (followUp.LatestAdminApprovalStatus == null)
+                    {
+                        var pendingApprovals = await _dbContext.FollowUpAdminApprovals
+                            .Where(a => a.FollowUpId == followUp.Id && a.Status == AdminApprovalStatus.Pending && !a.IsDeleted)
+                            .ToListAsync();
+                        foreach (var pa in pendingApprovals)
+                        {
+                            pa.IsActive = false;
+                            pa.IsDeleted = true;
+                        }
+                        if (pendingApprovals.Any())
+                        {
+                            await _dbContext.SaveChangesAsync();
+                        }
+                    }
+                }
 
                 // Save changes to repositories
                 await _followUpTimelineRepo.Add(timeline);
@@ -3374,9 +3417,24 @@ namespace URMARRY.Areas.Admin.Controllers
                 string? formFilterDate = isPost && Request.Form.ContainsKey("filterDate") ? Request.Form["filterDate"].ToString() : (filterDate ?? Request.Query["filterDate"].ToString());
                 string? formSortOrder = isPost && Request.Form.ContainsKey("sortOrder") ? Request.Form["sortOrder"].ToString() : (sortOrder ?? Request.Query["sortOrder"].ToString());
 
-                // Base query: Only followups that have a LatestAdminApprovalStatus
+                // Base query: Only followups that have a LatestAdminApprovalStatus and are in genuine actionable review statuses
                 IQueryable<FollowUp> query = _followUpRepo.GetQueryable()
-                    .Where(x => !x.IsDeleted && x.LatestAdminApprovalStatus != null)
+                    .Where(x => !x.IsDeleted && x.LatestAdminApprovalStatus != null &&
+                        ((x.FollowUpType == FollowUpType.ProfileVerification && (
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Suspended ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Dismissed
+                        )) ||
+                        (x.FollowUpType == FollowUpType.PremiumFollowUp && (
+                            x.LatestInterestStatus == PremiumInterestStatus.Converted ||
+                            x.LatestInterestStatus == PremiumInterestStatus.NotInterested
+                        )) ||
+                        (x.FollowUpType == FollowUpType.RenewalFollowUp && (
+                            x.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed ||
+                            x.LatestRenewalInterestStatus == RenewalInterestStatus.NotInterested
+                        )))
+                    )
                     .Include(x => x.Profile);
 
                 // Filter by Staff
@@ -3417,7 +3475,22 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
 
                 int recordsTotal = await _followUpRepo.GetQueryable()
-                    .Where(x => !x.IsDeleted && x.LatestAdminApprovalStatus != null)
+                    .Where(x => !x.IsDeleted && x.LatestAdminApprovalStatus != null &&
+                        ((x.FollowUpType == FollowUpType.ProfileVerification && (
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Suspended ||
+                            x.LatestProfileVerificationStatus == ProfileVerificationStatus.Dismissed
+                        )) ||
+                        (x.FollowUpType == FollowUpType.PremiumFollowUp && (
+                            x.LatestInterestStatus == PremiumInterestStatus.Converted ||
+                            x.LatestInterestStatus == PremiumInterestStatus.NotInterested
+                        )) ||
+                        (x.FollowUpType == FollowUpType.RenewalFollowUp && (
+                            x.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed ||
+                            x.LatestRenewalInterestStatus == RenewalInterestStatus.NotInterested
+                        )))
+                    )
                     .CountAsync();
                 int recordsFiltered = await query.CountAsync();
 
@@ -3786,6 +3859,9 @@ namespace URMARRY.Areas.Admin.Controllers
                                 if (latestPlan != null && (latestPlan.ViewCreditsPurchased - latestPlan.ViewCreditsUsed) > 0 && latestPlan.ExpiresAt > DateTime.UtcNow)
                                 {
                                     latestPlan.ViewCreditsPurchased += 50;
+                                    latestPlan.MessageCreditsPurchased += 50;
+                                    latestPlan.AudioCallContactsPurchased += 50;
+                                    latestPlan.VideoCallMinutesPurchased += 60;
                                     latestPlan.ExpiresAt = DateTime.UtcNow.AddDays(180);
                                     latestPlan.LowCreditNotificationSent = false;
                                     latestPlan.ExpiryNotificationSent = false;
@@ -3799,6 +3875,9 @@ namespace URMARRY.Areas.Admin.Controllers
                                     {
                                         UserId = userProfile.Id,
                                         ViewCreditsPurchased = 50,
+                                        MessageCreditsPurchased = 50,
+                                        AudioCallContactsPurchased = 50,
+                                        VideoCallMinutesPurchased = 60,
                                         CreatedOn = DateTime.Now,
                                         ModifiedOn = DateTime.Now,
                                         CreatedBy = adminName,
@@ -4080,12 +4159,12 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 int premInterested = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp && f.LatestInterestStatus == PremiumInterestStatus.Interested);
                 
-                // Payment verification: only count if admin approved and customer has a successful transaction created on or after this follow-up was created
+                // Payment verification: only count if payment is completed or customer has a successful transaction created on or after this follow-up was created
                 int premConverted = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp 
                     && (f.LatestInterestStatus == PremiumInterestStatus.Converted || (f.Profile != null && f.Profile.IsPremiumMember))
-                    && (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                        || f.PaymentCompleted
-                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)));
+                    && (f.PaymentCompleted
+                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
+                        || (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && !f.PaymentLinkSent && f.Profile != null && f.Profile.IsPremiumMember)));
                 
                 // Expired premium
                 // Count plan purchases belonging to assigned users that are expired
@@ -4093,12 +4172,12 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 int renewalFollows = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp);
                 
-                // Payment verification: only count renewal if admin approved and customer has a successful transaction created on or after this follow-up was created
+                // Payment verification: only count renewal if payment is completed or customer has a successful transaction created on or after this follow-up was created
                 int renewalConvs = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp 
                     && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember))
-                    && (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                        || f.PaymentCompleted
-                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)));
+                    && (f.PaymentCompleted
+                        || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
+                        || (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && !f.PaymentLinkSent && f.Profile != null && f.Profile.IsPremiumMember)));
 
                 int convRate = assigned > 0 ? (int)Math.Round((double)premConverted * 100 / assigned) : 0;
                 int renewalRate = renewalFollows > 0 ? (int)Math.Round((double)renewalConvs * 100 / renewalFollows) : 0;

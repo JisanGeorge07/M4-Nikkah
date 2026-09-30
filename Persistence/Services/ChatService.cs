@@ -33,17 +33,17 @@ namespace Persistence.Services
                 };
             }
 
-            // 1. Check target user exists and is active
+            // 1. Check target user exists
             var targetUser = await _dbContext.Registration
                 .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.Id == targetUserId && !r.IsDeleted && r.IsActive);
+                .FirstOrDefaultAsync(r => r.Id == targetUserId && !r.IsDeleted);
 
             if (targetUser == null)
             {
                 return new ChatPermissionResult
                 {
                     Allowed = false,
-                    Reason = "The requested profile is no longer available.",
+                    Reason = $"The requested profile (User ID {targetUserId}) was not found in the database.",
                     RequiresUpgrade = false
                 };
             }
@@ -70,7 +70,7 @@ namespace Persistence.Services
                 return new ChatPermissionResult
                 {
                     Allowed = false,
-                    Reason = "Messaging is unavailable for this conversation.",
+                    Reason = "Messaging is unavailable for this conversation (Blocked).",
                     RequiresUpgrade = false
                 };
             }
@@ -78,47 +78,90 @@ namespace Persistence.Services
             // 3. Check membership & paid plan status
             var currentUser = await _dbContext.Registration
                 .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.Id == currentUserId && !r.IsDeleted && r.IsActive);
+                .FirstOrDefaultAsync(r => r.Id == currentUserId && !r.IsDeleted);
 
             if (currentUser == null)
             {
                 return new ChatPermissionResult
                 {
                     Allowed = false,
-                    Reason = "Current user profile not found or inactive.",
+                    Reason = $"Current user profile (User ID {currentUserId}) was not found in the database.",
                     RequiresUpgrade = false
                 };
             }
 
-            bool isPremium = currentUser.IsPremiumMember;
-            bool hasActivePlan = await _dbContext.PlanPurchases
+            // 4. Check if conversation was already established with message history
+            long minU = Math.Min(currentUserId, targetUserId);
+            long maxU = Math.Max(currentUserId, targetUserId);
+            var existingConv = await _dbContext.Conversations
                 .AsNoTracking()
-                .AnyAsync(p => p.UserId == currentUserId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow);
+                .FirstOrDefaultAsync(c => !c.IsDeleted && c.Type == ConversationType.UserToUser && c.User1Id == minU && c.User2Id == maxU);
 
-            // 4. Check mutual interest (Accepted interest status)
-            bool hasAcceptedInterest = await _dbContext.Userfavoriteprofile
-                .AsNoTracking()
-                .AnyAsync(f => !f.IsDeleted && f.Status == InterestStatus.Accepted && (
-                    (f.UserId == currentUserId && f.LikedId == targetUserId) ||
-                    (f.UserId == targetUserId && f.LikedId == currentUserId)
-                ));
-
-            if (isPremium || hasActivePlan || hasAcceptedInterest)
+            bool conversationEstablished = false;
+            if (existingConv != null)
             {
+                conversationEstablished = existingConv.LastMessageId.HasValue ||
+                    await _dbContext.ChatMessages.AsNoTracking().AnyAsync(m => m.ConversationId == existingConv.Id && !m.IsDeleted);
+            }
+
+            // 5. Query active plans & remaining credits
+            var activePlans = await _dbContext.PlanPurchases
+                .Where(p => p.UserId == currentUserId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            int totalPurchased = activePlans.Sum(p => (int)p.MessageCreditsPurchased);
+            int totalUsed = activePlans.Sum(p => (int)p.MessageCreditsUsed);
+            int remaining = totalPurchased - totalUsed;
+
+            if (conversationEstablished)
+            {
+                // Existing conversation with active message history: both participants can chat/reply freely without consuming new credits
                 return new ChatPermissionResult
                 {
                     Allowed = true,
                     Reason = null,
-                    RequiresUpgrade = false
+                    RequiresUpgrade = false,
+                    MessageCreditsUsed = totalUsed,
+                    MessageCreditsPurchased = totalPurchased
+                };
+            }
+
+            // 6. For new conversations, verify current user is premium and has available message credits
+            bool isPremium = currentUser.IsPremiumMember || activePlans.Any();
+
+            if (!isPremium)
+            {
+                return new ChatPermissionResult
+                {
+                    Allowed = false,
+                    Reason = "Upgrade to Premium to initiate new conversations.",
+                    RequiresUpgrade = true,
+                    IsMutualInterestRequired = false,
+                    MessageCreditsUsed = totalUsed,
+                    MessageCreditsPurchased = totalPurchased
+                };
+            }
+
+            if (activePlans.Any() && remaining <= 0)
+            {
+                return new ChatPermissionResult
+                {
+                    Allowed = false,
+                    Reason = $"You have exhausted your message contact credits ({totalUsed}/{totalPurchased}). Please renew your premium plan to message more contacts.",
+                    RequiresUpgrade = true,
+                    MessageLimitReached = true,
+                    MessageCreditsUsed = totalUsed,
+                    MessageCreditsPurchased = totalPurchased
                 };
             }
 
             return new ChatPermissionResult
             {
-                Allowed = false,
-                Reason = "Upgrade your membership plan or establish mutual interest to start conversations.",
-                RequiresUpgrade = true,
-                IsMutualInterestRequired = true
+                Allowed = true,
+                Reason = null,
+                RequiresUpgrade = false,
+                MessageCreditsUsed = totalUsed,
+                MessageCreditsPurchased = totalPurchased
             };
         }
 
@@ -220,6 +263,27 @@ namespace Persistence.Services
                 .Where(r => otherUserIds.Contains(r.Id))
                 .ToDictionaryAsync(r => r.Id);
 
+            var lastMsgIds = conversations
+                .Where(c => c.LastMessageId.HasValue)
+                .Select(c => c.LastMessageId!.Value)
+                .Distinct()
+                .ToList();
+
+            var lastMessages = await _dbContext.ChatMessages
+                .AsNoTracking()
+                .Where(m => lastMsgIds.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id);
+
+            var convIds = conversations.Select(c => c.Id).ToList();
+
+            // Compute live unread counts directly from ChatMessages table
+            var liveUnreadCounts = await _dbContext.ChatMessages
+                .AsNoTracking()
+                .Where(m => convIds.Contains(m.ConversationId) && !m.IsDeleted && m.Status != ChatMessageStatus.Read && m.SenderId != currentUserId)
+                .GroupBy(m => m.ConversationId)
+                .Select(g => new { ConversationId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ConversationId, x => x.Count);
+
             var result = new List<ConversationDto>();
             foreach (var conv in conversations)
             {
@@ -230,7 +294,14 @@ namespace Persistence.Services
                     participants.TryGetValue(otherId, out participant);
                 }
 
-                result.Add(MapToConversationDto(conv, currentUserId, participant));
+                ChatMessage? lastMsg = null;
+                if (conv.LastMessageId.HasValue)
+                {
+                    lastMessages.TryGetValue(conv.LastMessageId.Value, out lastMsg);
+                }
+
+                int unreadCount = liveUnreadCounts.TryGetValue(conv.Id, out var count) ? count : 0;
+                result.Add(MapToConversationDto(conv, currentUserId, participant, lastMsg, unreadCount));
             }
 
             return result;
@@ -326,6 +397,8 @@ namespace Persistence.Services
             var conv = await _dbContext.Conversations
                 .FirstOrDefaultAsync(c => !c.IsDeleted && c.Type == ConversationType.UserToUser && c.User1Id == u1 && c.User2Id == u2);
 
+            bool isNewConversationForSender = false;
+
             if (conv == null)
             {
                 conv = new Conversation
@@ -339,6 +412,42 @@ namespace Persistence.Services
                 };
                 _dbContext.Conversations.Add(conv);
                 await _dbContext.SaveChangesAsync(senderUserId.ToString());
+
+                isNewConversationForSender = true;
+            }
+            else
+            {
+                // Check if this conversation has no messages yet (was created as an empty shell on page open)
+                bool hasAnyMessages = conv.LastMessageId.HasValue ||
+                    await _dbContext.ChatMessages.AnyAsync(m => m.ConversationId == conv.Id && !m.IsDeleted);
+
+                if (!hasAnyMessages)
+                {
+                    isNewConversationForSender = true;
+                }
+            }
+
+            if (isNewConversationForSender)
+            {
+                // Deduct 1 message credit for the sender upon establishing a new unique contact
+                var planToDeduct = await _dbContext.PlanPurchases
+                    .Where(p => p.UserId == senderUserId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow && p.MessageCreditsUsed < p.MessageCreditsPurchased)
+                    .OrderBy(p => p.ExpiresAt)
+                    .FirstOrDefaultAsync();
+
+                if (planToDeduct != null)
+                {
+                    planToDeduct.MessageCreditsUsed++;
+                    planToDeduct.ModifiedOn = DateTime.UtcNow;
+                    planToDeduct.ModifiedBy = senderUserId.ToString();
+                    await _dbContext.SaveChangesAsync(senderUserId.ToString());
+                }
+            }
+
+            var msgType = request.MessageType;
+            if ((int)msgType == 0)
+            {
+                msgType = !string.IsNullOrWhiteSpace(request.AttachmentUrl) ? ChatMessageType.Document : ChatMessageType.Text;
             }
 
             var message = new ChatMessage
@@ -348,7 +457,7 @@ namespace Persistence.Services
                 SenderRole = MessageSenderRole.User,
                 ReceiverId = request.ReceiverId,
                 Content = request.Content?.Trim() ?? string.Empty,
-                MessageType = request.MessageType,
+                MessageType = msgType,
                 AttachmentUrl = request.AttachmentUrl,
                 AttachmentFileName = request.AttachmentFileName,
                 AttachmentFileSize = request.AttachmentFileSize,
@@ -420,6 +529,12 @@ namespace Persistence.Services
                 throw new InvalidOperationException("Support conversation not found.");
             }
 
+            var msgType = request.MessageType;
+            if ((int)msgType == 0)
+            {
+                msgType = !string.IsNullOrWhiteSpace(request.AttachmentUrl) ? ChatMessageType.Document : ChatMessageType.Text;
+            }
+
             var message = new ChatMessage
             {
                 ConversationId = conv.Id,
@@ -427,7 +542,7 @@ namespace Persistence.Services
                 SenderRole = senderRole,
                 ReceiverId = senderRole == MessageSenderRole.Staff ? conv.User1Id : (long?)null,
                 Content = request.Content?.Trim() ?? string.Empty,
-                MessageType = request.MessageType,
+                MessageType = msgType,
                 AttachmentUrl = request.AttachmentUrl,
                 AttachmentFileName = request.AttachmentFileName,
                 AttachmentFileSize = request.AttachmentFileSize,
@@ -528,6 +643,40 @@ namespace Persistence.Services
                 {
                     throw new UnauthorizedAccessException("Unauthorized to access this conversation history.");
                 }
+
+                if (page == 1)
+                {
+                    var unreadMsgs = await _dbContext.ChatMessages
+                        .Where(m => m.ConversationId == conversationId && !m.IsDeleted && m.Status != ChatMessageStatus.Read && m.SenderId != currentUserId)
+                        .ToListAsync();
+
+                    if (unreadMsgs.Any())
+                    {
+                        var now = DateTime.UtcNow;
+                        foreach (var msg in unreadMsgs)
+                        {
+                            msg.Status = ChatMessageStatus.Read;
+                            msg.ReadAt = now;
+                            if (!msg.DeliveredAt.HasValue) msg.DeliveredAt = now;
+                        }
+
+                        var convEntity = await _dbContext.Conversations.FirstOrDefaultAsync(c => c.Id == conversationId && !c.IsDeleted);
+                        if (convEntity != null)
+                        {
+                            if (convEntity.Type == ConversationType.UserToUser)
+                            {
+                                if (convEntity.User1Id == currentUserId) convEntity.User1UnreadCount = 0;
+                                else if (convEntity.User2Id == currentUserId) convEntity.User2UnreadCount = 0;
+                            }
+                            else if (convEntity.Type == ConversationType.Support)
+                            {
+                                convEntity.User1UnreadCount = 0;
+                            }
+                        }
+
+                        await _dbContext.SaveChangesAsync(currentUserId.ToString());
+                    }
+                }
             }
 
             var query = _dbContext.ChatMessages
@@ -584,9 +733,9 @@ namespace Persistence.Services
                     AttachmentFileName = m.AttachmentFileName,
                     AttachmentFileSize = m.AttachmentFileSize,
                     Status = m.Status,
-                    SentAt = m.SentAt,
-                    DeliveredAt = m.DeliveredAt,
-                    ReadAt = m.ReadAt,
+                    SentAt = DateTime.SpecifyKind(m.SentAt, DateTimeKind.Utc),
+                    DeliveredAt = m.DeliveredAt.HasValue ? DateTime.SpecifyKind(m.DeliveredAt.Value, DateTimeKind.Utc) : null,
+                    ReadAt = m.ReadAt.HasValue ? DateTime.SpecifyKind(m.ReadAt.Value, DateTimeKind.Utc) : null,
                     IsMine = isMine
                 };
             }).ToList();
@@ -619,7 +768,8 @@ namespace Persistence.Services
 
             if (conv.Type == ConversationType.UserToUser)
             {
-                query = query.Where(m => m.ReceiverId == currentUserId);
+                // Mark any messages sent by the other user to currentUserId as read
+                query = query.Where(m => m.SenderId != currentUserId);
 
                 if (conv.User1Id == currentUserId)
                 {
@@ -651,6 +801,10 @@ namespace Persistence.Services
             {
                 msg.Status = ChatMessageStatus.Read;
                 msg.ReadAt = now;
+                if (!msg.DeliveredAt.HasValue)
+                {
+                    msg.DeliveredAt = now;
+                }
             }
 
             await _dbContext.SaveChangesAsync(currentUserId.ToString());
@@ -661,17 +815,21 @@ namespace Persistence.Services
         {
             if (currentUserId <= 0) return 0;
 
-            var user1Count = await _dbContext.Conversations
+            var userConvIds = await _dbContext.Conversations
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted && c.User1Id == currentUserId)
-                .SumAsync(c => c.User1UnreadCount);
+                .Where(c => !c.IsDeleted && (
+                    (c.Type == ConversationType.UserToUser && (c.User1Id == currentUserId || c.User2Id == currentUserId)) ||
+                    (c.Type == ConversationType.Support && c.User1Id == currentUserId)
+                ))
+                .Select(c => c.Id)
+                .ToListAsync();
 
-            var user2Count = await _dbContext.Conversations
+            if (!userConvIds.Any()) return 0;
+
+            return await _dbContext.ChatMessages
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted && c.Type == ConversationType.UserToUser && c.User2Id == currentUserId)
-                .SumAsync(c => c.User2UnreadCount);
-
-            return user1Count + user2Count;
+                .Where(m => userConvIds.Contains(m.ConversationId) && !m.IsDeleted && m.Status != ChatMessageStatus.Read && m.SenderId != currentUserId)
+                .CountAsync();
         }
 
         public async Task<int> GetStaffUnreadSupportCountAsync(long? staffId = null)
@@ -738,26 +896,80 @@ namespace Persistence.Services
 
         private static string GetPreviewText(ChatMessage message)
         {
+            if (message.MessageType == ChatMessageType.Text || (int)message.MessageType == 0)
+            {
+                if (!string.IsNullOrWhiteSpace(message.Content))
+                {
+                    return message.Content.Length > 60 ? message.Content[..60] + "..." : message.Content;
+                }
+                if (!string.IsNullOrWhiteSpace(message.AttachmentUrl))
+                {
+                    return "Attachment";
+                }
+                return "Message";
+            }
+
             return message.MessageType switch
             {
-                ChatMessageType.Text => string.IsNullOrWhiteSpace(message.Content) ? "[Message]" : (message.Content.Length > 60 ? message.Content[..60] + "..." : message.Content),
-                ChatMessageType.Image => "📷 Photo",
-                ChatMessageType.VoiceNote => "🎤 Voice Note",
-                ChatMessageType.Document => "📄 Document",
-                ChatMessageType.ContactCard => "📇 Contact Info",
-                _ => "[Attachment]"
+                ChatMessageType.Image => "Photo",
+                ChatMessageType.VoiceNote => "Voice Note",
+                ChatMessageType.Document => !string.IsNullOrWhiteSpace(message.AttachmentFileName) ? message.AttachmentFileName : (!string.IsNullOrWhiteSpace(message.Content) ? message.Content : "Document"),
+                ChatMessageType.ContactCard => "Contact Info",
+                _ => !string.IsNullOrWhiteSpace(message.Content) ? (message.Content.Length > 60 ? message.Content[..60] + "..." : message.Content) : "Attachment"
             };
         }
 
-        private static ConversationDto MapToConversationDto(Conversation conv, long currentUserId, Registration? participant)
+        private static ConversationDto MapToConversationDto(Conversation conv, long currentUserId, Registration? participant, ChatMessage? lastMsg = null, int? overrideUnreadCount = null)
         {
             bool isUser1 = conv.User1Id == currentUserId;
-            int unread = conv.Type == ConversationType.Support ? conv.User1UnreadCount : (isUser1 ? conv.User1UnreadCount : conv.User2UnreadCount);
+            int unread = overrideUnreadCount ?? (conv.Type == ConversationType.Support ? conv.User1UnreadCount : (isUser1 ? conv.User1UnreadCount : conv.User2UnreadCount));
 
             string pName = conv.Type == ConversationType.Support ? "M4 Nikah Support Team" : (participant?.Name ?? "Member");
             string? regNum = participant?.RegisterNumber;
-            string? photo = participant?.ImagePath;
+            string photo;
+            if (conv.Type == ConversationType.Support)
+            {
+                photo = "/assets/images/logo.png";
+            }
+            else if (participant != null)
+            {
+                if (!string.IsNullOrEmpty(participant.ImagePath))
+                {
+                    photo = participant.ImagePath.StartsWith("/") || participant.ImagePath.StartsWith("http")
+                        ? participant.ImagePath
+                        : "/" + participant.ImagePath;
+                }
+                else
+                {
+                    photo = string.Equals(participant.Gender, "Female", StringComparison.OrdinalIgnoreCase)
+                        ? "/assets/images/default-user-women.png"
+                        : "/assets/images/default-user-men.png";
+                }
+            }
+            else
+            {
+                photo = "/assets/images/default-user-men.png";
+            }
+
             bool isOnline = participant?.LastSeenAt.HasValue == true && participant.LastSeenAt.Value > DateTime.UtcNow.AddMinutes(-5);
+
+            DateTime? lastMsgAt = conv.LastMessageAt.HasValue
+                ? DateTime.SpecifyKind(conv.LastMessageAt.Value, DateTimeKind.Utc)
+                : (conv.CreatedOn != default ? DateTime.SpecifyKind(conv.CreatedOn, DateTimeKind.Utc) : (DateTime?)null);
+
+            DateTime? lastSeenAt = participant?.LastSeenAt.HasValue == true
+                ? DateTime.SpecifyKind(participant.LastSeenAt.Value, DateTimeKind.Utc)
+                : (DateTime?)null;
+
+            string preview = conv.LastMessagePreview ?? string.Empty;
+            if (lastMsg != null)
+            {
+                preview = GetPreviewText(lastMsg);
+            }
+            else if (string.IsNullOrWhiteSpace(preview) || preview == "Attachment")
+            {
+                preview = conv.Type == ConversationType.Support ? "Official Support Thread" : "Say hello!";
+            }
 
             return new ConversationDto
             {
@@ -767,14 +979,15 @@ namespace Persistence.Services
                 ParticipantName = pName,
                 ParticipantRegisterNumber = regNum,
                 ParticipantPhotoUrl = photo,
+                ParticipantGender = participant?.Gender,
                 IsParticipantOnline = isOnline,
-                ParticipantLastSeenAt = participant?.LastSeenAt,
+                ParticipantLastSeenAt = lastSeenAt,
                 SupportStatus = conv.SupportStatus,
                 SupportSubject = conv.SupportSubject,
                 AssignedStaffId = conv.AssignedStaffId,
                 LastMessageId = conv.LastMessageId,
-                LastMessagePreview = conv.LastMessagePreview,
-                LastMessageAt = conv.LastMessageAt,
+                LastMessagePreview = preview,
+                LastMessageAt = lastMsgAt,
                 LastMessageSenderId = conv.LastMessageSenderId,
                 UnreadCount = unread,
                 IsBlocked = conv.IsBlocked,
@@ -785,6 +998,26 @@ namespace Persistence.Services
 
         private static ConversationDto MapToStaffSupportDto(Conversation conv, Registration? user)
         {
+            DateTime? lastMsgAt = conv.LastMessageAt.HasValue
+                ? DateTime.SpecifyKind(conv.LastMessageAt.Value, DateTimeKind.Utc)
+                : (conv.CreatedOn != default ? DateTime.SpecifyKind(conv.CreatedOn, DateTimeKind.Utc) : (DateTime?)null);
+
+            DateTime? lastSeenAt = user?.LastSeenAt.HasValue == true
+                ? DateTime.SpecifyKind(user.LastSeenAt.Value, DateTimeKind.Utc)
+                : (DateTime?)null;
+
+            string defaultAvatar = (user != null && string.Equals(user.Gender, "Female", StringComparison.OrdinalIgnoreCase))
+                ? "/assets/images/default-user-women.png"
+                : "/assets/images/default-user-men.png";
+
+            string photo = defaultAvatar;
+            if (user != null && !string.IsNullOrEmpty(user.ImagePath))
+            {
+                photo = user.ImagePath.StartsWith("/") || user.ImagePath.StartsWith("http")
+                    ? user.ImagePath
+                    : "/" + user.ImagePath;
+            }
+
             return new ConversationDto
             {
                 Id = conv.Id,
@@ -792,15 +1025,16 @@ namespace Persistence.Services
                 ParticipantUserId = conv.User1Id,
                 ParticipantName = user?.Name ?? "User",
                 ParticipantRegisterNumber = user?.RegisterNumber,
-                ParticipantPhotoUrl = user?.ImagePath,
+                ParticipantPhotoUrl = photo,
+                ParticipantGender = user?.Gender,
                 IsParticipantOnline = user?.LastSeenAt.HasValue == true && user.LastSeenAt.Value > DateTime.UtcNow.AddMinutes(-5),
-                ParticipantLastSeenAt = user?.LastSeenAt,
+                ParticipantLastSeenAt = lastSeenAt,
                 SupportStatus = conv.SupportStatus,
                 SupportSubject = conv.SupportSubject,
                 AssignedStaffId = conv.AssignedStaffId,
                 LastMessageId = conv.LastMessageId,
-                LastMessagePreview = conv.LastMessagePreview,
-                LastMessageAt = conv.LastMessageAt,
+                LastMessagePreview = conv.LastMessagePreview ?? "Support Request",
+                LastMessageAt = lastMsgAt,
                 LastMessageSenderId = conv.LastMessageSenderId,
                 UnreadCount = conv.SupportUnreadCount,
                 IsBlocked = conv.IsBlocked,
@@ -826,9 +1060,9 @@ namespace Persistence.Services
                 AttachmentFileName = msg.AttachmentFileName,
                 AttachmentFileSize = msg.AttachmentFileSize,
                 Status = msg.Status,
-                SentAt = msg.SentAt,
-                DeliveredAt = msg.DeliveredAt,
-                ReadAt = msg.ReadAt,
+                SentAt = DateTime.SpecifyKind(msg.SentAt, DateTimeKind.Utc),
+                DeliveredAt = msg.DeliveredAt.HasValue ? DateTime.SpecifyKind(msg.DeliveredAt.Value, DateTimeKind.Utc) : null,
+                ReadAt = msg.ReadAt.HasValue ? DateTime.SpecifyKind(msg.ReadAt.Value, DateTimeKind.Utc) : null,
                 IsMine = msg.SenderId == currentUserId && msg.SenderRole == MessageSenderRole.User
             };
         }

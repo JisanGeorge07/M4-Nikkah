@@ -372,6 +372,9 @@ namespace URMARRY.Controllers
             if (latestPlan != null && (latestPlan.ViewCreditsPurchased - latestPlan.ViewCreditsUsed) > 0 && latestPlan.ExpiresAt > DateTime.UtcNow)
             {
                 latestPlan.ViewCreditsPurchased += 50;
+                latestPlan.MessageCreditsPurchased += 50;
+                latestPlan.AudioCallContactsPurchased += 50;
+                latestPlan.VideoCallMinutesPurchased += 60;
                 latestPlan.ExpiresAt = DateTime.UtcNow.AddDays(180);
                 latestPlan.LowCreditNotificationSent = false;
                 latestPlan.ExpiryNotificationSent = false;
@@ -385,6 +388,9 @@ namespace URMARRY.Controllers
                 {
                     UserId = userId,
                     ViewCreditsPurchased = 50,
+                    MessageCreditsPurchased = 50,
+                    AudioCallContactsPurchased = 50,
+                    VideoCallMinutesPurchased = 60,
                     CreatedOn = DateTime.Now,
                     ModifiedOn = DateTime.Now,
                     CreatedBy = _generatedBy,

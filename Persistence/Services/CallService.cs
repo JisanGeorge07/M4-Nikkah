@@ -98,12 +98,7 @@ namespace Persistence.Services
                 };
             }
 
-            bool isPremium = caller.IsPremiumMember;
-            bool hasActivePlan = await _dbContext.PlanPurchases
-                .AsNoTracking()
-                .AnyAsync(p => p.UserId == callerId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow);
-
-            // 4. Check accepted mutual interest
+            // 4. MANDATORY: Check accepted mutual interest FIRST
             bool hasAcceptedInterest = await _dbContext.Userfavoriteprofile
                 .AsNoTracking()
                 .AnyAsync(f => !f.IsDeleted && f.Status == InterestStatus.Accepted && (
@@ -111,21 +106,76 @@ namespace Persistence.Services
                     (f.UserId == receiverId && f.LikedId == callerId)
                 ));
 
-            if (isPremium || hasActivePlan || hasAcceptedInterest)
+            if (!hasAcceptedInterest)
             {
                 return new CallPermissionResult
                 {
-                    Allowed = true,
-                    Reason = null,
-                    RequiresUpgrade = false
+                    Allowed = false,
+                    Reason = "You need mutual interest acceptance before making calls. Send an interest request first.",
+                    RequiresUpgrade = false,
+                    InterestRequired = true
                 };
+            }
+
+            bool isPremium = caller.IsPremiumMember;
+            bool hasActivePlan = await _dbContext.PlanPurchases
+                .AsNoTracking()
+                .AnyAsync(p => p.UserId == callerId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow);
+
+            // 5. Check plan & credit availability
+            if (!isPremium && !hasActivePlan)
+            {
+                return new CallPermissionResult
+                {
+                    Allowed = false,
+                    Reason = "An active premium membership is required to make calls.",
+                    RequiresUpgrade = true,
+                    InterestRequired = false
+                };
+            }
+
+            // 6. Check type-specific credits
+            var creditStatus = await GetCallCreditStatusAsync(callerId);
+
+            if (callType == UserCallType.Voice)
+            {
+                // Check if already called this profile (no new credit needed)
+                bool alreadyCalled = await _dbContext.AudioCallContacts
+                    .AnyAsync(a => a.UserId == callerId && a.ContactUserId == receiverId && !a.IsDeleted);
+
+                if (!alreadyCalled && creditStatus.AudioCallContactsRemaining <= 0)
+                {
+                    return new CallPermissionResult
+                    {
+                        Allowed = false,
+                        Reason = "You've reached the maximum audio call contacts for your current plan.",
+                        RequiresUpgrade = true,
+                        AudioLimitReached = true,
+                        CreditStatus = creditStatus
+                    };
+                }
+            }
+            else if (callType == UserCallType.Video)
+            {
+                if (creditStatus.VideoCallMinutesRemaining <= 0)
+                {
+                    return new CallPermissionResult
+                    {
+                        Allowed = false,
+                        Reason = "You've used all your video call minutes for the current plan period.",
+                        RequiresUpgrade = true,
+                        VideoLimitReached = true,
+                        CreditStatus = creditStatus
+                    };
+                }
             }
 
             return new CallPermissionResult
             {
-                Allowed = false,
-                Reason = "An active membership plan or accepted mutual interest is required to make calls.",
-                RequiresUpgrade = true
+                Allowed = true,
+                Reason = null,
+                RequiresUpgrade = false,
+                CreditStatus = creditStatus
             };
         }
 
@@ -135,6 +185,12 @@ namespace Persistence.Services
             if (!perm.Allowed)
             {
                 throw new InvalidOperationException(perm.Reason ?? "Permission denied to initiate call.");
+            }
+
+            // Spend audio call contact credit (only for voice calls, only for new unique contacts)
+            if (request.CallType == UserCallType.Voice)
+            {
+                await SpendAudioCallContactAsync(callerId, request.ReceiverId);
             }
 
             string roomId = string.IsNullOrWhiteSpace(request.RoomId) ? Guid.NewGuid().ToString("N") : request.RoomId.Trim();
@@ -256,6 +312,12 @@ namespace Persistence.Services
             else
             {
                 callLog.DurationSeconds = 0;
+            }
+
+            // Record video call duration against credits
+            if (callLog.CallType == UserCallType.Video && callLog.DurationSeconds > 0)
+            {
+                await RecordVideoCallDurationAsync(callLog.CallerId, callLog.DurationSeconds);
             }
 
             await _dbContext.SaveChangesAsync(userId.ToString());
@@ -382,6 +444,115 @@ namespace Persistence.Services
             }
 
             await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<CallCreditStatus> GetCallCreditStatusAsync(long userId)
+        {
+            var activePlans = await _dbContext.PlanPurchases
+                .AsNoTracking()
+                .Where(p => p.UserId == userId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            if (!activePlans.Any())
+            {
+                return new CallCreditStatus { HasActivePlan = false };
+            }
+
+            int totalAudioPurchased = activePlans.Sum(p => (int)p.AudioCallContactsPurchased);
+            int totalAudioUsed = activePlans.Sum(p => (int)p.AudioCallContactsUsed);
+            int totalVideoPurchased = activePlans.Sum(p => (int)p.VideoCallMinutesPurchased);
+            int totalVideoUsed = activePlans.Sum(p => (int)p.VideoCallMinutesUsed);
+            DateTime maxExpiry = activePlans.Max(p => p.ExpiresAt);
+
+            return new CallCreditStatus
+            {
+                AudioCallContactsPurchased = (short)totalAudioPurchased,
+                AudioCallContactsUsed = (short)totalAudioUsed,
+                VideoCallMinutesPurchased = (short)totalVideoPurchased,
+                VideoCallMinutesUsed = (short)totalVideoUsed,
+                HasActivePlan = true,
+                PlanExpiresAt = maxExpiry
+            };
+        }
+
+        public async Task<bool> SpendAudioCallContactAsync(long callerId, long receiverId)
+        {
+            var activePlans = await _dbContext.PlanPurchases
+                .Where(p => p.UserId == callerId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow)
+                .OrderBy(p => p.ExpiresAt)
+                .ToListAsync();
+
+            if (!activePlans.Any()) return false;
+
+            var planIds = activePlans.Select(p => p.Id).ToList();
+
+            // Check if this contact was already called in this plan cycle
+            bool alreadyCalled = await _dbContext.AudioCallContacts
+                .AnyAsync(a => a.UserId == callerId && a.ContactUserId == receiverId 
+                            && planIds.Contains(a.PlanPurchaseId) && !a.IsDeleted);
+
+            if (alreadyCalled) return true; // No credit consumed — already contacted in current cycle
+
+            int totalPurchased = activePlans.Sum(p => (int)p.AudioCallContactsPurchased);
+            int totalUsed = activePlans.Sum(p => (int)p.AudioCallContactsUsed);
+
+            if (totalUsed >= totalPurchased)
+                return false; // Limit reached
+
+            // Spend credit from first active plan that has available quota
+            var targetPlan = activePlans.FirstOrDefault(p => p.AudioCallContactsUsed < p.AudioCallContactsPurchased) ?? activePlans.Last();
+            targetPlan.AudioCallContactsUsed++;
+
+            _dbContext.AudioCallContacts.Add(new AudioCallContact
+            {
+                UserId = callerId,
+                ContactUserId = receiverId,
+                PlanPurchaseId = targetPlan.Id,
+                FirstCalledAt = DateTime.UtcNow,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = callerId.ToString(),
+                IsActive = true
+            });
+
+            await _dbContext.SaveChangesAsync(callerId.ToString());
+            return true;
+        }
+
+        public async Task<bool> RecordVideoCallDurationAsync(long userId, int durationSeconds)
+        {
+            if (durationSeconds <= 0) return true;
+
+            var activePlans = await _dbContext.PlanPurchases
+                .Where(p => p.UserId == userId && !p.IsDeleted && p.ExpiresAt > DateTime.UtcNow)
+                .OrderBy(p => p.ExpiresAt)
+                .ToListAsync();
+
+            if (!activePlans.Any()) return false;
+
+            int minutesUsed = (int)Math.Ceiling(durationSeconds / 60.0);
+            int remainingMinutesToDeduct = minutesUsed;
+
+            foreach (var plan in activePlans)
+            {
+                int availableInPlan = plan.VideoCallMinutesPurchased - plan.VideoCallMinutesUsed;
+                if (availableInPlan > 0)
+                {
+                    int deduct = Math.Min(remainingMinutesToDeduct, availableInPlan);
+                    plan.VideoCallMinutesUsed += (short)deduct;
+                    remainingMinutesToDeduct -= deduct;
+                    if (remainingMinutesToDeduct <= 0) break;
+                }
+            }
+
+            // If still remaining, apply to the latest plan
+            if (remainingMinutesToDeduct > 0)
+            {
+                var latestPlan = activePlans.Last();
+                latestPlan.VideoCallMinutesUsed += (short)remainingMinutesToDeduct;
+            }
+
+            await _dbContext.SaveChangesAsync(userId.ToString());
             return true;
         }
 

@@ -1,0 +1,1495 @@
+@{
+    ViewBag.Title = "M4Nikah Support Chat";
+    Layout = "_Layout";
+}
+
+@section Title
+{
+    M4Nikah Support Chat
+}
+
+<style>
+    /* Support Chat Dashboard Styling */
+    .support-chat-wrapper {
+        height: calc(100vh - 180px);
+        min-height: 650px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        display: flex;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Left Sidebar: Tickets List */
+    .chat-sidebar {
+        width: 380px;
+        min-width: 340px;
+        max-width: 420px;
+        border-right: 1px solid #edf2f7;
+        display: flex;
+        flex-direction: column;
+        background: #fbfcfd;
+    }
+
+    .chat-sidebar-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #edf2f7;
+        background: #fff;
+    }
+
+    .ticket-search-box {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .ticket-search-box input {
+        width: 100%;
+        padding: 9px 14px 9px 36px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        font-size: 13px;
+        background: #f8fafc;
+        transition: all 0.2s;
+    }
+
+    .ticket-search-box input:focus {
+        background: #fff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        outline: none;
+    }
+
+    .ticket-search-box i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 14px;
+    }
+
+    .status-filter-pills {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .status-filter-pills::-webkit-scrollbar {
+        height: 3px;
+    }
+    .status-filter-pills::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .filter-pill {
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 16px;
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid transparent;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .filter-pill:hover {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .filter-pill.active {
+        background: #1e293b;
+        color: #fff;
+    }
+
+    .filter-pill .badge {
+        font-size: 10px;
+        margin-left: 4px;
+        padding: 2px 6px;
+    }
+
+    /* Ticket List */
+    .tickets-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    .ticket-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 14px 18px;
+        gap: 12px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: all 0.15s ease;
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
+    }
+
+    .ticket-item:hover {
+        background: #f8fafc;
+    }
+
+    .ticket-item.active {
+        background: #eff6ff;
+        border-left-color: #3b82f6;
+    }
+
+    .ticket-avatar {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .ticket-avatar img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .ticket-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ticket-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 3px;
+    }
+
+    .ticket-user-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ticket-time {
+        font-size: 11px;
+        color: #94a3b8;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+
+    .ticket-subject {
+        font-size: 12px;
+        font-weight: 500;
+        color: #475569;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+    }
+
+    .ticket-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ticket-preview {
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 190px;
+    }
+
+    .ticket-badges {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ticket-status-badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .ticket-status-open {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .ticket-status-inprogress {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .ticket-status-resolved {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .ticket-status-closed {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .ticket-unread-badge {
+        background: #ef4444;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    /* Right Main Chat Area */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        min-width: 0;
+    }
+
+    /* Empty Placeholder */
+    .chat-empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        text-align: center;
+        background: #f8fafc;
+    }
+
+    .chat-empty-state .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin-bottom: 16px;
+    }
+
+    .chat-empty-state h4 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 6px;
+    }
+
+    .chat-empty-state p {
+        font-size: 13px;
+        color: #64748b;
+        max-width: 360px;
+    }
+
+    /* Chat Active Header */
+    .chat-header {
+        padding: 14px 24px;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #fff;
+        z-index: 10;
+    }
+
+    .chat-header-user {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .chat-header-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+
+    .chat-header-meta h4 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chat-header-meta p {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chat-header-meta a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .chat-header-meta a:hover {
+        text-decoration: underline;
+    }
+
+    .chat-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-select-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-select-wrapper label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .status-select {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        cursor: pointer;
+    }
+
+    /* Chat Messages Stream */
+    .chat-messages-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        background: #f8fafc;
+    }
+
+    .message-date-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+    }
+
+    .message-date-divider span {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        background: #e2e8f0;
+        padding: 3px 12px;
+        border-radius: 12px;
+    }
+
+    .chat-msg-row {
+        display: flex;
+        gap: 10px;
+        max-width: 75%;
+    }
+
+    .chat-msg-row.incoming {
+        align-self: flex-start;
+    }
+
+    .chat-msg-row.outgoing {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .chat-msg-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        margin-top: 4px;
+    }
+
+    .chat-msg-bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 13.5px;
+        line-height: 1.45;
+        position: relative;
+        word-break: break-word;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .chat-msg-row.incoming .chat-msg-bubble {
+        background: #fff;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-top-left-radius: 4px;
+    }
+
+    .chat-msg-row.outgoing .chat-msg-bubble {
+        background: #007b35;
+        color: #fff;
+        border-top-right-radius: 4px;
+    }
+
+    .chat-msg-author {
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .chat-msg-row.incoming .chat-msg-author {
+        color: #2563eb;
+    }
+
+    .chat-msg-row.outgoing .chat-msg-author {
+        color: #a7f3d0;
+    }
+
+    .chat-msg-time {
+        font-size: 10.5px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .chat-msg-row.incoming .chat-msg-time {
+        color: #94a3b8;
+        justify-content: flex-start;
+    }
+
+    .chat-msg-row.outgoing .chat-msg-time {
+        color: rgba(255, 255, 255, 0.75);
+        justify-content: flex-end;
+    }
+
+    /* Message Attachments */
+    .msg-image-attachment {
+        max-width: 260px;
+        max-height: 240px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 6px;
+        display: block;
+        transition: transform 0.2s;
+    }
+    .msg-image-attachment:hover {
+        transform: scale(1.02);
+    }
+
+    .msg-file-attachment {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        margin-top: 6px;
+        text-decoration: none;
+        color: inherit;
+    }
+    .msg-file-attachment i {
+        font-size: 24px;
+    }
+
+    .msg-audio-player {
+        margin-top: 6px;
+        max-width: 260px;
+    }
+
+    /* Canned Replies */
+    .canned-replies-bar {
+        padding: 8px 20px;
+        background: #fff;
+        border-top: 1px solid #edf2f7;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .canned-replies-bar::-webkit-scrollbar {
+        height: 3px;
+    }
+    .canned-replies-bar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+    }
+
+    .canned-chip {
+        font-size: 11.5px;
+        padding: 4px 10px;
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .canned-chip:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    /* Chat Footer / Reply Box */
+    .chat-footer {
+        padding: 12px 20px;
+        border-top: 1px solid #edf2f7;
+        background: #fff;
+    }
+
+    .attached-file-preview {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 12px;
+    }
+
+    .chat-input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chat-input-box {
+        flex: 1;
+        position: relative;
+    }
+
+    .chat-input-box textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        font-size: 13.5px;
+        resize: none;
+        max-height: 100px;
+        line-height: 1.4;
+        transition: border 0.2s;
+    }
+
+    .chat-input-box textarea:focus {
+        border-color: #007b35;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 53, 0.12);
+    }
+
+    .chat-action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+
+    .attach-btn {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    .attach-btn:hover {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .send-btn {
+        background: #007b35;
+        color: #fff;
+    }
+    .send-btn:hover {
+        background: #00632b;
+        transform: scale(1.03);
+    }
+</style>
+
+<div class="row">
+    <div class="col-12">
+        <div class="support-chat-wrapper">
+
+            <!-- ================= LEFT: TICKETS LIST ================= -->
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="mb-0 fw-bold" style="font-size: 16px; color: #1e293b;">Support Inbox</h5>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill py-1 px-2" onclick="loadTickets()" title="Refresh List">
+                            <i class="fas fa-sync-alt font-size-11"></i> Refresh
+                        </button>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="ticket-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="ticketSearchInput" placeholder="Search user name, ID, subject..." oninput="handleSearchFilter()">
+                    </div>
+
+                    <!-- Filter Pills -->
+                    <div class="status-filter-pills" id="statusFilterPills">
+                        <button class="filter-pill active" data-status="">All <span class="badge bg-secondary" id="countAll">0</span></button>
+                        <button class="filter-pill" data-status="1">Open <span class="badge bg-danger" id="countOpen">0</span></button>
+                        <button class="filter-pill" data-status="2">In Progress <span class="badge bg-primary" id="countInProgress">0</span></button>
+                        <button class="filter-pill" data-status="3">Resolved <span class="badge bg-success" id="countResolved">0</span></button>
+                        <button class="filter-pill" data-status="4">Closed <span class="badge bg-dark" id="countClosed">0</span></button>
+                    </div>
+                </div>
+
+                <!-- Tickets Scrollable Container -->
+                <div class="tickets-list" id="ticketsListContainer">
+                    <div class="text-center p-4 text-muted" style="font-size: 13px;">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block text-primary"></i>
+                        Loading support conversations...
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= RIGHT: ACTIVE CHAT ================= -->
+            <div class="chat-main" id="chatMainPanel">
+
+                <!-- Empty state when no ticket is chosen -->
+                <div class="chat-empty-state" id="emptyChatState">
+                    <div class="empty-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4>Support Conversation Desk</h4>
+                    <p>Select a user support ticket from the list on the left to review messages and respond directly to the member.</p>
+                </div>
+
+                <!-- Active Chat Container -->
+                <div id="activeChatWrapper" style="display: none; height: 100%; flex-direction: column;">
+                    
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="chat-header-user">
+                            <img id="activeUserAvatar" class="chat-header-avatar" src="/assets/images/default-user-men.png" alt="" onerror="this.onerror=null; this.src='/assets/images/default-user-men.png';">
+                            <div class="chat-header-meta">
+                                <h4>
+                                    <span id="activeUserName">User Name</span>
+                                    <span class="badge bg-light text-dark border" id="activeUserRegId" style="font-size: 11px;">M4N-0000</span>
+                                </h4>
+                                <p>
+                                    <span id="activeUserSubject"><i class="fas fa-tag me-1"></i> Subject</span>
+                                    <span>•</span>
+                                    <a id="activeUserProfileLink" href="#" target="_blank"><i class="fas fa-external-link-alt me-1"></i> View Profile</a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="chat-header-actions">
+                            <div class="status-select-wrapper">
+                                <label for="ticketStatusSelect">Status:</label>
+                                <select id="ticketStatusSelect" class="status-select" onchange="changeTicketStatus(this.value)">
+                                    <option value="1">Open</option>
+                                    <option value="2">In Progress</option>
+                                    <option value="3">Resolved</option>
+                                    <option value="4">Closed</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="reloadActiveMessages()" title="Refresh Chat Stream">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Stream -->
+                    <div class="chat-messages-body" id="messagesContainer">
+                        <div class="text-center p-4 text-muted">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+                            <div>Loading messages...</div>
+                        </div>
+                    </div>
+
+                    <!-- Canned Responses -->
+                    <div class="canned-replies-bar">
+                        <span class="canned-chip" onclick="insertCanned('Hello! How can we assist you today?')">👋 How can we help?</span>
+                        <span class="canned-chip" onclick="insertCanned('We are reviewing your request and will update you shortly.')">🔍 Reviewing request</span>
+                        <span class="canned-chip" onclick="insertCanned('Your profile details have been successfully verified and updated.')">✅ Profile updated</span>
+                        <span class="canned-chip" onclick="insertCanned('Please provide a clear photo or identification document for verification.')">📷 Request photo/ID</span>
+                        <span class="canned-chip" onclick="insertCanned('Thank you for contacting M4Nikah Support! Let us know if you need anything else.')">🙏 Issue resolved</span>
+                    </div>
+
+                    <!-- Chat Footer / Reply Bar -->
+                    <div class="chat-footer">
+                        <div class="attached-file-preview" id="filePreviewBar">
+                            <span id="filePreviewName"><i class="fas fa-paperclip me-1"></i> Attached file</span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="clearAttachedFile()"><i class="fas fa-times"></i></button>
+                        </div>
+
+                        <div class="chat-input-row">
+                            <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(this)" accept="image/*,audio/*,.pdf,.doc,.docx" />
+                            <button type="button" class="chat-action-btn attach-btn" onclick="document.getElementById('fileInput').click()" title="Attach file or screenshot">
+                                <i class="fas fa-paperclip font-size-16"></i>
+                            </button>
+
+                            <div class="chat-input-box">
+                                <textarea id="adminMessageInput" rows="1" placeholder="Type support reply here... (Press Enter to send, Shift+Enter for new line)" onkeydown="handleInputKeydown(event)"></textarea>
+                            </div>
+
+                            <button type="button" class="chat-action-btn send-btn" id="sendBtn" onclick="sendAdminReply()" title="Send Reply">
+                                <i class="fas fa-paper-plane font-size-16"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox Modal for Image Previews -->
+<div class="modal fade" id="imageLightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img id="lightboxImg" src="" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- SignalR Client Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+    <script>
+        let allTickets = [];
+        let currentStatusFilter = '';
+        let currentSearchQuery = '';
+        let activeConversationId = @(ViewBag.SelectedConversationId ?? 0);
+        let activeTicket = null;
+        let attachedFileUrl = null;
+        let attachedFileName = null;
+        let attachedFileSize = null;
+        let chatHub = null;
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            initFilterPills();
+            await loadTickets();
+            await initSignalR();
+
+            // Auto-select conversation if provided in URL
+            if (activeConversationId > 0) {
+                const target = allTickets.find(t => t.id === activeConversationId);
+                if (target) {
+                    selectTicket(target);
+                }
+            }
+        });
+
+        function initFilterPills() {
+            document.querySelectorAll('#statusFilterPills .filter-pill').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    document.querySelectorAll('#statusFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    currentStatusFilter = this.getAttribute('data-status') || '';
+                    renderTicketsList();
+                });
+            });
+        }
+
+        async function loadTickets() {
+            const container = document.getElementById('ticketsListContainer');
+            try {
+                const resp = await fetch('/api/chat/staff/tickets');
+                if (!resp.ok) {
+                    container.innerHTML = '<div class="p-3 text-danger text-center">Unable to load support tickets. Please refresh.</div>';
+                    return;
+                }
+
+                allTickets = await resp.json();
+                updateCounts();
+                renderTicketsList();
+
+                // If an active ticket is currently open, refresh its data in memory
+                if (activeConversationId > 0) {
+                    const fresh = allTickets.find(t => t.id === activeConversationId);
+                    if (fresh) {
+                        activeTicket = fresh;
+                        updateActiveHeader(fresh);
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading tickets:", err);
+                container.innerHTML = '<div class="p-3 text-danger text-center">Error connecting to server.</div>';
+            }
+        }
+
+        function updateCounts() {
+            const countAll = allTickets.length;
+            const countOpen = allTickets.filter(t => t.supportStatus === 1 || t.supportStatus === 'Open').length;
+            const countInProgress = allTickets.filter(t => t.supportStatus === 2 || t.supportStatus === 'InProgress').length;
+            const countResolved = allTickets.filter(t => t.supportStatus === 3 || t.supportStatus === 'Resolved').length;
+            const countClosed = allTickets.filter(t => t.supportStatus === 4 || t.supportStatus === 'Closed').length;
+
+            document.getElementById('countAll').innerText = countAll;
+            document.getElementById('countOpen').innerText = countOpen;
+            document.getElementById('countInProgress').innerText = countInProgress;
+            document.getElementById('countResolved').innerText = countResolved;
+            document.getElementById('countClosed').innerText = countClosed;
+
+            // Update main navbar badge if exists
+            const totalUnread = allTickets.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
+            const navBadge = document.getElementById('adminSupportChatBadge');
+            if (navBadge) {
+                if (totalUnread > 0) {
+                    navBadge.innerText = totalUnread;
+                    navBadge.style.display = 'inline-block';
+                } else {
+                    navBadge.style.display = 'none';
+                }
+            }
+        }
+
+        function handleSearchFilter() {
+            currentSearchQuery = (document.getElementById('ticketSearchInput').value || '').trim().toLowerCase();
+            renderTicketsList();
+        }
+
+        function renderTicketsList() {
+            const container = document.getElementById('ticketsListContainer');
+            if (!container) return;
+
+            let filtered = allTickets;
+
+            // Status filter
+            if (currentStatusFilter !== '') {
+                const st = parseInt(currentStatusFilter, 10);
+                filtered = filtered.filter(t => {
+                    const ticketStatusVal = typeof t.supportStatus === 'number' ? t.supportStatus : getStatusEnumVal(t.supportStatus);
+                    return ticketStatusVal === st;
+                });
+            }
+
+            // Search query filter
+            if (currentSearchQuery) {
+                filtered = filtered.filter(t => {
+                    const name = (t.participantName || '').toLowerCase();
+                    const reg = (t.participantRegisterNumber || '').toLowerCase();
+                    const subj = (t.supportSubject || '').toLowerCase();
+                    const lastMsg = (t.lastMessagePreview || '').toLowerCase();
+                    return name.includes(currentSearchQuery) || reg.includes(currentSearchQuery) || subj.includes(currentSearchQuery) || lastMsg.includes(currentSearchQuery);
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-4 text-muted" style="font-size: 13px;">
+                        <i class="far fa-folder-open fa-2x mb-2 d-block text-secondary"></i>
+                        No support tickets match the filter.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(t => {
+                const isActive = t.id === activeConversationId ? 'active' : '';
+                const defaultAvatar = (t.participantGender && String(t.participantGender).toLowerCase() === 'female')
+                    ? '/assets/images/default-user-women.png'
+                    : '/assets/images/default-user-men.png';
+                const avatar = t.participantPhotoUrl || defaultAvatar;
+                const name = escapeHtml(t.participantName || 'Member');
+                const regNum = escapeHtml(t.participantRegisterNumber || `ID: ${t.participantUserId}`);
+                const subject = escapeHtml(t.supportSubject || 'Support Request');
+                const preview = escapeHtml(t.lastMessagePreview || 'New support ticket');
+                const timeAgo = formatTimeAgo(t.lastMessageAt);
+                const statusMeta = getStatusBadgeMeta(t.supportStatus);
+                const unreadPill = t.unreadCount > 0 ? `<span class="ticket-unread-badge">${t.unreadCount}</span>` : '';
+
+                html += `
+                    <div class="ticket-item ${isActive}" onclick="selectTicketById(${t.id})">
+                        <div class="ticket-avatar">
+                            <img src="${avatar}" alt="" onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                        </div>
+                        <div class="ticket-info">
+                            <div class="ticket-top">
+                                <div class="ticket-user-name">${name}</div>
+                                <div class="ticket-time">${timeAgo}</div>
+                            </div>
+                            <div class="ticket-subject">
+                                <span class="badge bg-light text-dark border me-1">${regNum}</span> ${subject}
+                            </div>
+                            <div class="ticket-bottom">
+                                <div class="ticket-preview">${preview}</div>
+                                <div class="ticket-badges">
+                                    <span class="ticket-status-badge ${statusMeta.cssClass}">${statusMeta.label}</span>
+                                    ${unreadPill}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getStatusEnumVal(status) {
+            if (typeof status === 'number') return status;
+            switch (String(status).toLowerCase()) {
+                case 'open': return 1;
+                case 'inprogress': return 2;
+                case 'resolved': return 3;
+                case 'closed': return 4;
+                default: return 1;
+            }
+        }
+
+        function getStatusBadgeMeta(status) {
+            const val = getStatusEnumVal(status);
+            switch (val) {
+                case 1: return { label: 'Open', cssClass: 'ticket-status-open' };
+                case 2: return { label: 'In Progress', cssClass: 'ticket-status-inprogress' };
+                case 3: return { label: 'Resolved', cssClass: 'ticket-status-resolved' };
+                case 4: return { label: 'Closed', cssClass: 'ticket-status-closed' };
+                default: return { label: 'Open', cssClass: 'ticket-status-open' };
+            }
+        }
+
+        function selectTicketById(convId) {
+            const ticket = allTickets.find(t => t.id === convId);
+            if (ticket) {
+                selectTicket(ticket);
+            }
+        }
+
+        async function selectTicket(ticket) {
+            activeConversationId = ticket.id;
+            activeTicket = ticket;
+
+            // Highlight in list
+            renderTicketsList();
+
+            // Show active chat wrapper and hide empty placeholder
+            document.getElementById('emptyChatState').style.display = 'none';
+            const wrapper = document.getElementById('activeChatWrapper');
+            wrapper.style.display = 'flex';
+
+            // Populate header
+            updateActiveHeader(ticket);
+
+            // Join SignalR room for active ticket
+            if (chatHub && chatHub.state === signalR.HubConnectionState.Connected) {
+                try {
+                    await chatHub.invoke('JoinConversation', activeConversationId);
+                } catch (e) {
+                    console.warn("Could not join conversation group:", e);
+                }
+            }
+
+            // Load Message History
+            await reloadActiveMessages();
+
+            // Mark as read
+            markActiveTicketRead();
+        }
+
+        function updateActiveHeader(ticket) {
+            const defaultAvatar = (ticket.participantGender && String(ticket.participantGender).toLowerCase() === 'female')
+                ? '/assets/images/default-user-women.png'
+                : '/assets/images/default-user-men.png';
+            document.getElementById('activeUserAvatar').src = ticket.participantPhotoUrl || defaultAvatar;
+            document.getElementById('activeUserName').innerText = ticket.participantName || 'Member';
+            document.getElementById('activeUserRegId').innerText = ticket.participantRegisterNumber ? `ID: ${ticket.participantRegisterNumber}` : `ID: ${ticket.participantUserId}`;
+            document.getElementById('activeUserSubject').innerHTML = `<i class="fas fa-tag me-1"></i> ${escapeHtml(ticket.supportSubject || 'General Support')}`;
+            
+            const profileRef = ticket.participantRegisterNumber || ticket.participantUserId;
+            document.getElementById('activeUserProfileLink').href = `/profile/${profileRef}`;
+
+            const statusVal = getStatusEnumVal(ticket.supportStatus);
+            document.getElementById('ticketStatusSelect').value = statusVal;
+        }
+
+        async function reloadActiveMessages() {
+            if (!activeConversationId) return;
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+                    <div>Loading messages...</div>
+                </div>
+            `;
+
+            try {
+                const resp = await fetch(`/api/chat/messages/${activeConversationId}?page=1&pageSize=100`);
+                if (!resp.ok) {
+                    container.innerHTML = '<div class="p-4 text-center text-danger">Failed to load message history.</div>';
+                    return;
+                }
+
+                const data = await resp.json();
+                const messages = data.messages || [];
+
+                if (messages.length === 0) {
+                    container.innerHTML = '<div class="p-4 text-center text-muted">No messages in this ticket yet. Send a reply to start!</div>';
+                    return;
+                }
+
+                renderMessagesStream(messages);
+                scrollToBottom();
+
+            } catch (err) {
+                console.error("Error loading chat messages:", err);
+                container.innerHTML = '<div class="p-4 text-center text-danger">Error connecting to message history.</div>';
+            }
+        }
+
+        function renderMessagesStream(messages) {
+            const container = document.getElementById('messagesContainer');
+            let html = '';
+            let lastDateStr = '';
+
+            messages.forEach(msg => {
+                const dateHeader = getMsgDateHeader(msg.sentAt);
+                if (dateHeader && dateHeader !== lastDateStr) {
+                    html += `<div class="message-date-divider"><span>${dateHeader}</span></div>`;
+                    lastDateStr = dateHeader;
+                }
+                html += renderSingleMessage(msg);
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderSingleMessage(msg) {
+            const isStaffMsg = msg.senderRole === 2 || msg.senderRole === 'Staff';
+            const rowClass = isStaffMsg ? 'outgoing' : 'incoming';
+            const authorName = isStaffMsg ? 'M4Nikah Support' : escapeHtml(msg.senderName || 'Member');
+            const defaultAvatar = isStaffMsg ? '/assets/images/logo.png' : '/assets/images/default-user-men.png';
+            const avatar = isStaffMsg ? '/assets/images/logo.png' : (msg.senderPhotoUrl || defaultAvatar);
+            const timeText = formatMsgClock(msg.sentAt);
+
+            let bodyHtml = '';
+
+            // Image attachment
+            if (msg.messageType === 2 || msg.messageType === 'Image' || (msg.attachmentUrl && isImageFile(msg.attachmentUrl))) {
+                bodyHtml += `
+                    <div>
+                        <img src="${msg.attachmentUrl}" class="msg-image-attachment" onclick="openLightbox('${msg.attachmentUrl}')" alt="Attachment">
+                    </div>
+                `;
+            }
+            // Voice Audio attachment
+            else if (msg.messageType === 3 || msg.messageType === 'VoiceAudio' || (msg.attachmentUrl && isAudioFile(msg.attachmentUrl))) {
+                bodyHtml += `
+                    <div class="msg-audio-player">
+                        <audio controls src="${msg.attachmentUrl}" style="width: 100%; height: 38px;"></audio>
+                    </div>
+                `;
+            }
+            // Document attachment
+            else if (msg.attachmentUrl) {
+                const fileName = escapeHtml(msg.attachmentFileName || 'Download Attachment');
+                bodyHtml += `
+                    <a href="${msg.attachmentUrl}" target="_blank" download class="msg-file-attachment">
+                        <i class="fas fa-file-download"></i>
+                        <div>
+                            <div style="font-weight: 600; font-size: 12px;">${fileName}</div>
+                            <div style="font-size: 11px; opacity: 0.8;">Click to download</div>
+                        </div>
+                    </a>
+                `;
+            }
+
+            // Text content
+            if (msg.content && msg.content.trim()) {
+                bodyHtml += `<div class="mt-1">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>`;
+            }
+
+            return `
+                <div class="chat-msg-row ${rowClass}" data-msg-id="${msg.id}">
+                    <img class="chat-msg-avatar" src="${avatar}" alt="" onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                    <div class="chat-msg-bubble">
+                        <div class="chat-msg-author">${authorName}</div>
+                        ${bodyHtml}
+                        <div class="chat-msg-time">
+                            <span>${timeText}</span>
+                            ${isStaffMsg ? '<i class="fas fa-check-double font-size-10 text-white-50"></i>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function appendMessageToStream(msg) {
+            const container = document.getElementById('messagesContainer');
+            if (!container) return;
+
+            // Check if already rendered
+            if (msg.id && container.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+
+            const html = renderSingleMessage(msg);
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        async function sendAdminReply() {
+            if (!activeConversationId) return;
+            const input = document.getElementById('adminMessageInput');
+            const content = (input.value || '').trim();
+
+            if (!content && !attachedFileUrl) return;
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin font-size-16"></i>';
+
+            try {
+                let msgType = 1; // Text
+                if (attachedFileUrl) {
+                    if (isImageFile(attachedFileUrl)) msgType = 2; // Image
+                    else if (isAudioFile(attachedFileUrl)) msgType = 3; // VoiceAudio
+                    else msgType = 4; // Document
+                }
+
+                const payload = {
+                    conversationId: activeConversationId,
+                    content: content,
+                    messageType: msgType,
+                    attachmentUrl: attachedFileUrl,
+                    attachmentFileName: attachedFileName,
+                    attachmentFileSize: attachedFileSize
+                };
+
+                const resp = await fetch('/api/chat/support/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to send',
+                        text: err.message || 'Unable to deliver message.'
+                    });
+                    return;
+                }
+
+                const newMsg = await resp.json();
+                appendMessageToStream(newMsg);
+
+                // Clear input and file
+                input.value = '';
+                clearAttachedFile();
+
+                // If ticket was Open or Closed, auto-update ticket status to InProgress
+                const currentStatus = getStatusEnumVal(activeTicket?.supportStatus);
+                if (currentStatus === 1 || currentStatus === 4) {
+                    await changeTicketStatus(2, false);
+                }
+
+                // Update ticket preview in list
+                if (activeTicket) {
+                    activeTicket.lastMessagePreview = content || (attachedFileName ? `Attachment: ${attachedFileName}` : 'Attachment');
+                    activeTicket.lastMessageAt = new Date().toISOString();
+                    renderTicketsList();
+                }
+
+            } catch (err) {
+                console.error("Error sending admin reply:", err);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane font-size-16"></i>';
+                input.focus();
+            }
+        }
+
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAdminReply();
+            }
+        }
+
+        function insertCanned(text) {
+            const input = document.getElementById('adminMessageInput');
+            if (input) {
+                input.value = text;
+                input.focus();
+            }
+        }
+
+        async function handleFileSelect(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const previewBar = document.getElementById('filePreviewBar');
+            const previewName = document.getElementById('filePreviewName');
+            previewBar.style.display = 'flex';
+            previewName.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Uploading ${escapeHtml(file.name)}...`;
+
+            try {
+                const resp = await fetch('/api/chat/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await resp.json();
+                attachedFileUrl = data.attachmentUrl;
+                attachedFileName = data.fileName;
+                attachedFileSize = data.fileSize;
+
+                previewName.innerHTML = `<i class="fas fa-paperclip me-1 text-success"></i> <strong>${escapeHtml(data.fileName)}</strong> (${formatBytes(data.fileSize)})`;
+            } catch (err) {
+                console.error("File upload error:", err);
+                Swal.fire({ icon: 'error', title: 'Upload Failed', text: 'Unable to upload file.' });
+                clearAttachedFile();
+            }
+        }
+
+        function clearAttachedFile() {
+            attachedFileUrl = null;
+            attachedFileName = null;
+            attachedFileSize = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreviewBar').style.display = 'none';
+        }
+
+        async function changeTicketStatus(newStatus, showToast = true) {
+            if (!activeConversationId) return;
+            const statusInt = parseInt(newStatus, 10);
+
+            try {
+                const resp = await fetch('/api/chat/staff/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        conversationId: activeConversationId,
+                        status: statusInt
+                    })
+                });
+
+                if (resp.ok) {
+                    if (activeTicket) {
+                        activeTicket.supportStatus = statusInt;
+                        updateCounts();
+                        renderTicketsList();
+                    }
+                    if (showToast) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Status updated',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Error updating status:", err);
+            }
+        }
+
+        async function markActiveTicketRead() {
+            if (!activeConversationId) return;
+            try {
+                await fetch('/api/chat/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversationId: activeConversationId })
+                });
+                if (activeTicket) {
+                    activeTicket.unreadCount = 0;
+                    updateCounts();
+                    renderTicketsList();
+                }
+            } catch (err) {
+                console.error("Error marking ticket read:", err);
+            }
+        }
+
+        async function initSignalR() {
+            try {
+                chatHub = new signalR.HubConnectionBuilder()
+                    .withUrl('/hubs/chat?isStaff=true&staffId=1')
+                    .withAutomaticReconnect()
+                    .build();
+
+                chatHub.on('ReceiveMessage', (msg) => {
+                    // If message is for currently open active ticket
+                    if (activeConversationId && msg.conversationId === activeConversationId) {
+                        appendMessageToStream(msg);
+                        markActiveTicketRead();
+                    }
+
+                    // Update ticket in sidebar
+                    const existing = allTickets.find(t => t.id === msg.conversationId);
+                    if (existing) {
+                        existing.lastMessagePreview = msg.content || (msg.attachmentFileName ? `Attachment: ${msg.attachmentFileName}` : 'Attachment');
+                        existing.lastMessageAt = msg.sentAt;
+                        if (msg.senderRole === 1 || msg.senderRole === 'User') {
+                            if (msg.conversationId !== activeConversationId) {
+                                existing.unreadCount = (existing.unreadCount || 0) + 1;
+                            }
+                        }
+                        updateCounts();
+                        renderTicketsList();
+                    } else {
+                        // New ticket arrived, refresh list
+                        loadTickets();
+                    }
+                });
+
+                chatHub.on('ReceiveStaffSupportNotification', (msg) => {
+                    loadTickets();
+                    if (activeConversationId && msg.conversationId === activeConversationId) {
+                        appendMessageToStream(msg);
+                        markActiveTicketRead();
+                    }
+                });
+
+                chatHub.on('StaffUnreadCountUpdated', (count) => {
+                    const navBadge = document.getElementById('adminSupportChatBadge');
+                    if (navBadge) {
+                        if (count > 0) {
+                            navBadge.innerText = count;
+                            navBadge.style.display = 'inline-block';
+                        } else {
+                            navBadge.style.display = 'none';
+                        }
+                    }
+                });
+
+                await chatHub.start();
+
+                if (activeConversationId > 0) {
+                    await chatHub.invoke('JoinConversation', activeConversationId);
+                }
+            } catch (err) {
+                console.error("SignalR connection error in Admin Support Chat:", err);
+            }
+        }
+
+        function openLightbox(url) {
+            document.getElementById('lightboxImg').src = url;
+            const modal = new bootstrap.Modal(document.getElementById('imageLightboxModal'));
+            modal.show();
+        }
+
+        function scrollToBottom() {
+            const c = document.getElementById('messagesContainer');
+            if (c) {
+                setTimeout(() => { c.scrollTop = c.scrollHeight; }, 60);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function isImageFile(url) {
+            return /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(url);
+        }
+
+        function isAudioFile(url) {
+            return /\.(mp3|wav|ogg|m4a|webm)(\?.*)?$/i.test(url);
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            if (!s.endsWith('Z') && !s.includes('+')) s += 'Z';
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return '';
+
+            const now = new Date();
+            const diffMs = now - d;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHr = Math.floor(diffMin / 60);
+            const diffDays = Math.floor(diffHr / 24);
+
+            if (diffMin < 1) return 'Just now';
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHr < 24) return `${diffHr}h ago`;
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
+        function formatMsgClock(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            if (!s.endsWith('Z') && !s.includes('+')) s += 'Z';
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        function getMsgDateHeader(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            if (!s.endsWith('Z') && !s.includes('+')) s += 'Z';
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return '';
+
+            const today = new Date();
+            if (d.toDateString() === today.toDateString()) return 'Today';
+            
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+            return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+    </script>
+}

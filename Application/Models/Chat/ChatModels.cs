@@ -8,15 +8,16 @@ namespace Application.Models.Chat
     {
         public long Id { get; set; }
         public ConversationType Type { get; set; }
-        
+
         // Matrimony participant (counterpart for 1-to-1 chats, or ticket creator for staff view)
         public long ParticipantUserId { get; set; }
         public string ParticipantName { get; set; } = string.Empty;
         public string? ParticipantRegisterNumber { get; set; }
         public string? ParticipantPhotoUrl { get; set; }
+        public string? ParticipantGender { get; set; }
         public bool IsParticipantOnline { get; set; }
         public DateTime? ParticipantLastSeenAt { get; set; }
-        
+
         // Support details
         public bool IsSupport => Type == ConversationType.Support;
         public SupportTicketStatus SupportStatus { get; set; }
@@ -45,7 +46,7 @@ namespace Application.Models.Chat
     {
         public long Id { get; set; }
         public long ConversationId { get; set; }
-        
+
         public long SenderId { get; set; }
         public MessageSenderRole SenderRole { get; set; }
         public string SenderName { get; set; } = string.Empty;
@@ -94,6 +95,9 @@ namespace Application.Models.Chat
         public string? Reason { get; set; }
         public bool RequiresUpgrade { get; set; }
         public bool IsMutualInterestRequired { get; set; }
+        public bool MessageLimitReached { get; set; }
+        public int MessageCreditsUsed { get; set; }
+        public int MessageCreditsPurchased { get; set; }
     }
 
     public class PaginatedChatMessagesDto

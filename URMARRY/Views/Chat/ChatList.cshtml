@@ -1,0 +1,377 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+        color: #333;
+    }
+
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff !important;
+    }
+
+    .category-link:hover {
+        background-color: #e2e6ea !important;
+    }
+
+    .profile-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        width: 100%;
+        max-width: 300px;
+        height: 380px;
+        margin: 0 auto;
+        cursor: pointer;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Background zoom */
+    .profile-bg {
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s ease;
+    }
+
+    .profile-card:hover .profile-bg {
+        transform: scale(1.1);
+    }
+
+    /* Overlay gradient */
+    .profile-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.2), transparent);
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover .profile-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.2), transparent);
+    }
+
+    /* Buttons */
+    .action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    i.uil {
+        font-size: 18px;
+        width: 20px;
+    }
+</style>
+
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+                        
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+							
+                    <div class="messages-wrapper">
+
+                        <!-- TOP SWITCH -->
+                        <div class="top-switch">
+                            <div class="switch-item active">
+                                <a href="/chat" style="text-decoration:none; color:inherit;">Messages</a>
+                            </div>
+
+                            <div class="switch-item">
+                                <a href="/chat/support" style="text-decoration:none; color:inherit;">M4Nikah Support</a>
+                            </div>
+                        </div>
+
+
+                        <!-- ONLINE HEADER -->
+                        <div class="online-header">
+                            <h3>Online Now</h3>
+                            <a href="/chat/online-list">Show All</a>
+                        </div>
+
+
+                        <!-- ONLINE USERS -->
+                        <div class="online-users" id="onlineUsersContainer">
+                            <div class="p-2 text-center" style="color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;">Loading online users...</div>
+                        </div>
+
+
+                        <!-- MESSAGE PANEL -->
+                        <div class="message-panel">
+
+                            <div class="drag-bar"></div>
+
+                            <div class="message-list" id="conversationsContainer">
+                                <div class="text-muted p-3 text-center" style="font-size: 14px;">Loading messages...</div>
+                            </div>
+
+
+                            <!-- BOTTOM SHOW ALL -->
+                            <div class="show-all-bottom">
+                                <a href="/chat/online-list">Show All</a>
+                            </div>
+
+                        </div>
+
+                    </div>
+								
+								
+								
+                </div>
+
+                            
+                            
+
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts
+{
+    <script>
+        const currentUserId = @(ViewBag.CurrentUserId ?? 0);
+
+        function parseUtcDate(dateStr) {
+            if (!dateStr) return null;
+            let s = String(dateStr).trim();
+            if (!s.endsWith('Z') && !s.includes('+') && !/T.*\d{2}-\d{2}$/.test(s)) {
+                s += 'Z';
+            }
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatTimeAgo(dateStr) {
+            const date = parseUtcDate(dateStr);
+            if (!date) return '';
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            if (diffSec < 60) return 'Just now';
+            const diffMin = Math.floor(diffSec / 60);
+            if (diffMin < 60) return diffMin + ' min ago';
+            const diffHr = Math.floor(diffMin / 60);
+            if (diffHr < 24) return diffHr + ' hr ago';
+            const diffDays = Math.floor(diffHr / 24);
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return diffDays + ' days ago';
+            return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getAvatar(imagePath, gender) {
+            const defaultImg = (gender && String(gender).toLowerCase() === 'female')
+                ? '/assets/images/default-user-women.png'
+                : '/assets/images/default-user-men.png';
+
+            if (imagePath && imagePath.trim() !== '' && !imagePath.includes('user-default.png')) {
+                return (imagePath.startsWith('http') || imagePath.startsWith('/')) ? imagePath : '/' + imagePath;
+            }
+            return defaultImg;
+        }
+
+        async function loadOnlineUsers() {
+            try {
+                const resp = await fetch('/api/chat/online-users?limit=5');
+                if (!resp.ok) return;
+                const users = await resp.json();
+                const container = document.getElementById('onlineUsersContainer');
+                if (!container) return;
+
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="p-2 text-center" style="color: rgba(255, 255, 255, 0.95); font-size: 13px; font-weight: 500;">No users online right now</div>';
+                    return;
+                }
+
+                let html = '';
+                users.forEach(u => {
+                    const defaultImg = (u.gender && String(u.gender).toLowerCase() === 'female') ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png';
+                    const photo = getAvatar(u.imagePath, u.gender);
+                    const name = escapeHtml(u.name || 'Member');
+                    const regId = escapeHtml(u.registerNumber ? (u.registerNumber.startsWith('ID') ? u.registerNumber : 'ID : ' + u.registerNumber) : 'ID : ' + u.id);
+                    const dotClass = u.isOnline ? 'online-dot' : 'online-dot offline';
+                    html += `
+                        <div class="user" onclick="window.location.href='/chat/with/${u.id}'" style="cursor: pointer;">
+                            <div class="profile-wrapper">
+                                <img src="${photo}" alt="" onerror="this.onerror=null; this.src='${defaultImg}';">
+                                <span class="${dotClass}"></span>
+                            </div>
+                            <div class="user-name">${name}</div>
+                            <div class="user-id">${regId}</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading online users:', err);
+            }
+        }
+
+        async function loadConversations() {
+            try {
+                const resp = await fetch('/api/chat/conversations');
+                if (!resp.ok) return;
+                const conversations = await resp.json();
+                const container = document.getElementById('conversationsContainer');
+                if (!container) return;
+
+                if (!conversations || conversations.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center p-4 text-muted" style="font-size: 14px;">
+                            <i class="uil uil-comments-alt" style="font-size: 36px; display: block; margin-bottom: 8px;"></i>
+                            No active conversations yet.<br>
+                            Click on any online user above to start chatting!
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                conversations.forEach(c => {
+                    const isSupport = c.isSupport === true || c.type === 2 || c.type === 'Support';
+                    const name = isSupport ? 'M4Nikah Support' : escapeHtml(c.participantName || 'Member');
+                    const defaultImg = (c.participantGender && String(c.participantGender).toLowerCase() === 'female') ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png';
+                    const photo = isSupport ? '/assets/images/logo.png' : getAvatar(c.participantPhotoUrl, c.participantGender);
+                    const fallbackImg = isSupport ? '/assets/images/logo.png' : defaultImg;
+                    const time = formatTimeAgo(c.lastMessageAt);
+                    const preview = escapeHtml(c.lastMessagePreview || (isSupport ? 'Official Support Thread' : 'Say hello!'));
+                    const isOnline = c.isParticipantOnline;
+                    const statusClass = isOnline ? 'message-status' : 'message-status offline';
+                    const targetUrl = isSupport ? '/chat/support' : `/chat/with/${c.participantUserId}`;
+                    const unreadBadge = c.unreadCount > 0 ? `<div class="unread">${c.unreadCount}</div>` : '';
+
+                    html += `
+                        <div class="message-item" onclick="window.location.href='${targetUrl}'" style="cursor: pointer;">
+                            <div class="message-avatar">
+                                <img src="${photo}" alt="" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                                <span class="${statusClass}"></span>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-top">
+                                    <div class="message-name">${name}</div>
+                                    <div class="message-time">${time}</div>
+                                </div>
+                                <div class="message-preview">${preview}</div>
+                                ${unreadBadge}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading conversations:', err);
+            }
+        }
+
+        // Initialize SignalR connections
+        function setupSignalR() {
+            if (typeof signalR === 'undefined') return;
+
+            // Chat Hub
+            const chatHub = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/chat?userId=' + currentUserId)
+                .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                .build();
+
+            chatHub.on('ReceiveNewMessageNotification', function () {
+                loadConversations();
+            });
+
+            chatHub.on('ReceiveMessage', function () {
+                loadConversations();
+            });
+
+            chatHub.on('MessagesRead', function () {
+                loadConversations();
+            });
+
+            chatHub.on('UnreadCountUpdated', function () {
+                loadConversations();
+            });
+
+            chatHub.start().catch(err => console.log('ChatHub connection info:', err));
+
+            // Presence Hub
+            const presenceHub = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/presence?userId=' + currentUserId)
+                .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                .build();
+
+            presenceHub.on('UserOnline', function () {
+                loadOnlineUsers();
+                loadConversations();
+            });
+
+            presenceHub.on('UserOffline', function () {
+                loadOnlineUsers();
+                loadConversations();
+            });
+
+            presenceHub.on('UserIsOnline', function () {
+                loadOnlineUsers();
+                loadConversations();
+            });
+
+            presenceHub.on('UserIsOffline', function () {
+                loadOnlineUsers();
+                loadConversations();
+            });
+
+            presenceHub.start().catch(err => console.log('PresenceHub connection info:', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadOnlineUsers();
+            loadConversations();
+            setupSignalR();
+
+            // Refresh periodically every 30 seconds
+            setInterval(function () {
+                loadOnlineUsers();
+                loadConversations();
+            }, 30000);
+        });
+
+        // Ensure back-forward cache (bfcache) navigation refreshes unread count instantly
+        window.addEventListener('pageshow', function (event) {
+            loadConversations();
+            loadOnlineUsers();
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                loadConversations();
+                loadOnlineUsers();
+            }
+        });
+    </script>
+}

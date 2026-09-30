@@ -1751,6 +1751,8 @@ namespace URMARRY.Controllers.Api.Staff
                             await _registrationRepo.SaveChanges();
                         }
                         hasReachedEndStatus = false;
+                        followUp.LatestAdminApprovalStatus = null;
+                        followUp.VerificationGrade = null;
                     }
                     else if (model.ProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     {
@@ -1764,6 +1766,12 @@ namespace URMARRY.Controllers.Api.Staff
                                 userProfile.DocumentVerificationRejected = !model.DocumentVerificationComplete.Value;
                                 hasReachedEndStatus = true;
                             }
+                            else
+                            {
+                                hasReachedEndStatus = false;
+                                followUp.LatestAdminApprovalStatus = null;
+                                followUp.VerificationGrade = null;
+                            }
                             await _registrationRepo.Update(userProfile);
                             await _registrationRepo.SaveChanges();
                         }
@@ -1773,6 +1781,22 @@ namespace URMARRY.Controllers.Api.Staff
                         model.ProfileVerificationStatus == ProfileVerificationStatus.Suspended)
                     {
                         hasReachedEndStatus = true;
+                    }
+                    else
+                    {
+                        // Revoked / changed back to non-end statuses (Pending, Started, Hold, etc.)
+                        hasReachedEndStatus = false;
+                        followUp.LatestAdminApprovalStatus = null;
+                        followUp.VerificationGrade = null;
+
+                        var userProfile = await _registrationRepo.Get(followUp.ProfileId);
+                        if (userProfile != null && !userProfile.DocumentVerificationFollowupApproved)
+                        {
+                            userProfile.DocumentVerificationComplete = false;
+                            userProfile.DocumentVerificationRejected = false;
+                            await _registrationRepo.Update(userProfile);
+                            await _registrationRepo.SaveChanges();
+                        }
                     }
                 }
                 else if (followUp.FollowUpType == FollowUpType.PremiumFollowUp)
@@ -2031,6 +2055,25 @@ namespace URMARRY.Controllers.Api.Staff
                     };
                     await _dbContext.FollowUpAdminApprovals.AddAsync(adminApproval);
                     await _dbContext.SaveChangesAsync();
+                }
+                else
+                {
+                    // If not an end status requiring admin review, cancel any dangling active pending approvals
+                    if (followUp.LatestAdminApprovalStatus == null)
+                    {
+                        var pendingApprovals = await _dbContext.FollowUpAdminApprovals
+                            .Where(a => a.FollowUpId == followUp.Id && a.Status == AdminApprovalStatus.Pending && !a.IsDeleted)
+                            .ToListAsync();
+                        foreach (var pa in pendingApprovals)
+                        {
+                            pa.IsActive = false;
+                            pa.IsDeleted = true;
+                        }
+                        if (pendingApprovals.Any())
+                        {
+                            await _dbContext.SaveChangesAsync();
+                        }
+                    }
                 }
 
                 // Save changes to repositories
@@ -2960,9 +3003,9 @@ namespace URMARRY.Controllers.Api.Staff
                             || (f.FollowUpType == FollowUpType.RenewalFollowUp && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember)))
                         )
                         && (
-                            f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                            || f.PaymentCompleted
+                            f.PaymentCompleted
                             || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
+                            || (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && !f.PaymentLinkSent && f.Profile != null && f.Profile.IsPremiumMember)
                         ))
                     .ToList();
 
@@ -3008,7 +3051,7 @@ namespace URMARRY.Controllers.Api.Staff
                         var profileFollowUps = convertedFollowUps.Where(f => f.ProfileId == fu.ProfileId);
                         foreach (var pfu in profileFollowUps)
                         {
-                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && (pfu.PaymentCompleted || !pfu.PaymentLinkSent))
                             {
                                 profileCollection += pfu.PaymentAmount.Value;
                             }

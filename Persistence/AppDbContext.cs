@@ -81,6 +81,7 @@ namespace Persistence;
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<CallLog> CallLogs { get; set; }
+    public DbSet<AudioCallContact> AudioCallContacts { get; set; }
 
 
 
@@ -140,6 +141,9 @@ namespace Persistence;
 
         modelBuilder.Entity<CallLog>()
             .HasIndex(c => new { c.ReceiverId, c.StartedAt });
+
+        modelBuilder.Entity<AudioCallContact>()
+            .HasIndex(a => new { a.UserId, a.ContactUserId, a.PlanPurchaseId });
     }
 
 

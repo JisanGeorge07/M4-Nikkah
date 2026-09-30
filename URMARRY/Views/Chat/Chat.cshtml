@@ -1,0 +1,2257 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<style>
+    /* Chat Header Online Dot Status (Matching ChatList colors) */
+    .online-dot {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        background: #55c934 !important;
+        border-radius: 50%;
+        right: 1px;
+        bottom: -6px;
+        border: 2px solid #fff;
+    }
+
+    .online-dot.offline {
+        background: #999 !important;
+    }
+
+    /* Voice Recording Bar (WhatsApp Style) */
+    .voice-recording-bar {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 56px;
+        background: #fdf2f2;
+        border: 1px solid #fed7d7;
+        border-radius: 28px;
+        padding: 0 12px 0 16px;
+        gap: 12px;
+        animation: fadeInSlideUp 0.2s ease-out;
+    }
+
+    .cancel-recording-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: #fee2e2;
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .cancel-recording-btn:hover {
+        background: #fca5a5;
+        color: #991b1b;
+        transform: scale(1.05);
+    }
+
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .recording-pulse-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background-color: #ef4444;
+        animation: pulseRecording 1.2s infinite ease-in-out;
+    }
+
+    @@keyframes pulseRecording {
+        0% {
+            transform: scale(0.9);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+
+        70% {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+            transform: scale(0.9);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    .recording-timer {
+        font-size: 14px;
+        font-weight: 600;
+        color: #dc2626;
+        font-variant-numeric: tabular-nums;
+        min-width: 44px;
+    }
+
+    .recording-waves {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex: 1;
+        height: 24px;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .recording-waves span {
+        width: 3px;
+        height: 6px;
+        background: #ef4444;
+        border-radius: 3px;
+        animation: soundWave 1.1s infinite ease-in-out;
+    }
+
+    .recording-waves span:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .recording-waves span:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+
+    .recording-waves span:nth-child(4) {
+        animation-delay: 0.3s;
+    }
+
+    .recording-waves span:nth-child(5) {
+        animation-delay: 0.4s;
+    }
+
+    .recording-waves span:nth-child(6) {
+        animation-delay: 0.5s;
+    }
+
+    .recording-waves span:nth-child(7) {
+        animation-delay: 0.6s;
+    }
+
+    .recording-waves span:nth-child(8) {
+        animation-delay: 0.7s;
+    }
+
+    .recording-waves span:nth-child(9) {
+        animation-delay: 0.8s;
+    }
+
+    .recording-waves span:nth-child(10) {
+        animation-delay: 0.9s;
+    }
+
+    .recording-waves span:nth-child(11) {
+        animation-delay: 1.0s;
+    }
+
+    .recording-waves span:nth-child(12) {
+        animation-delay: 0.3s;
+    }
+
+    .recording-waves span:nth-child(13) {
+        animation-delay: 0.5s;
+    }
+
+    .recording-waves span:nth-child(14) {
+        animation-delay: 0.2s;
+    }
+
+    .recording-waves span:nth-child(15) {
+        animation-delay: 0.4s;
+    }
+
+    @@keyframes soundWave {
+
+        0%,
+        100% {
+            height: 4px;
+            opacity: 0.4;
+        }
+
+        50% {
+            height: 20px;
+            opacity: 1;
+        }
+    }
+
+    .send-recording-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: #007b35;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 123, 53, 0.35);
+        flex-shrink: 0;
+    }
+
+    .send-recording-btn:hover {
+        background: #00632b;
+        transform: scale(1.06);
+    }
+
+    /* Voice message received vs sent styling */
+    .voice-message-row.received {
+        justify-content: flex-start;
+    }
+
+    .voice-message-row.received .voice-player {
+        background: #e2e8f0;
+        border-radius: 0 10px 10px 10px;
+    }
+
+    .voice-message-row.received .play-button {
+        background: #007b35;
+    }
+
+    .voice-message-row.received .play-button svg {
+        fill: #fff;
+        stroke: #fff;
+    }
+
+    .voice-message-row.received .waveform span {
+        background: #64748b;
+    }
+
+    .voice-message-row.received .duration {
+        color: #475569;
+    }
+
+    .voice-message-row.received .voice-time {
+        text-align: left;
+        padding-left: 10px;
+        padding-right: 0;
+    }
+
+    .waveform.is-playing span {
+        animation: wavePlaying 0.8s infinite ease-in-out alternate;
+    }
+
+    .waveform.is-playing span:nth-child(2n) {
+        animation-delay: 0.15s;
+    }
+
+    .waveform.is-playing span:nth-child(3n) {
+        animation-delay: 0.3s;
+    }
+
+    .waveform.is-playing span:nth-child(4n) {
+        animation-delay: 0.45s;
+    }
+
+    @@keyframes wavePlaying {
+        0% {
+            transform: scaleY(0.4);
+        }
+
+        100% {
+            transform: scaleY(1.3);
+        }
+    }
+
+    /* Camera Modal Overlay */
+    .camera-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(5px);
+        z-index: 10500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    .camera-modal-container {
+        background: #18181b;
+        border-radius: 20px;
+        max-width: 540px;
+        width: 100%;
+        max-height: 92vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .camera-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: #27272a;
+        color: #fff;
+    }
+
+    .camera-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #f4f4f5;
+        display: flex;
+        align-items: center;
+    }
+
+    .camera-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .camera-icon-btn {
+        background: rgba(255, 255, 255, 0.12);
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        color: #e4e4e7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .camera-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: #fff;
+    }
+
+    .camera-viewport {
+        position: relative;
+        width: 100%;
+        min-height: 320px;
+        max-height: 60vh;
+        background: #09090b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .camera-viewport video,
+    .camera-viewport img {
+        width: 100%;
+        height: 100%;
+        max-height: 60vh;
+        object-fit: contain;
+        display: block;
+    }
+
+    .camera-loading-spinner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2;
+    }
+
+    .camera-modal-footer {
+        padding: 16px 20px;
+        background: #27272a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .camera-controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .camera-shutter-btn {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        background: transparent;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+
+    .camera-shutter-btn:active {
+        transform: scale(0.92);
+    }
+
+    .camera-shutter-btn .shutter-inner {
+        width: 100%;
+        height: 100%;
+        background: #ef4444;
+        border-radius: 50%;
+        display: block;
+        transition: background 0.15s ease;
+    }
+
+    .camera-shutter-btn:hover .shutter-inner {
+        background: #dc2626;
+    }
+
+    @@keyframes fadeInSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+                    <div class="chat-wrapper">
+
+                        <!-- ================= HEADER ================= -->
+
+                        <header class="chat-header">
+
+                            <button class="back-btn" onclick="handleBackClick()" title="Go Back">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M19 12H5M11 18L5 12L11 6" stroke="currentColor" stroke-linecap="round"
+                                          stroke-linejoin="round" />
+                                </svg>
+                            </button>
+
+                            <div class="profile" id="headerProfileBlock" style="cursor: pointer;">
+
+                                <div class="profile-image">
+                                    <img id="chatTargetPhoto" src="/assets/images/default-user-men.png" alt=""
+                                         onerror="this.onerror=null; this.src='/assets/images/default-user-men.png';">
+                                    <span id="chatOnlineDot" class="online-dot"></span>
+                                </div>
+
+                                <div class="profile-info">
+                                    <h3 id="chatTargetName">Connecting...</h3>
+                                    <span id="chatTargetStatus">Offline</span>
+                                </div>
+
+                            </div>
+
+                            <div class="header-actions">
+
+                                <!-- Phone -->
+                                <button type="button" title="Audio Call" id="headerAudioCallBtn">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M21 16.5V19C21 20.1 20.1 21 19 21
+                                        C10.16 20.57 3.43 13.84 3 5
+                                        C3 3.9 3.9 3 5 3H7.5
+                                        C8.05 3 8.53 3.4 8.65 3.94
+                                        C8.87 4.91 9.24 5.84 9.75 6.7
+                                        C9.96 7.06 9.87 7.52 9.56 7.79
+                                        L8.02 9.07
+                                        C9.1 11.45 11.55 13.9 13.93 14.98
+                                        L15.21 13.44
+                                        C15.48 13.13 15.94 13.04 16.3 13.25
+                                        C17.16 13.76 18.09 14.13 19.06 14.35
+                                        C19.6 14.47 20 14.95 20 15.5V16.5Z" stroke="currentColor"
+                                              stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+
+                                <!-- Video -->
+                                <button type="button" title="Video Call" id="headerVideoCallBtn">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" />
+                                        <path d="M16 10L21 7V17L16 14V10Z" stroke="currentColor"
+                                              stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+
+                            </div>
+
+                        </header>
+
+
+                        <!-- ================= CHAT AREA ================= -->
+
+                        <!-- ================= INTEREST CARD AREA ================= -->
+                        <div class="interest-card" id="chatInterestCard" style="display: none;">
+
+                            <!-- =========================
+         DOVE / HEART ILLUSTRATION
+    ========================== -->
+
+                            <div class="love-illustration">
+
+                                <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+
+                                    <!-- Small hearts -->
+
+                                    <path d="M50 47
+                                    C45 39 31 42 31 52
+                                    C31 60 40 65 50 73
+                                    C60 65 69 60 69 52
+                                    C69 42 55 39 50 47Z" fill="#e40032" transform="scale(.45) translate(80 55)" />
+
+                                    <path d="M245 82
+                                    C240 74 226 77 226 87
+                                    C226 95 235 100 245 108
+                                    C255 100 264 95 264 87
+                                    C264 77 250 74 245 82Z" fill="#e40032" transform="scale(.45) translate(300 90)" />
+
+                                    <path d="M150 245
+                                    C145 237 131 240 131 250
+                                    C131 258 140 263 150 271
+                                    C160 263 169 258 169 250
+                                    C169 240 155 237 150 245Z" fill="#e40032" transform="scale(.45) translate(165 270)" />
+
+
+                                    <!-- Main heart -->
+
+                                    <path d="M150 55
+                                    C135 33 105 43 105 67
+                                    C105 88 127 102 150 121
+                                    C173 102 195 88 195 67
+                                    C195 43 165 33 150 55Z" fill="#9fa483" />
+
+                                    <path d="M150 62
+                                    C138 44 119 51 119 68
+                                    C119 82 134 93 150 107
+                                    C166 93 181 82 181 68
+                                    C181 51 162 44 150 62Z" fill="#df0031" />
+
+
+                                    <!-- Left Dove -->
+
+                                    <path d="
+                                    M143 122
+
+                                    C127 112 107 107 91 115
+                                    C72 124 68 146 75 169
+
+                                    C58 182 43 190 25 193
+
+                                    C43 216 67 226 91 214
+
+                                    C86 230 75 244 59 254
+
+                                    C89 252 116 243 132 223
+
+                                    C147 204 151 181 145 162
+
+                                    C140 147 132 135 143 122Z" fill="#fff2a9" stroke="#9fa483" stroke-width="7" />
+
+
+                                    <!-- Left Dove Body -->
+
+                                    <path d="
+                                    M126 127
+                                    C108 136 104 154 111 174
+                                    C118 195 116 218 98 237
+                                    C119 227 136 210 141 189
+                                    C145 169 138 145 126 127Z" fill="#ffe998" />
+
+
+                                    <!-- Left Wing -->
+
+                                    <path d="
+                                    M92 116
+                                    C75 124 68 143 74 162
+                                    C78 174 86 182 96 188
+                                    C89 165 91 143 105 128Z" fill="#fff6c5" />
+
+
+                                    <!-- Left eye -->
+
+                                    <rect x="92" y="133" width="8" height="8" rx="1" fill="#9fa483"
+                                          transform="rotate(-8 96 137)" />
+
+
+                                    <!-- Right Dove -->
+
+                                    <path d="
+                                    M157 122
+
+                                    C173 112 193 107 209 115
+                                    C228 124 232 146 225 169
+
+                                    C242 182 257 190 275 193
+
+                                    C257 216 233 226 209 214
+
+                                    C214 230 225 244 241 254
+
+                                    C211 252 184 243 168 223
+
+                                    C153 204 149 181 155 162
+
+                                    C160 147 168 135 157 122Z" fill="#fff2a9" stroke="#9fa483" stroke-width="7" />
+
+
+                                    <!-- Right Dove Body -->
+
+                                    <path d="
+                                    M174 127
+                                    C192 136 196 154 189 174
+                                    C182 195 184 218 202 237
+                                    C181 227 164 210 159 189
+                                    C155 169 162 145 174 127Z" fill="#ffe998" />
+
+
+                                    <!-- Right Wing -->
+
+                                    <path d="
+                                    M208 116
+                                    C225 124 232 143 226 162
+                                    C222 174 214 182 204 188
+                                    C211 165 209 143 195 128Z" fill="#fff6c5" />
+
+
+                                    <!-- Right eye -->
+
+                                    <rect x="200" y="133" width="8" height="8" rx="1" fill="#9fa483"
+                                          transform="rotate(8 204 137)" />
+
+                                </svg>
+
+                            </div>
+
+
+                            <!-- =========================
+         CONTENT
+    ========================== -->
+
+                            <div class="interest-content">
+
+                                <h1>Interest Accepted</h1>
+
+                                <div class="connected-text">
+                                    You are now connected
+                                </div>
+
+                                <p class="description">
+                                    You can now chat, and use Audio and Video Call
+                                </p>
+
+                            </div>
+
+
+                            <!-- =========================
+         ACTION BUTTONS
+    ========================== -->
+
+                            <div class="action-buttons">
+
+                                <!-- Chat -->
+
+                                <a href="#" class="action-button" id="interestCardChatBtn">
+
+                                    <div class="action-icon">
+
+                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+
+                                            <rect x="7" y="6" width="34" height="29" rx="8" fill="#007b3d" />
+
+                                            <path d="M15 35L14 42L22 35" fill="#007b3d" />
+
+                                            <path d="M16 17H32" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+
+                                            <path d="M16 24H28" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <span>Chat</span>
+
+                                </a>
+
+
+                                <!-- Audio Call -->
+
+                                <a href="#" class="action-button" id="interestCardAudioBtn">
+
+                                    <div class="action-icon">
+
+                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+
+                                            <path d="
+                                            M14 7
+                                            C12 7 10 9 10 11
+                                            C10 25 23 38 37 38
+                                            C39 38 41 36 41 34
+                                            V29
+                                            C41 28 40 27 39 27
+                                            L32 25
+                                            C31 25 30 25 29 26
+                                            L26 29
+                                            C21 27 17 23 15 18
+                                            L18 15
+                                            C19 14 19 13 19 12
+                                            L17 8
+                                            C17 7 16 7 14 7Z" fill="#007b3d" />
+
+                                            <circle cx="35" cy="13" r="9" fill="#007b3d" />
+
+                                            <path d="M31 13H39" stroke="#fff" stroke-width="2" />
+
+                                            <path d="M35 9V17" stroke="#fff" stroke-width="2" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <span>Audio Call</span>
+
+                                </a>
+
+
+                                <!-- Video Call -->
+
+                                <a href="#" class="action-button" id="interestCardVideoBtn">
+
+                                    <div class="action-icon">
+
+                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+
+                                            <rect x="6" y="13" width="25" height="22" rx="4" fill="#007b3d" />
+
+                                            <path d="M31 19L42 13V35L31 29V19Z" fill="#007b3d" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <span>Video Call</span>
+
+                                </a>
+
+
+                                <!-- View Profile -->
+
+                                <a href="#" class="action-button" id="interestCardProfileBtn">
+
+                                    <div class="action-icon">
+
+                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+
+                                            <circle cx="24" cy="15" r="10" fill="#007b3d" />
+
+                                            <path d="
+                                            M8 41
+                                            C8 31 15 25 24 25
+                                            C33 25 40 31 40 41
+                                            Z" fill="#007b3d" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <span>View Profile</span>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ================= INTEREST CARD AREA END ================= -->
+
+                        <main class="chat-area" id="chatArea">
+
+                            <div class="date" id="chatDateHeader">Today</div>
+
+                            <!-- Messages dynamic list -->
+                            <div id="messagesContainer">
+                                <div class="text-center p-4 text-muted" id="chatLoading">
+                                    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                                    <span class="ms-2" style="font-size: 13px;">Loading conversation...</span>
+                                </div>
+                            </div>
+
+                            <!-- Typing Indicator -->
+                            <div class="message-row received" id="typingRow" style="display: none;">
+                                <div class="message-wrapper">
+                                    <div class="message"
+                                         style="font-style: italic; font-size: 12px; color: #888; padding: 6px 12px;">
+                                        <span id="typingText">Typing...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </main>
+
+
+                        <!-- ================= INPUT AREA ================= -->
+
+                        <footer class="chat-input-area" id="chatInputArea">
+
+                            <!-- Standard Input Controls Row -->
+                            <div id="chatNormalInputs" class="d-flex align-items-center w-100" style="gap: 14px;">
+
+                                <!-- Attachment -->
+                                <button class="input-icon" id="attachmentBtn" type="button" title="Attach file">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M20.5 11.5L12 20
+                                        C9.79 22.21 6.21 22.21 4 20
+                                        C1.79 17.79 1.79 14.21 4 12
+                                        L13.5 2.5
+                                        C15.16 0.84 17.84 0.84 19.5 2.5
+                                        C21.16 4.16 21.16 6.84 19.5 8.5
+                                        L10 18
+                                        C8.9 19.1 7.1 19.1 6 18
+                                        C4.9 16.9 4.9 15.1 6 14
+                                        L14.5 5.5" stroke="currentColor" stroke-linecap="round"
+                                              stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                                <input type="file" id="fileUploadInput" style="display: none;"
+                                       accept="image/*,audio/*,.pdf,.doc,.docx" />
+
+
+                                <div class="message-input">
+
+                                    <input type="text" id="messageInput" placeholder="Write your message"
+                                           autocomplete="off">
+
+                                    <!-- Send button -->
+                                    <button class="input-inner-icon" id="sendBtn" type="button" title="Send message">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <rect x="4" y="3" width="13" height="15" rx="2" stroke="currentColor" />
+                                            <path d="M8 7H13M8 10H13M8 13H11" stroke="currentColor"
+                                                  stroke-linecap="round" />
+                                            <path d="M9 18V21L12 18" stroke="currentColor" stroke-linecap="round"
+                                                  stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+
+                                </div>
+
+
+                                <!-- Camera -->
+                                <button class="input-icon" id="cameraBtn" type="button" title="Take photo with camera">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M4 7H7L9 4H15L17 7H20
+                                        C21.1 7 22 7.9 22 9V18
+                                        C22 19.1 21.1 20 20 20H4
+                                        C2.9 20 2 19.1 2 18V9
+                                        C2 7.9 2.9 7 4 7Z" stroke="currentColor" stroke-linejoin="round" />
+                                        <circle cx="12" cy="13" r="4" stroke="currentColor" />
+                                    </svg>
+                                </button>
+                                <input type="file" id="cameraUploadInput" style="display: none;" accept="image/*"
+                                       capture="environment" />
+
+
+                                <!-- Microphone -->
+                                <button class="input-icon" id="micBtn" type="button" title="Record voice message">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <rect x="8" y="2" width="8" height="13" rx="4" stroke="currentColor" />
+                                        <path d="M5 11C5 14.87 8.13 18 12 18
+                                        C15.87 18 19 14.87 19 11" stroke="currentColor" stroke-linecap="round" />
+                                        <path d="M12 18V22M9 22H15" stroke="currentColor" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                                <input type="file" id="audioUploadInput" style="display: none;" accept="audio/*" />
+
+                            </div>
+
+                            <!-- WhatsApp-Style Voice Recording Bar -->
+                            <div id="voiceRecordingBar" class="voice-recording-bar" style="display: none;">
+                                <button type="button" class="cancel-recording-btn" id="cancelVoiceBtn"
+                                        title="Discard recording">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                                         stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+
+                                <div class="recording-indicator">
+                                    <span class="recording-pulse-dot"></span>
+                                    <span class="recording-timer" id="recordingTimer">00:00</span>
+                                </div>
+
+                                <div class="recording-waves">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+
+                                <button type="button" class="send-recording-btn" id="sendVoiceBtn"
+                                        title="Send voice note">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                        </footer>
+
+                    </div>
+								
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- ================= CAMERA MODAL OVERLAY ================= -->
+<div id="cameraModalOverlay" class="camera-modal-overlay" style="display: none;">
+    <div class="camera-modal-container">
+        <!-- Header -->
+        <div class="camera-modal-header">
+            <span class="camera-title"><i class="uil uil-camera me-1"></i> Take Photo</span>
+            <div class="camera-header-actions">
+                <button type="button" class="camera-icon-btn" id="switchCameraBtn" title="Switch Camera"
+                        style="display: none;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 16v-4a8 8 0 0 0-16 0v4m16 0-3-3m3 3-3 3M4 8v4a8 8 0 0 0 16 0V8M4 8l3 3M4 8l3-3" />
+                    </svg>
+                </button>
+                <button type="button" class="camera-icon-btn" id="closeCameraBtn" title="Close">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Viewport -->
+        <div class="camera-viewport">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <img id="cameraPreviewImg" alt="Captured preview" style="display: none;" />
+            <canvas id="cameraCanvas" style="display: none;"></canvas>
+
+            <div id="cameraLoadingSpinner" class="camera-loading-spinner" style="display: none;">
+                <div class="spinner-border text-light" role="status"></div>
+                <span class="mt-2 text-light" style="font-size: 13px;">Opening camera...</span>
+            </div>
+        </div>
+
+        <!-- Footer / Controls -->
+        <div class="camera-modal-footer">
+            <!-- State 1: Live Viewport Shutter Button -->
+            <div id="cameraLiveControls" class="camera-controls-row">
+                <button type="button" class="camera-shutter-btn" id="capturePhotoBtn" title="Capture Photo">
+                    <span class="shutter-inner"></span>
+                </button>
+            </div>
+
+            <!-- State 2: Captured Preview Actions -->
+            <div id="cameraPreviewControls" class="camera-controls-row" style="display: none;">
+                <button type="button" class="btn btn-outline-light rounded-pill px-4" id="retakePhotoBtn">
+                    <i class="uil uil-redo me-1"></i> Retake
+                </button>
+                <button type="button" class="btn btn-success rounded-pill px-4" id="sendCapturedPhotoBtn">
+                    <i class="uil uil-message me-1"></i> Send Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        const currentUserId = @(ViewBag.CurrentUserId ?? 0);
+        const targetUserId = @(ViewBag.TargetUserId ?? 0);
+        const isSupportChat = @((ViewBag.IsSupportChat ?? false).ToString().ToLower());
+
+        let currentConversationId = 0;
+        let chatHub = null;
+        let presenceHub = null;
+        let typingTimeout = null;
+        let lastTypingSent = 0;
+
+        // Camera State
+        let cameraStream = null;
+        let capturedBlob = null;
+        let currentFacingMode = 'user'; // 'user' (front) or 'environment' (back)
+
+        // Voice Recording State
+        let mediaRecorder = null;
+        let audioStream = null;
+        let audioChunks = [];
+        let recordingTimerInterval = null;
+        let recordingStartTime = 0;
+        let isCancelledRecording = false;
+
+        function handleBackClick() {
+            if (document.referrer && document.referrer.includes('/chat')) {
+                history.back();
+            } else {
+                window.location.href = '/chat';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function parseUtcDate(dateStr) {
+            if (!dateStr) return null;
+            let s = String(dateStr).trim();
+            if (!s.endsWith('Z') && !s.includes('+') && !/T.*\d{2}-\d{2}$/.test(s)) {
+                s += 'Z';
+            }
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatMsgTime(dateStr) {
+            const date = parseUtcDate(dateStr);
+            if (!date) return '';
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        function scrollToBottom() {
+            const chatArea = document.getElementById('chatArea');
+            if (chatArea) {
+                setTimeout(() => {
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }, 50);
+            }
+        }
+
+        function renderMessage(msg) {
+            const isMe = msg.senderId === currentUserId;
+            const rowClass = isMe ? 'message-row sent' : 'message-row received';
+            const voiceRowClass = isMe ? 'voice-message-row sent' : 'voice-message-row received';
+            const timeText = formatMsgTime(msg.sentAt || msg.createdOn);
+            let readCheck = '';
+            if (isMe) {
+                const isRead = msg.status === 3 || msg.status === 'Read' || msg.isRead === true || Boolean(msg.readAt);
+                const isDelivered = msg.status === 2 || msg.status === 'Delivered' || Boolean(msg.deliveredAt);
+                if (isRead) {
+                    readCheck = '<span class="read-receipt" style="color: #0d6efd; margin-left: 4px; font-weight: bold;">✓✓</span>';
+                } else if (isDelivered) {
+                    readCheck = '<span class="read-receipt" style="color: #888; margin-left: 4px;">✓✓</span>';
+                } else {
+                    readCheck = '<span class="read-receipt" style="color: #888; margin-left: 4px;">✓</span>';
+                }
+            }
+
+            // Handle voice message (enum 3 or 'VoiceNote' or audio extension)
+            const isVoiceNote = msg.messageType === 3 || msg.messageType === 'VoiceNote' || (msg.attachmentUrl && /\.(mp3|wav|ogg|m4a|webm)$/i.test(msg.attachmentUrl));
+            if (isVoiceNote && msg.attachmentUrl) {
+                return `
+                        <div class="${voiceRowClass}" data-message-id="${msg.id}">
+                            <div class="voice-message">
+                                <div class="voice-player">
+                                    <audio src="${msg.attachmentUrl}" preload="none"></audio>
+                                    <button class="play-button" onclick="playVoiceNote(this)" title="Play audio">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M8 5L19 12L8 19V5Z" />
+                                        </svg>
+                                    </button>
+                                    <div class="waveform">
+                                        <span></span><span></span><span></span><span></span><span></span>
+                                        <span></span><span></span><span></span><span></span><span></span>
+                                        <span></span><span></span><span></span><span></span><span></span>
+                                    </div>
+                                    <span class="duration">Voice Note</span>
+                                </div>
+                                <div class="voice-time">
+                                    ${timeText} ${readCheck}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            }
+
+            // Handle image message (enum 2 or 'Image' or image extension)
+            const isImage = msg.messageType === 2 || msg.messageType === 'Image' || (msg.attachmentUrl && /\.(jpeg|jpg|png|gif|webp)$/i.test(msg.attachmentUrl));
+            if (isImage && msg.attachmentUrl) {
+                return `
+                        <div class="${rowClass}" data-message-id="${msg.id}">
+                            <div class="message-wrapper">
+                                <div class="message" style="padding: 4px; background: transparent;">
+                                    <a href="${msg.attachmentUrl}" target="_blank">
+                                        <img src="${msg.attachmentUrl}" style="max-width: 240px; max-height: 240px; border-radius: 12px; display: block; object-fit: cover;" alt="Attachment" />
+                                    </a>
+                                    ${msg.content && msg.content !== msg.attachmentFileName && msg.content !== 'Photo' ? `<div style="padding: 6px 8px; font-size: 13px;">${escapeHtml(msg.content)}</div>` : ''}
+                                </div>
+                                <div class="message-time">
+                                    ${timeText} ${readCheck}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            }
+
+            // Handle document or file attachment
+            if (msg.attachmentUrl) {
+                return `
+                        <div class="${rowClass}" data-message-id="${msg.id}">
+                            <div class="message-wrapper">
+                                <div class="message">
+                                    <a href="${msg.attachmentUrl}" target="_blank" style="color: inherit; text-decoration: underline; display: flex; align-items: center; gap: 6px;">
+                                        <i class="uil uil-file-download" style="font-size: 18px;"></i>
+                                        <span>${escapeHtml(msg.attachmentFileName || msg.content || 'Download Attachment')}</span>
+                                    </a>
+                                </div>
+                                <div class="message-time">
+                                    ${timeText} ${readCheck}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            }
+
+            // Standard text message
+            return `
+                    <div class="${rowClass}" data-message-id="${msg.id}">
+                        <div class="message-wrapper">
+                            <div class="message">
+                                ${escapeHtml(msg.content)}
+                            </div>
+                            <div class="message-time">
+                                ${timeText} ${readCheck}
+                            </div>
+                        </div>
+                    </div>
+                `;
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('messagesContainer');
+            if (!container) return;
+
+            // Prevent duplicate message renders
+            if (msg.id && document.querySelector(`[data-message-id="${msg.id}"]`)) {
+                return;
+            }
+
+            // Remove loading indicator if present
+            const loading = document.getElementById('chatLoading');
+            if (loading) loading.remove();
+
+            const msgHtml = renderMessage(msg);
+            container.insertAdjacentHTML('beforeend', msgHtml);
+            scrollToBottom();
+        }
+
+        function updateReadReceipts() {
+            document.querySelectorAll('.message-row.sent .read-receipt, .voice-message-row.sent .read-receipt, .read-receipt').forEach(elem => {
+                const parentSent = elem.closest('.sent');
+                if (parentSent) {
+                    elem.innerHTML = '✓✓';
+                    elem.style.color = '#0d6efd';
+                    elem.style.fontWeight = 'bold';
+                }
+            });
+        }
+
+        async function markConversationAsRead() {
+            if (!currentConversationId || currentConversationId <= 0) return;
+            try {
+                await fetch('/api/chat/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversationId: currentConversationId })
+                });
+                if (typeof checkUnreadChatMessages === 'function') {
+                    checkUnreadChatMessages();
+                }
+            } catch (err) {
+                console.error('Error marking as read:', err);
+            }
+        }
+
+        async function initChat() {
+            if (currentUserId <= 0) {
+                window.location.href = '/Account/Login';
+                return;
+            }
+
+            const targetPhoto = document.getElementById('chatTargetPhoto');
+            const targetName = document.getElementById('chatTargetName');
+            const targetStatus = document.getElementById('chatTargetStatus');
+            const onlineDot = document.getElementById('chatOnlineDot');
+            const container = document.getElementById('messagesContainer');
+
+            try {
+                if (isSupportChat) {
+                    // Setup Support Header
+                    if (targetName) targetName.innerText = 'M4Nikah Support';
+                    if (targetStatus) targetStatus.innerText = 'Official Support Desk';
+                    if (targetPhoto) targetPhoto.src = '/assets/images/logo.png';
+                    if (onlineDot) onlineDot.className = 'online-dot';
+
+                    const resp = await fetch('/api/chat/support/conversation');
+                    if (!resp.ok) {
+                        if (container) container.innerHTML = '<div class="p-4 text-center text-danger">Failed to connect to Support.</div>';
+                        return;
+                    }
+                    const conv = await resp.json();
+                    currentConversationId = conv.id;
+                } else {
+                    if (targetUserId <= 0) {
+                        window.location.href = '/chat';
+                        return;
+                    }
+
+                    const resp = await fetch(`/api/chat/with/${targetUserId}`);
+                    if (!resp.ok) {
+                        const err = await resp.json();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Chat Access',
+                            text: err.message || 'Unable to open conversation. You may have reached your message limit.',
+                            confirmButtonText: 'View Premium Plans'
+                        }).then(() => {
+                            window.location.href = '/chat/my-premium';
+                        });
+                        return;
+                    }
+
+                    const conv = await resp.json();
+                    currentConversationId = conv.id;
+
+                    if (targetName) targetName.innerText = conv.participantName || 'Member';
+                    
+                    const defaultImg = (conv.participantGender && String(conv.participantGender).toLowerCase() === 'female')
+                        ? '/assets/images/default-user-women.png'
+                        : '/assets/images/default-user-men.png';
+
+                    if (targetPhoto) {
+                        targetPhoto.src = conv.participantPhotoUrl || defaultImg;
+                        targetPhoto.onerror = function () {
+                            this.onerror = null;
+                            this.src = defaultImg;
+                        };
+                    }
+                    
+                    if (conv.isParticipantOnline) {
+                        if (onlineDot) onlineDot.className = 'online-dot';
+                        if (targetStatus) targetStatus.innerText = 'Active now';
+                    } else {
+                        if (onlineDot) onlineDot.className = 'online-dot offline';
+                        if (targetStatus) targetStatus.innerText = 'Offline';
+                    }
+
+                    // Click header to open profile (same as Dashboard / Explore)
+                    const headerProfile = document.getElementById('headerProfileBlock');
+                    if (headerProfile) {
+                        const profileUrl = '/profile/' + (conv.participantRegisterNumber ? conv.participantRegisterNumber : (conv.participantUserId || targetUserId));
+                        headerProfile.onclick = () => window.location.href = profileUrl;
+                    }
+                }
+
+                // Load Messages History
+                await loadMessagesHistory();
+
+                // Check and show interest card if first time after acceptance
+                await checkAndShowInterestCard();
+
+                // Immediately mark as read in database
+                markConversationAsRead();
+
+                // Connect to SignalR
+                await initSignalR();
+
+            } catch (err) {
+                console.error('Error initializing chat:', err);
+                if (container) container.innerHTML = '<div class="p-4 text-center text-danger">Error loading conversation. Please refresh.</div>';
+            }
+        }
+
+        async function loadMessagesHistory() {
+            if (!currentConversationId) return;
+            const container = document.getElementById('messagesContainer');
+            try {
+                const resp = await fetch(`/api/chat/messages/${currentConversationId}?page=1&pageSize=50`);
+                if (!resp.ok) {
+                    if (container) container.innerHTML = '<div class="p-4 text-center text-muted">No messages yet. Say hello!</div>';
+                    return;
+                }
+                const history = await resp.json();
+                const messages = history.messages || [];
+
+                if (messages.length === 0) {
+                    if (container) container.innerHTML = '<div class="p-4 text-center text-muted">No messages yet. Send a message to start chatting!</div>';
+                    return;
+                }
+
+                let html = '';
+                messages.forEach(m => {
+                    html += renderMessage(m);
+                });
+                if (container) container.innerHTML = html;
+                scrollToBottom();
+
+            } catch (err) {
+                console.error('Error loading history:', err);
+            }
+        }
+
+        async function initSignalR() {
+            try {
+                // Initialize ChatHub
+                chatHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/chat?userId=${currentUserId}`)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                    .build();
+
+                chatHub.onreconnected(async (connectionId) => {
+                    if (currentConversationId > 0) {
+                        try {
+                            await chatHub.invoke('JoinConversation', currentConversationId);
+                            markConversationAsRead();
+                        } catch (e) {
+                            console.error('Error re-joining conversation:', e);
+                        }
+                    }
+                });
+
+                chatHub.on('ReceiveMessage', (msg) => {
+                    if (msg.conversationId === currentConversationId) {
+                        appendMessage(msg);
+                        if (msg.senderId !== currentUserId) {
+                            markConversationAsRead();
+                        }
+                    }
+                });
+
+                chatHub.on('ReceiveSupportMessage', (msg) => {
+                    if (isSupportChat && (msg.conversationId === currentConversationId || currentConversationId === 0)) {
+                        appendMessage(msg);
+                        markConversationAsRead();
+                    }
+                });
+
+                chatHub.on('MessagesRead', (payload) => {
+                    if (payload.conversationId === currentConversationId) {
+                        updateReadReceipts();
+                    }
+                });
+
+                chatHub.on('UnreadCountUpdated', (unreadCount) => {
+                    if (typeof updateChatUnreadBadge === 'function') {
+                        updateChatUnreadBadge(unreadCount);
+                    }
+                });
+
+                chatHub.on('UserTyping', (payload) => {
+                    if (payload.conversationId === currentConversationId && payload.senderId !== currentUserId) {
+                        const typingRow = document.getElementById('typingRow');
+                        if (typingRow) {
+                            typingRow.style.display = payload.isTyping ? 'flex' : 'none';
+                            scrollToBottom();
+                        }
+                    }
+                });
+
+                await chatHub.start();
+                if (currentConversationId > 0) {
+                    await chatHub.invoke('JoinConversation', currentConversationId);
+                }
+
+                // Initialize PresenceHub
+                presenceHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/presence?userId=${currentUserId}`)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                    .build();
+
+                presenceHub.on('UserOnline', (uid) => {
+                    if (!isSupportChat && (uid === targetUserId || (window.currentConvParticipantId && window.currentConvParticipantId === uid))) {
+                        const dot = document.getElementById('chatOnlineDot');
+                        const status = document.getElementById('chatTargetStatus');
+                        if (dot) dot.className = 'online-dot';
+                        if (status) status.innerText = 'Active now';
+                    }
+                });
+
+                presenceHub.on('UserOffline', (uid) => {
+                    if (!isSupportChat && (uid === targetUserId || (window.currentConvParticipantId && window.currentConvParticipantId === uid))) {
+                        const dot = document.getElementById('chatOnlineDot');
+                        const status = document.getElementById('chatTargetStatus');
+                        if (dot) dot.className = 'online-dot offline';
+                        if (status) status.innerText = 'Offline';
+                    }
+                });
+
+                await presenceHub.start();
+
+            } catch (err) {
+                console.error('Error starting SignalR connections:', err);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (!input) return;
+            const content = input.value.trim();
+            if (!content) return;
+
+            input.value = '';
+
+            try {
+                if (isSupportChat) {
+                    const resp = await fetch('/api/chat/support/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversationId: currentConversationId,
+                            content: content,
+                            messageType: 1 // Text = 1
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        const err = await resp.json();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Send',
+                            text: err.message || 'Error sending message.'
+                        });
+                        return;
+                    }
+
+                    const newMsg = await resp.json();
+                    appendMessage(newMsg);
+                    scrollToBottom();
+                } else {
+                    const resp = await fetch('/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            receiverId: targetUserId,
+                            content: content,
+                            messageType: 1 // Text = 1
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        const err = await resp.json();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Message Limit Reached',
+                            text: err.message || 'You have reached your contact limit. Please upgrade to continue.',
+                            confirmButtonText: 'Upgrade Plan'
+                        }).then(() => {
+                            window.location.href = '/chat/my-premium';
+                        });
+                        return;
+                    }
+
+                    const newMsg = await resp.json();
+                    appendMessage(newMsg);
+                    scrollToBottom();
+                }
+
+                // Send typing stopped
+                if (chatHub && currentConversationId > 0) {
+                    chatHub.invoke('SendTyping', currentConversationId, isSupportChat ? null : targetUserId, false);
+                }
+
+            } catch (err) {
+                console.error('Error sending message:', err);
+            }
+        }
+
+        // ==========================================
+        // UNIFIED MEDIA UPLOAD & SEND HANDLER
+        // ==========================================
+        async function uploadAndSendMedia(file, messageType, defaultContent) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const sendBtn = document.getElementById('sendBtn');
+            if (sendBtn) sendBtn.disabled = true;
+
+            try {
+                const uploadResp = await fetch('/api/chat/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResp.ok) {
+                    const err = await uploadResp.json();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: err.message || 'Failed to upload attachment.'
+                    });
+                    if (sendBtn) sendBtn.disabled = false;
+                    return;
+                }
+
+                const uploadData = await uploadResp.json();
+                const contentName = defaultContent || file.name || 'Attachment';
+
+                if (isSupportChat) {
+                    const sendResp = await fetch('/api/chat/support/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversationId: currentConversationId,
+                            content: contentName,
+                            messageType: messageType, // 1: Text, 2: Image, 3: VoiceNote, 4: Document
+                            attachmentUrl: uploadData.attachmentUrl,
+                            attachmentFileName: file.name,
+                            attachmentFileSize: file.size
+                        })
+                    });
+
+                    if (!sendResp.ok) {
+                        const err = await sendResp.json();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Send',
+                            text: err.message || 'Error sending attachment.'
+                        });
+                        return;
+                    }
+
+                    const newMsg = await sendResp.json();
+                    appendMessage(newMsg);
+                    scrollToBottom();
+                } else {
+                    const sendResp = await fetch('/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            receiverId: targetUserId,
+                            content: contentName,
+                            messageType: messageType,
+                            attachmentUrl: uploadData.attachmentUrl,
+                            attachmentFileName: file.name,
+                            attachmentFileSize: file.size
+                        })
+                    });
+
+                    if (!sendResp.ok) {
+                        const err = await sendResp.json();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Message Limit Reached',
+                            text: err.message || 'You have reached your contact limit.',
+                            confirmButtonText: 'Upgrade Plan'
+                        }).then(() => {
+                            window.location.href = '/chat/my-premium';
+                        });
+                        return;
+                    }
+
+                    const newMsg = await sendResp.json();
+                    appendMessage(newMsg);
+                    scrollToBottom();
+                }
+
+            } catch (err) {
+                console.error('Error uploading/sending media:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred while sending.'
+                });
+            } finally {
+                if (sendBtn) sendBtn.disabled = false;
+            }
+        }
+
+        async function handleFileUpload(fileInput, defaultMessageType) {
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+            const file = fileInput.files[0];
+            
+            let msgType = defaultMessageType || 4; // 1: Text, 2: Image, 3: VoiceNote, 4: Document
+            if (file.type.startsWith('image/')) msgType = 2;
+            else if (file.type.startsWith('audio/')) msgType = 3;
+            else msgType = 4;
+
+            await uploadAndSendMedia(file, msgType, file.name);
+            fileInput.value = '';
+        }
+
+        // ==========================================
+        // LIVE CAMERA FEATURE
+        // ==========================================
+        async function openCameraModal() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Camera Access',
+                    text: 'Live camera stream is not supported in this browser environment. You can take or choose a photo from your files.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Select Photo',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const cameraInput = document.getElementById('cameraUploadInput');
+                        if (cameraInput) cameraInput.click();
+                    }
+                });
+                return;
+            }
+
+            const modal = document.getElementById('cameraModalOverlay');
+            const video = document.getElementById('cameraVideo');
+            const previewImg = document.getElementById('cameraPreviewImg');
+            const liveControls = document.getElementById('cameraLiveControls');
+            const previewControls = document.getElementById('cameraPreviewControls');
+            const spinner = document.getElementById('cameraLoadingSpinner');
+
+            capturedBlob = null;
+            if (previewImg) {
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+            }
+            if (video) video.style.display = 'block';
+            if (liveControls) liveControls.style.display = 'flex';
+            if (previewControls) previewControls.style.display = 'none';
+            if (spinner) spinner.style.display = 'flex';
+            if (modal) modal.style.display = 'flex';
+
+            // Check if multiple camera devices exist to show flip button
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                const switchBtn = document.getElementById('switchCameraBtn');
+                if (switchBtn) {
+                    switchBtn.style.display = videoDevices.length > 1 ? 'inline-flex' : 'none';
+                }
+            } catch (e) {
+                console.warn('Could not enumerate media devices:', e);
+            }
+
+            await startCameraStream();
+        }
+
+        async function startCameraStream() {
+            const video = document.getElementById('cameraVideo');
+            const spinner = document.getElementById('cameraLoadingSpinner');
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+
+            try {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: currentFacingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    });
+                } catch (err) {
+                    // Fallback without exact constraints
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: false
+                    });
+                }
+
+                if (video) {
+                    video.srcObject = cameraStream;
+                    await video.play();
+                }
+                if (spinner) spinner.style.display = 'none';
+            } catch (err) {
+                console.error('Camera access error:', err);
+                if (spinner) spinner.style.display = 'none';
+                closeCameraModal();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Camera Permission',
+                    text: 'Unable to access your camera. Please allow camera permissions in your browser or select an image file.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Choose from Files',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const cameraInput = document.getElementById('cameraUploadInput');
+                        if (cameraInput) cameraInput.click();
+                    }
+                });
+            }
+        }
+
+        function closeCameraModal() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            const modal = document.getElementById('cameraModalOverlay');
+            if (modal) modal.style.display = 'none';
+            capturedBlob = null;
+        }
+
+        async function switchCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            const spinner = document.getElementById('cameraLoadingSpinner');
+            if (spinner) spinner.style.display = 'flex';
+            await startCameraStream();
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const previewImg = document.getElementById('cameraPreviewImg');
+            const liveControls = document.getElementById('cameraLiveControls');
+            const previewControls = document.getElementById('cameraPreviewControls');
+
+            if (!video || !canvas) return;
+
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                capturedBlob = blob;
+                const url = URL.createObjectURL(blob);
+                if (previewImg) {
+                    previewImg.src = url;
+                    previewImg.style.display = 'block';
+                }
+                if (video) video.style.display = 'none';
+                if (liveControls) liveControls.style.display = 'none';
+                if (previewControls) previewControls.style.display = 'flex';
+            }, 'image/jpeg', 0.9);
+        }
+
+        function retakePhoto() {
+            capturedBlob = null;
+            const video = document.getElementById('cameraVideo');
+            const previewImg = document.getElementById('cameraPreviewImg');
+            const liveControls = document.getElementById('cameraLiveControls');
+            const previewControls = document.getElementById('cameraPreviewControls');
+
+            if (previewImg) {
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+            }
+            if (video) video.style.display = 'block';
+            if (liveControls) liveControls.style.display = 'flex';
+            if (previewControls) previewControls.style.display = 'none';
+        }
+
+        async function sendCapturedPhoto() {
+            if (!capturedBlob) return;
+            const photoFile = new File([capturedBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            closeCameraModal();
+            await uploadAndSendMedia(photoFile, 2, 'Photo');
+        }
+
+        // ==========================================
+        // WHATSAPP-STYLE VOICE NOTE RECORDING FEATURE
+        // ==========================================
+        async function startVoiceRecording() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Audio Recording',
+                    text: 'Direct audio recording is not supported in this browser. You can select an audio file to send.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Choose Audio',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const audioInput = document.getElementById('audioUploadInput');
+                        if (audioInput) audioInput.click();
+                    }
+                });
+                return;
+            }
+
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                let mimeType = 'audio/webm;codecs=opus';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/ogg;codecs=opus';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/mp4';
+                if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+
+                mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
+                audioChunks = [];
+                isCancelledRecording = false;
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        audioChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const elapsedSecs = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    
+                    if (isCancelledRecording || audioChunks.length === 0) {
+                        return;
+                    }
+
+                    if (elapsedSecs < 1) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'bottom-end',
+                            icon: 'info',
+                            title: 'Recording too short',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        return;
+                    }
+
+                    const recMimeType = mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: recMimeType });
+                    
+                    let ext = '.webm';
+                    if (recMimeType.includes('ogg')) ext = '.ogg';
+                    else if (recMimeType.includes('mp4') || recMimeType.includes('aac')) ext = '.mp4';
+                    else if (recMimeType.includes('wav')) ext = '.wav';
+
+                    const voiceFile = new File([audioBlob], `voice_note_${Date.now()}${ext}`, { type: recMimeType });
+                    await uploadAndSendMedia(voiceFile, 3, 'Voice Note');
+                };
+
+                // Switch Input UI to Recording Bar
+                const normalInputs = document.getElementById('chatNormalInputs');
+                const recordingBar = document.getElementById('voiceRecordingBar');
+                const timerElem = document.getElementById('recordingTimer');
+
+                if (normalInputs) normalInputs.style.setProperty('display', 'none', 'important');
+                if (recordingBar) recordingBar.style.display = 'flex';
+                if (timerElem) timerElem.innerText = '00:00';
+
+                recordingStartTime = Date.now();
+                clearInterval(recordingTimerInterval);
+                recordingTimerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const secs = String(elapsed % 60).padStart(2, '0');
+                    if (timerElem) timerElem.innerText = `${mins}:${secs}`;
+                }, 500);
+
+                mediaRecorder.start(250);
+
+            } catch (err) {
+                console.error('Microphone access error:', err);
+                cancelVoiceRecording();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Microphone Permission',
+                    text: 'Could not access your microphone. Please grant microphone permissions to record voice notes.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Choose Audio File',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const audioInput = document.getElementById('audioUploadInput');
+                        if (audioInput) audioInput.click();
+                    }
+                });
+            }
+        }
+
+        function cancelVoiceRecording() {
+            isCancelledRecording = true;
+            clearInterval(recordingTimerInterval);
+
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(t => t.stop());
+                audioStream = null;
+            }
+
+            const normalInputs = document.getElementById('chatNormalInputs');
+            const recordingBar = document.getElementById('voiceRecordingBar');
+            if (recordingBar) recordingBar.style.display = 'none';
+            if (normalInputs) normalInputs.style.setProperty('display', 'flex', 'important');
+        }
+
+        function finishAndSendVoiceRecording() {
+            isCancelledRecording = false;
+            clearInterval(recordingTimerInterval);
+
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(t => t.stop());
+                audioStream = null;
+            }
+
+            const normalInputs = document.getElementById('chatNormalInputs');
+            const recordingBar = document.getElementById('voiceRecordingBar');
+            if (recordingBar) recordingBar.style.display = 'none';
+            if (normalInputs) normalInputs.style.setProperty('display', 'flex', 'important');
+        }
+
+        // ==========================================
+        // VOICE NOTE PLAYER
+        // ==========================================
+        function playVoiceNote(btn) {
+            const player = btn.closest('.voice-player');
+            if (!player) return;
+            const audio = player.querySelector('audio');
+            if (!audio) return;
+            const waveform = player.querySelector('.waveform');
+            const durationElem = player.querySelector('.duration');
+
+            if (audio.paused) {
+                // Pause any other playing audio
+                document.querySelectorAll('.voice-player audio').forEach(a => {
+                    if (a !== audio && !a.paused) {
+                        a.pause();
+                        a.currentTime = 0;
+                        const otherPlayer = a.closest('.voice-player');
+                        if (otherPlayer) {
+                            const otherBtn = otherPlayer.querySelector('.play-button');
+                            const otherWf = otherPlayer.querySelector('.waveform');
+                            const otherDur = otherPlayer.querySelector('.duration');
+                            if (otherBtn) otherBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5L19 12L8 19V5Z"/></svg>';
+                            if (otherWf) otherWf.classList.remove('is-playing');
+                            if (otherDur) otherDur.innerText = 'Voice Note';
+                        }
+                    }
+                });
+
+                audio.play();
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><rect x="7" y="5" width="3" height="14" fill="currentColor"></rect><rect x="14" y="5" width="3" height="14" fill="currentColor"></rect></svg>';
+                if (waveform) waveform.classList.add('is-playing');
+
+                audio.ontimeupdate = () => {
+                    if (durationElem && audio.duration && !isNaN(audio.duration)) {
+                        const cur = Math.floor(audio.currentTime);
+                        const mins = String(Math.floor(cur / 60)).padStart(2, '0');
+                        const secs = String(cur % 60).padStart(2, '0');
+                        durationElem.innerText = `${mins}:${secs}`;
+                    }
+                };
+
+                audio.onended = () => {
+                    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5L19 12L8 19V5Z"/></svg>';
+                    if (waveform) waveform.classList.remove('is-playing');
+                    if (durationElem) durationElem.innerText = 'Voice Note';
+                };
+            } else {
+                audio.pause();
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5L19 12L8 19V5Z"/></svg>';
+                if (waveform) waveform.classList.remove('is-playing');
+            }
+        }
+
+        // ==========================================
+        // EVENT LISTENERS BINDINGS
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initChat();
+
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const attachmentBtn = document.getElementById('attachmentBtn');
+            const fileUploadInput = document.getElementById('fileUploadInput');
+            const cameraBtn = document.getElementById('cameraBtn');
+            const cameraUploadInput = document.getElementById('cameraUploadInput');
+            const micBtn = document.getElementById('micBtn');
+            const audioUploadInput = document.getElementById('audioUploadInput');
+
+            // Text input listeners
+            if (messageInput) {
+                messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    } else {
+                        // Send typing status throttled
+                        const now = Date.now();
+                        if (now - lastTypingSent > 3000 && chatHub && currentConversationId > 0) {
+                            lastTypingSent = now;
+                            chatHub.invoke('SendTyping', currentConversationId, isSupportChat ? null : targetUserId, true);
+                            clearTimeout(typingTimeout);
+                            typingTimeout = setTimeout(() => {
+                                if (chatHub && currentConversationId > 0) {
+                                    chatHub.invoke('SendTyping', currentConversationId, isSupportChat ? null : targetUserId, false);
+                                }
+                            }, 4000);
+                        }
+                    }
+                });
+            }
+
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+
+            // File Attachment listener
+            if (attachmentBtn && fileUploadInput) {
+                attachmentBtn.addEventListener('click', () => fileUploadInput.click());
+                fileUploadInput.addEventListener('change', () => handleFileUpload(fileUploadInput, 4));
+            }
+
+            // Camera button -> Open Live Camera Modal
+            if (cameraBtn) {
+                cameraBtn.addEventListener('click', openCameraModal);
+            }
+            if (cameraUploadInput) {
+                cameraUploadInput.addEventListener('change', () => handleFileUpload(cameraUploadInput, 2));
+            }
+
+            // Camera Modal Controls
+            const closeCameraBtn = document.getElementById('closeCameraBtn');
+            const switchCameraBtn = document.getElementById('switchCameraBtn');
+            const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+            const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+            const sendCapturedPhotoBtn = document.getElementById('sendCapturedPhotoBtn');
+            const cameraModalOverlay = document.getElementById('cameraModalOverlay');
+
+            if (closeCameraBtn) closeCameraBtn.addEventListener('click', closeCameraModal);
+            if (switchCameraBtn) switchCameraBtn.addEventListener('click', switchCamera);
+            if (capturePhotoBtn) capturePhotoBtn.addEventListener('click', capturePhoto);
+            if (retakePhotoBtn) retakePhotoBtn.addEventListener('click', retakePhoto);
+            if (sendCapturedPhotoBtn) sendCapturedPhotoBtn.addEventListener('click', sendCapturedPhoto);
+
+            if (cameraModalOverlay) {
+                cameraModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === cameraModalOverlay) {
+                        closeCameraModal();
+                    }
+                });
+            }
+
+            // Microphone button -> WhatsApp style live recording
+            if (micBtn) {
+                micBtn.addEventListener('click', startVoiceRecording);
+            }
+            if (audioUploadInput) {
+                audioUploadInput.addEventListener('change', () => handleFileUpload(audioUploadInput, 3));
+            }
+
+            const cancelVoiceBtn = document.getElementById('cancelVoiceBtn');
+            const sendVoiceBtn = document.getElementById('sendVoiceBtn');
+
+            if (cancelVoiceBtn) cancelVoiceBtn.addEventListener('click', cancelVoiceRecording);
+            if (sendVoiceBtn) sendVoiceBtn.addEventListener('click', finishAndSendVoiceRecording);
+
+            // Escape key handler
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeCameraModal();
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        cancelVoiceRecording();
+                    }
+                }
+            });
+
+            // Call buttons (Header)
+            const headerAudioCallBtn = document.getElementById('headerAudioCallBtn');
+            const headerVideoCallBtn = document.getElementById('headerVideoCallBtn');
+            if (headerAudioCallBtn) headerAudioCallBtn.addEventListener('click', handleVoiceCallClick);
+            if (headerVideoCallBtn) headerVideoCallBtn.addEventListener('click', handleVideoCallClick);
+
+            // Interest Card action buttons
+            const interestCardChatBtn = document.getElementById('interestCardChatBtn');
+            const interestCardAudioBtn = document.getElementById('interestCardAudioBtn');
+            const interestCardVideoBtn = document.getElementById('interestCardVideoBtn');
+            const interestCardProfileBtn = document.getElementById('interestCardProfileBtn');
+
+            if (interestCardChatBtn) {
+                interestCardChatBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const card = document.getElementById('chatInterestCard');
+                    if (card) card.style.display = 'none';
+                    const input = document.getElementById('messageInput');
+                    if (input) input.focus();
+                });
+            }
+
+            if (interestCardAudioBtn) {
+                interestCardAudioBtn.addEventListener('click', handleVoiceCallClick);
+            }
+
+            if (interestCardVideoBtn) {
+                interestCardVideoBtn.addEventListener('click', handleVideoCallClick);
+            }
+
+            if (interestCardProfileBtn) {
+                interestCardProfileBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (targetUserId > 0) {
+                        window.location.href = `/profile/${targetUserId}`;
+                    }
+                });
+            }
+        });
+
+        // ==========================================
+        // CALL & INTEREST CARD FUNCTIONS
+        // ==========================================
+        async function checkAndShowInterestCard() {
+            const card = document.getElementById('chatInterestCard') || document.querySelector('.interest-card');
+            if (!card) return;
+
+            if (isSupportChat || targetUserId <= 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/api/chat/interest-status/${targetUserId}`);
+                if (!resp.ok) {
+                    card.style.display = 'none';
+                    return;
+                }
+                const data = await resp.json();
+                
+                if (data.isAccepted && data.showInterestCard) {
+                    card.style.display = 'block';
+                    // Mark as shown so it doesn't appear next time
+                    await fetch(`/api/chat/interest-card-shown/${targetUserId}`, { method: 'POST' });
+                } else {
+                    card.style.display = 'none';
+                }
+            } catch(e) {
+                console.error('Interest status check error:', e);
+                card.style.display = 'none';
+            }
+        }
+
+        async function handleVoiceCallClick(e) {
+            if (e) e.preventDefault();
+            if (isSupportChat) {
+                showCallPopup("Voice Call", "Calls are not available in Support Chat.", false);
+                return;
+            }
+            if (!targetUserId || targetUserId <= 0) return;
+
+            try {
+                const resp = await fetch(`/api/call/check-permission/${targetUserId}?callType=0`);
+                const permData = await resp.json();
+                
+                if (!permData.allowed) {
+                    if (permData.interestRequired) {
+                        showCallPopup("Interest Required", permData.reason || "You need mutual interest acceptance before making calls.", false);
+                    } else if (permData.requiresUpgrade || permData.audioLimitReached) {
+                        showCallPopup("Plan Limit Reached", permData.reason || "Upgrade your plan to make audio calls.", true);
+                    } else {
+                        showCallPopup("Cannot Call", permData.reason || "Unable to make this call.", false);
+                    }
+                    return;
+                }
+                window.location.href = `/call/voice/${targetUserId}`;
+            } catch(err) {
+                console.error('Call permission error:', err);
+                window.location.href = `/call/voice/${targetUserId}`;
+            }
+        }
+
+        async function handleVideoCallClick(e) {
+            if (e) e.preventDefault();
+            if (isSupportChat) {
+                showCallPopup("Video Call", "Calls are not available in Support Chat.", false);
+                return;
+            }
+            if (!targetUserId || targetUserId <= 0) return;
+
+            try {
+                const resp = await fetch(`/api/call/check-permission/${targetUserId}?callType=1`);
+                const permData = await resp.json();
+                
+                if (!permData.allowed) {
+                    if (permData.interestRequired) {
+                        showCallPopup("Interest Required", permData.reason || "You need mutual interest acceptance before making calls.", false);
+                    } else if (permData.requiresUpgrade || permData.videoLimitReached) {
+                        showCallPopup("Plan Limit Reached", permData.reason || "Upgrade your plan to make video calls.", true);
+                    } else {
+                        showCallPopup("Cannot Call", permData.reason || "Unable to make this call.", false);
+                    }
+                    return;
+                }
+                window.location.href = `/call/video/${targetUserId}`;
+            } catch(err) {
+                console.error('Call permission error:', err);
+                window.location.href = `/call/video/${targetUserId}`;
+            }
+        }
+
+        function showCallPopup(title, message, requiresUpgrade) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: requiresUpgrade ? 'warning' : 'info',
+                    title: title,
+                    text: message,
+                    confirmButtonColor: '#007b3d',
+                    confirmButtonText: requiresUpgrade ? 'View Premium Plans' : 'OK',
+                    showCancelButton: requiresUpgrade,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed && requiresUpgrade) {
+                        window.location.href = '/chat/my-premium';
+                    }
+                });
+                return;
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:360px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                    <h3 style="margin:0 0 8px;font-size:18px;color:#333;">${escapeHtml(title)}</h3>
+                    <p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.5;">${escapeHtml(message)}</p>
+                    <button onclick="this.closest('div').parentElement.remove(); ${requiresUpgrade ? "window.location.href='/chat/my-premium';" : ""}" 
+                            style="background:#007b3d;color:#fff;border:none;border-radius:24px;padding:10px 28px;font-size:14px;cursor:pointer;">
+                        ${requiresUpgrade ? 'View Premium Plans' : 'OK'}
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        }
+    </script>
+}

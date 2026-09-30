@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence;
 
@@ -10,9 +11,11 @@ using Persistence;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260925112342_AddMessageCredits")]
+    partial class AddMessageCredits
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -229,62 +232,6 @@ namespace Persistence.Migrations
                         .HasName("pk_about");
 
                     b.ToTable("about", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.AudioCallContact", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    b.Property<long>("ContactUserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("contact_user_id");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("longtext")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("created_on");
-
-                    b.Property<DateTime>("FirstCalledAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("first_called_at");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("is_active");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("longtext")
-                        .HasColumnName("modified_by");
-
-                    b.Property<DateTime>("ModifiedOn")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("modified_on");
-
-                    b.Property<long>("PlanPurchaseId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("plan_purchase_id");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_audio_call_contacts");
-
-                    b.HasIndex("UserId", "ContactUserId", "PlanPurchaseId")
-                        .HasDatabaseName("ix_audio_call_contacts_user_id_contact_user_id_plan_purchase_id");
-
-                    b.ToTable("audio_call_contacts", (string)null);
                 });
 
             modelBuilder.Entity("Domain.BodyFeatures", b =>
@@ -867,10 +814,6 @@ namespace Persistence.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_on");
-
-                    b.Property<bool>("InterestCardShown")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("interest_card_shown");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
@@ -2285,14 +2228,6 @@ namespace Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<short>("AudioCallContactsPurchased")
-                        .HasColumnType("smallint")
-                        .HasColumnName("audio_call_contacts_purchased");
-
-                    b.Property<short>("AudioCallContactsUsed")
-                        .HasColumnType("smallint")
-                        .HasColumnName("audio_call_contacts_used");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("longtext")
                         .HasColumnName("created_by");
@@ -2340,14 +2275,6 @@ namespace Persistence.Migrations
                     b.Property<long>("UserId")
                         .HasColumnType("bigint")
                         .HasColumnName("user_id");
-
-                    b.Property<short>("VideoCallMinutesPurchased")
-                        .HasColumnType("smallint")
-                        .HasColumnName("video_call_minutes_purchased");
-
-                    b.Property<short>("VideoCallMinutesUsed")
-                        .HasColumnType("smallint")
-                        .HasColumnName("video_call_minutes_used");
 
                     b.Property<short>("ViewCreditsPurchased")
                         .HasColumnType("smallint")

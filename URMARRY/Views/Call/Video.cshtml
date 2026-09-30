@@ -1,0 +1,479 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+                    <div class="chat-wrapper">
+                      
+                        <div class="video-call" style="position: relative; overflow: hidden;">
+
+                            <!-- Main remote video -->
+                            <video class="main-video" id="remoteVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                            <img class="main-video" id="mainVideoPlaceholder" src="/assets/images/videocall.jpg" alt="Video Call" style="width: 100%; height: 100%; object-fit: cover;">
+
+                            <!-- Status Bar -->
+                            <div class="status-bar">
+
+                                <span id="callStatusIndicator">Connecting...</span>
+
+                                <div class="status-right">
+
+                                    <div class="signal">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+
+                                    <div class="wifi"></div>
+
+                                    <div class="battery"></div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- Back -->
+                            <button type="button" class="back-button" onclick="goBack()" title="Back">
+                                ←
+                            </button>
+
+                            <!-- Small caller preview -->
+                            <div class="caller-video" id="callerVideoContainer" style="overflow: hidden;">
+                                <video id="localVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                            </div>
+
+                            <!-- Timer -->
+                            <div class="call-timer" id="timer">
+                                00:00
+                            </div>
+
+                            <!-- Controls -->
+                            <div class="controls">
+
+                                <!-- Speaker -->
+                                <button type="button" class="control control-gray" onclick="toggleSpeaker()" title="Speaker" id="speakerBtn">
+                                    <img src="/assets/images/speaker.svg" alt="Speaker">
+                                </button>
+
+                                <!-- Camera Switch -->
+                                <button type="button" class="control control-gray" onclick="toggleCamera()" title="Switch Camera" id="switchCameraBtn">
+                                    <img src="/assets/images/camera-rotate.svg" alt="Switch Camera">
+                                </button>
+
+                                <!-- Video Mute/Off -->
+                                <button type="button" class="control control-green" onclick="toggleVideo()" title="Toggle Video" id="toggleVideoBtn">
+                                    <img src="/assets/images/video-off.svg" alt="Toggle Video">
+                                </button>
+
+                                <!-- End Call -->
+                                <button type="button" class="control control-red" onclick="endCall()" title="End Call" id="endCallBtn">
+                                    <img src="/assets/images/disconnect.svg" alt="End Call">
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts
+{
+    <script>
+        const currentUserId = @(ViewBag.CurrentUserId ?? 0);
+        const targetUserId = @(ViewBag.TargetUserId ?? 0);
+        const callAllowed = @((ViewBag.CallAllowed ?? false).ToString().ToLower());
+        const callDeniedReason = '@Html.Raw(ViewBag.CallDeniedReason ?? "")';
+        const interestRequired = @((ViewBag.InterestRequired ?? false).ToString().ToLower());
+        const requiresUpgrade = @((ViewBag.RequiresUpgrade ?? false).ToString().ToLower());
+        const isIncoming = @((ViewBag.IsIncoming ?? false).ToString().ToLower());
+        const urlCallLogId = @(ViewBag.CallLogId ?? 0);
+        const urlRoomId = '@Html.Raw(ViewBag.RoomId ?? "")';
+
+        let callHub = null;
+        let currentCallLog = null;
+        let peerConnection = null;
+        let localStream = null;
+        let callTimerInterval = null;
+        let callStartTime = null;
+        let isVideoOff = false;
+        let isSpeakerMuted = false;
+        let currentFacingMode = 'user'; // 'user' or 'environment'
+        let candidateQueue = [];
+
+        async function initCall() {
+            const statusIndicator = document.getElementById('callStatusIndicator');
+
+            if (!callAllowed) {
+                if (statusIndicator) statusIndicator.textContent = callDeniedReason || 'Cannot make this call';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: requiresUpgrade ? 'warning' : 'info',
+                        title: interestRequired ? 'Interest Required' : 'Call Unavailable',
+                        text: callDeniedReason || 'Unable to place video call.',
+                        confirmButtonColor: '#007b3d',
+                        confirmButtonText: requiresUpgrade ? 'View Premium Plans' : 'OK'
+                    }).then(() => {
+                        window.location.href = requiresUpgrade ? '/chat/my-premium' : `/chat/with/${targetUserId}`;
+                    });
+                } else {
+                    setTimeout(() => {
+                        window.location.href = `/chat/with/${targetUserId}`;
+                    }, 3000);
+                }
+                return;
+            }
+
+            try {
+                if (statusIndicator) statusIndicator.textContent = isIncoming ? 'Answering video call...' : 'Connecting...';
+
+                // Connect to CallHub
+                callHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/call?userId=${currentUserId}`)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000])
+                    .build();
+
+                callHub.on('CallAccepted', onCallAccepted);
+                callHub.on('CallRejected', onCallRejected);
+                callHub.on('CallEnded', onCallEnded);
+                callHub.on('ReceiveOffer', onReceiveOffer);
+                callHub.on('ReceiveAnswer', onReceiveAnswer);
+                callHub.on('ReceiveIceCandidate', onReceiveIceCandidate);
+
+                await callHub.start();
+
+                // Setup local WebRTC media (audio + video)
+                await setupWebRTC();
+
+                if (isIncoming) {
+                    // Receiver answering call
+                    currentCallLog = await callHub.invoke('AnswerCall', {
+                        callLogId: urlCallLogId,
+                        roomId: urlRoomId
+                    });
+                    if (statusIndicator) statusIndicator.textContent = 'Connecting video...';
+                } else {
+                    // Caller initiating call
+                    if (statusIndicator) statusIndicator.textContent = 'Ringing...';
+                    currentCallLog = await callHub.invoke('InitiateCall', {
+                        receiverId: targetUserId,
+                        callType: 1, // Video
+                        roomId: null
+                    });
+
+                    // Create and send SDP offer
+                    const offer = await peerConnection.createOffer({
+                        offerToReceiveAudio: true,
+                        offerToReceiveVideo: true
+                    });
+                    await peerConnection.setLocalDescription(offer);
+                    await callHub.invoke('SendOffer', targetUserId, JSON.stringify(offer), currentCallLog.roomId);
+                }
+
+            } catch(e) {
+                console.error('Video call initialization failed:', e);
+                if (statusIndicator) statusIndicator.textContent = e.message || 'Call failed';
+            }
+        }
+
+        async function setupWebRTC() {
+            let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+            try {
+                const iceResp = await fetch('/api/call/ice-servers');
+                if (iceResp.ok) {
+                    const iceConfig = await iceResp.json();
+                    if (iceConfig && iceConfig.iceServers) {
+                        iceServers = iceConfig.iceServers;
+                    }
+                }
+            } catch(e) {
+                console.warn('ICE servers fetch fallback:', e);
+            }
+
+            peerConnection = new RTCPeerConnection({ iceServers: iceServers });
+
+            // Acquire local camera and audio
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+
+            // Display local stream in preview box
+            const localVideo = document.getElementById('localVideo');
+            if (localVideo) {
+                localVideo.srcObject = localStream;
+            }
+
+            // Add local tracks to peer connection
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Remote stream handler
+            peerConnection.ontrack = (event) => {
+                const remoteVideo = document.getElementById('remoteVideo');
+                const placeholder = document.getElementById('mainVideoPlaceholder');
+                if (remoteVideo && event.streams && event.streams[0]) {
+                    remoteVideo.srcObject = event.streams[0];
+                    remoteVideo.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                    remoteVideo.play().catch(e => console.warn('Autoplay prevented:', e));
+                }
+            };
+
+            // ICE Candidate handler
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && callHub && currentCallLog) {
+                    callHub.invoke('SendIceCandidate', targetUserId, 
+                        JSON.stringify(event.candidate), currentCallLog.roomId)
+                        .catch(e => console.error('Error sending ICE candidate:', e));
+                }
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                const statusIndicator = document.getElementById('callStatusIndicator');
+                if (!peerConnection) return;
+                if (peerConnection.connectionState === 'connected') {
+                    if (statusIndicator) statusIndicator.textContent = 'Connected';
+                } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
+                    if (statusIndicator) statusIndicator.textContent = 'Call Disconnected';
+                    setTimeout(() => endCall(), 2000);
+                }
+            };
+        }
+
+        async function onCallAccepted(callLog) {
+            currentCallLog = callLog;
+            const statusIndicator = document.getElementById('callStatusIndicator');
+            if (statusIndicator) statusIndicator.textContent = 'Connected';
+            startCallTimer();
+
+            // Re-send offer if caller to ensure newly joined receiver processes it
+            if (!isIncoming && peerConnection && peerConnection.localDescription && callHub && currentCallLog) {
+                try {
+                    await callHub.invoke('SendOffer', targetUserId, JSON.stringify(peerConnection.localDescription), currentCallLog.roomId);
+                } catch(err) {
+                    console.warn('Error re-sending offer:', err);
+                }
+            }
+        }
+
+        async function flushCandidateQueue() {
+            while (candidateQueue.length > 0) {
+                const cand = candidateQueue.shift();
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+                } catch(e) {
+                    console.warn('Error applying queued ICE candidate:', e);
+                }
+            }
+        }
+
+        async function onReceiveOffer(payload) {
+            try {
+                if (!peerConnection) await setupWebRTC();
+                if (payload && payload.sdp) {
+                    const offer = JSON.parse(payload.sdp);
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    await flushCandidateQueue();
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    if (callHub) {
+                        const roomId = payload.roomId || (currentCallLog ? currentCallLog.roomId : urlRoomId);
+                        await callHub.invoke('SendAnswer', payload.callerId || targetUserId, 
+                            JSON.stringify(answer), roomId);
+                    }
+                    const statusIndicator = document.getElementById('callStatusIndicator');
+                    if (statusIndicator) statusIndicator.textContent = 'Connected';
+                    startCallTimer();
+                }
+            } catch(e) {
+                console.error('Error handling SDP offer in video call:', e);
+            }
+        }
+
+        async function onReceiveAnswer(payload) {
+            try {
+                if (peerConnection && payload && payload.sdp) {
+                    const answer = JSON.parse(payload.sdp);
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    await flushCandidateQueue();
+                    const statusIndicator = document.getElementById('callStatusIndicator');
+                    if (statusIndicator) statusIndicator.textContent = 'Connected';
+                    startCallTimer();
+                }
+            } catch(e) {
+                console.error('Error processing SDP answer:', e);
+            }
+        }
+
+        async function onReceiveIceCandidate(payload) {
+            try {
+                if (payload && payload.candidate) {
+                    const candidate = JSON.parse(payload.candidate);
+                    if (peerConnection && peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    } else {
+                        candidateQueue.push(candidate);
+                    }
+                }
+            } catch(e) {
+                console.error('Error adding ICE candidate:', e);
+            }
+        }
+
+        function onCallRejected(callLog) {
+            const statusIndicator = document.getElementById('callStatusIndicator');
+            if (statusIndicator) statusIndicator.textContent = 'Call Declined';
+            cleanup();
+            setTimeout(() => {
+                window.location.href = `/chat/with/${targetUserId}`;
+            }, 2000);
+        }
+
+        function onCallEnded(callLog) {
+            const statusIndicator = document.getElementById('callStatusIndicator');
+            if (statusIndicator) statusIndicator.textContent = 'Call Ended';
+            cleanup();
+            setTimeout(() => {
+                window.location.href = `/chat/with/${targetUserId}`;
+            }, 1500);
+        }
+
+        function startCallTimer() {
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            callStartTime = Date.now();
+            const timerEl = document.getElementById('timer');
+            callTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function toggleSpeaker() {
+            const remoteVideo = document.getElementById('remoteVideo');
+            if (remoteVideo) {
+                isSpeakerMuted = !isSpeakerMuted;
+                remoteVideo.muted = isSpeakerMuted;
+                const speakerBtn = document.getElementById('speakerBtn');
+                if (speakerBtn) {
+                    speakerBtn.style.opacity = isSpeakerMuted ? '0.5' : '1';
+                }
+            }
+        }
+
+        async function toggleCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.stop();
+                }
+
+                try {
+                    const newStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } }
+                    });
+                    const newVideoTrack = newStream.getVideoTracks()[0];
+                    if (newVideoTrack) {
+                        localStream.removeTrack(videoTrack);
+                        localStream.addTrack(newVideoTrack);
+
+                        const localVideo = document.getElementById('localVideo');
+                        if (localVideo) localVideo.srcObject = localStream;
+
+                        // Replace sender track on peerConnection
+                        if (peerConnection) {
+                            const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                            if (sender) {
+                                sender.replaceTrack(newVideoTrack);
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.error('Failed to switch camera:', e);
+                }
+            }
+        }
+
+        function toggleVideo() {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    isVideoOff = !isVideoOff;
+                    videoTrack.enabled = !isVideoOff;
+                    const toggleBtn = document.getElementById('toggleVideoBtn');
+                    if (toggleBtn) {
+                        toggleBtn.style.opacity = isVideoOff ? '0.5' : '1';
+                    }
+                }
+            }
+        }
+
+        function goBack() {
+            if (currentCallLog) {
+                endCall();
+            } else {
+                cleanup();
+                window.location.href = `/chat/with/${targetUserId}`;
+            }
+        }
+
+        async function endCall() {
+            const statusIndicator = document.getElementById('callStatusIndicator');
+            if (statusIndicator) statusIndicator.textContent = 'Ending Call...';
+
+            if (currentCallLog && callHub) {
+                try {
+                    await callHub.invoke('EndCall', { 
+                        callLogId: currentCallLog.id || currentCallLog.Id, 
+                        reason: 'NormalHangup' 
+                    });
+                } catch(e) { 
+                    console.error('EndCall invoke error:', e); 
+                }
+            }
+            cleanup();
+            window.location.href = `/chat/with/${targetUserId}`;
+        }
+
+        function cleanup() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            cleanup();
+        });
+
+        document.addEventListener('DOMContentLoaded', initCall);
+    </script>
+}

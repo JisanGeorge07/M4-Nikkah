@@ -1,0 +1,439 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+                    <div class="chat-wrapper">
+                      
+                        <div class="phonee">
+
+                            <!-- Status Bar -->
+                            <div class="status-bar">
+                                <span>9:41</span>
+
+                                <div class="status-icons">
+                                    <div class="signal">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+
+                                    <span class="wifi">⌁</span>
+
+                                    <span class="battery"></span>
+                                </div>
+                            </div>
+
+                            <!-- Call Content -->
+                            <div class="call-content">
+
+                                <!-- Replace profile.jpg with your profile image -->
+                                <img src="/assets/images/chat-img2.jpg" alt="Profile" class="profile-image2" id="callerPhoto">
+
+                                <div class="name" id="callerName">Loading...</div>
+
+                                <div class="incoming" id="callStatusText">
+                                    Connecting...
+                                </div>
+
+                                <!-- Timer -->
+                                <div class="timer" id="timer">
+                                    00:00
+                                </div>
+
+                                <!-- Controls -->
+                                <div class="controls">
+
+                                    <button type="button" class="control gray" title="Speaker" id="speakerBtn" onclick="toggleSpeaker()">
+                                        <img src="/assets/images/speaker.svg" alt="Speaker">
+                                    </button>
+
+                                    <button type="button" class="control gray" title="Mute" id="muteBtn" onclick="toggleMute()">
+                                        <img src="/assets/images/report.svg" alt="Mute">
+                                    </button>
+
+                                    <button type="button" class="control greenvideo" title="Message" id="messageBtn" onclick="goToChat()">
+                                        <img src="/assets/images/message.svg" alt="Message">
+                                    </button>
+
+                                    <button type="button" class="control red" title="End Call" id="endCallBtn" onclick="endCall()">
+                                        <img src="/assets/images/disconnect.svg" alt="End Call">
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<audio id="remoteAudio" autoplay playsinline style="display: none;"></audio>
+
+@section Scripts
+{
+    <script>
+        const currentUserId = @(ViewBag.CurrentUserId ?? 0);
+        const targetUserId = @(ViewBag.TargetUserId ?? 0);
+        const callAllowed = @((ViewBag.CallAllowed ?? false).ToString().ToLower());
+        const callDeniedReason = '@Html.Raw(ViewBag.CallDeniedReason ?? "")';
+        const interestRequired = @((ViewBag.InterestRequired ?? false).ToString().ToLower());
+        const requiresUpgrade = @((ViewBag.RequiresUpgrade ?? false).ToString().ToLower());
+        const isIncoming = @((ViewBag.IsIncoming ?? false).ToString().ToLower());
+        const urlCallLogId = @(ViewBag.CallLogId ?? 0);
+        const urlRoomId = '@Html.Raw(ViewBag.RoomId ?? "")';
+
+        let callHub = null;
+        let currentCallLog = null;
+        let peerConnection = null;
+        let localStream = null;
+        let callTimerInterval = null;
+        let callStartTime = null;
+        let isMuted = false;
+        let isSpeakerMuted = false;
+        let candidateQueue = [];
+
+        async function loadTargetUserInfo() {
+            try {
+                const resp = await fetch(`/api/chat/with/${targetUserId}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const nameEl = document.getElementById('callerName');
+                    const photoEl = document.getElementById('callerPhoto');
+                    if (nameEl) nameEl.textContent = data.participantName || 'Member';
+                    if (photoEl && data.participantPhotoUrl) {
+                        photoEl.src = data.participantPhotoUrl;
+                    }
+                }
+            } catch(e) {
+                console.error('Failed to load user info:', e);
+            }
+        }
+
+        async function initCall() {
+            await loadTargetUserInfo();
+
+            const statusEl = document.getElementById('callStatusText');
+
+            if (!callAllowed) {
+                if (statusEl) statusEl.textContent = callDeniedReason || 'Cannot make this call';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: requiresUpgrade ? 'warning' : 'info',
+                        title: interestRequired ? 'Interest Required' : 'Call Unavailable',
+                        text: callDeniedReason || 'Unable to place call.',
+                        confirmButtonColor: '#007b3d',
+                        confirmButtonText: requiresUpgrade ? 'View Premium Plans' : 'OK'
+                    }).then(() => {
+                        window.location.href = requiresUpgrade ? '/chat/my-premium' : `/chat/with/${targetUserId}`;
+                    });
+                } else {
+                    setTimeout(() => {
+                        window.location.href = `/chat/with/${targetUserId}`;
+                    }, 3000);
+                }
+                return;
+            }
+
+            try {
+                if (statusEl) statusEl.textContent = isIncoming ? 'Answering call...' : 'Connecting...';
+
+                // Connect to CallHub
+                callHub = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/call?userId=${currentUserId}`)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000])
+                    .build();
+
+                callHub.on('CallAccepted', onCallAccepted);
+                callHub.on('CallRejected', onCallRejected);
+                callHub.on('CallEnded', onCallEnded);
+                callHub.on('ReceiveOffer', onReceiveOffer);
+                callHub.on('ReceiveAnswer', onReceiveAnswer);
+                callHub.on('ReceiveIceCandidate', onReceiveIceCandidate);
+
+                await callHub.start();
+
+                // Setup local WebRTC media
+                await setupWebRTC();
+
+                if (isIncoming) {
+                    // Receiver answering call
+                    currentCallLog = await callHub.invoke('AnswerCall', {
+                        callLogId: urlCallLogId,
+                        roomId: urlRoomId
+                    });
+                    if (statusEl) statusEl.textContent = 'Connecting audio...';
+                } else {
+                    // Caller initiating call
+                    if (statusEl) statusEl.textContent = 'Ringing...';
+                    currentCallLog = await callHub.invoke('InitiateCall', {
+                        receiverId: targetUserId,
+                        callType: 0, // Voice
+                        roomId: null
+                    });
+
+                    // Create and send SDP offer
+                    const offer = await peerConnection.createOffer({
+                        offerToReceiveAudio: true,
+                        offerToReceiveVideo: false
+                    });
+                    await peerConnection.setLocalDescription(offer);
+                    await callHub.invoke('SendOffer', targetUserId, JSON.stringify(offer), currentCallLog.roomId);
+                }
+
+            } catch(e) {
+                console.error('Call initialization failed:', e);
+                if (statusEl) statusEl.textContent = e.message || 'Call failed';
+            }
+        }
+
+        async function setupWebRTC() {
+            let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+            try {
+                const iceResp = await fetch('/api/call/ice-servers');
+                if (iceResp.ok) {
+                    const iceConfig = await iceResp.json();
+                    if (iceConfig && iceConfig.iceServers) {
+                        iceServers = iceConfig.iceServers;
+                    }
+                }
+            } catch(e) {
+                console.warn('ICE servers fetch fallback:', e);
+            }
+
+            peerConnection = new RTCPeerConnection({ iceServers: iceServers });
+
+            // Acquire local audio microphone
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Remote audio stream handler
+            peerConnection.ontrack = (event) => {
+                const remoteAudio = document.getElementById('remoteAudio');
+                if (remoteAudio && event.streams && event.streams[0]) {
+                    remoteAudio.srcObject = event.streams[0];
+                    remoteAudio.play().catch(e => console.warn('Autoplay prevented:', e));
+                }
+            };
+
+            // ICE Candidate handler
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && callHub && currentCallLog) {
+                    callHub.invoke('SendIceCandidate', targetUserId, 
+                        JSON.stringify(event.candidate), currentCallLog.roomId)
+                        .catch(e => console.error('Error sending ICE candidate:', e));
+                }
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                const statusEl = document.getElementById('callStatusText');
+                if (!peerConnection) return;
+                if (peerConnection.connectionState === 'connected') {
+                    if (statusEl) statusEl.textContent = 'Connected';
+                } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
+                    if (statusEl) statusEl.textContent = 'Call Disconnected';
+                    setTimeout(() => endCall(), 2000);
+                }
+            };
+        }
+
+        async function onCallAccepted(callLog) {
+            currentCallLog = callLog;
+            const statusEl = document.getElementById('callStatusText');
+            if (statusEl) statusEl.textContent = 'Connected';
+            startCallTimer();
+
+            // Re-send offer if caller to ensure newly joined receiver processes it
+            if (!isIncoming && peerConnection && peerConnection.localDescription && callHub && currentCallLog) {
+                try {
+                    await callHub.invoke('SendOffer', targetUserId, JSON.stringify(peerConnection.localDescription), currentCallLog.roomId);
+                } catch(err) {
+                    console.warn('Error re-sending offer:', err);
+                }
+            }
+        }
+
+        async function flushCandidateQueue() {
+            while (candidateQueue.length > 0) {
+                const cand = candidateQueue.shift();
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+                } catch(e) {
+                    console.warn('Error applying queued ICE candidate:', e);
+                }
+            }
+        }
+
+        async function onReceiveOffer(payload) {
+            try {
+                if (!peerConnection) await setupWebRTC();
+                if (payload && payload.sdp) {
+                    const offer = JSON.parse(payload.sdp);
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    await flushCandidateQueue();
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    if (callHub) {
+                        const roomId = payload.roomId || (currentCallLog ? currentCallLog.roomId : urlRoomId);
+                        await callHub.invoke('SendAnswer', payload.callerId || targetUserId, 
+                            JSON.stringify(answer), roomId);
+                    }
+                    const statusEl = document.getElementById('callStatusText');
+                    if (statusEl) statusEl.textContent = 'Connected';
+                    startCallTimer();
+                }
+            } catch(e) {
+                console.error('Error handling SDP offer:', e);
+            }
+        }
+
+        async function onReceiveAnswer(payload) {
+            try {
+                if (peerConnection && payload && payload.sdp) {
+                    const answer = JSON.parse(payload.sdp);
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    await flushCandidateQueue();
+                    const statusEl = document.getElementById('callStatusText');
+                    if (statusEl) statusEl.textContent = 'Connected';
+                    startCallTimer();
+                }
+            } catch(e) {
+                console.error('Error processing SDP answer:', e);
+            }
+        }
+
+        async function onReceiveIceCandidate(payload) {
+            try {
+                if (payload && payload.candidate) {
+                    const candidate = JSON.parse(payload.candidate);
+                    if (peerConnection && peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    } else {
+                        candidateQueue.push(candidate);
+                    }
+                }
+            } catch(e) {
+                console.error('Error adding ICE candidate:', e);
+            }
+        }
+
+        function onCallRejected(callLog) {
+            const statusEl = document.getElementById('callStatusText');
+            if (statusEl) statusEl.textContent = 'Call Declined';
+            cleanup();
+            setTimeout(() => {
+                window.location.href = `/chat/with/${targetUserId}`;
+            }, 2000);
+        }
+
+        function onCallEnded(callLog) {
+            const statusEl = document.getElementById('callStatusText');
+            if (statusEl) statusEl.textContent = 'Call Ended';
+            cleanup();
+            setTimeout(() => {
+                window.location.href = `/chat/with/${targetUserId}`;
+            }, 1500);
+        }
+
+        function startCallTimer() {
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            callStartTime = Date.now();
+            const timerEl = document.getElementById('timer');
+            callTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function toggleMute() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    isMuted = !isMuted;
+                    audioTrack.enabled = !isMuted;
+                    const muteBtn = document.getElementById('muteBtn');
+                    if (muteBtn) {
+                        muteBtn.style.opacity = isMuted ? '0.5' : '1';
+                        muteBtn.title = isMuted ? 'Unmute' : 'Mute';
+                    }
+                }
+            }
+        }
+
+        function toggleSpeaker() {
+            const remoteAudio = document.getElementById('remoteAudio');
+            if (remoteAudio) {
+                isSpeakerMuted = !isSpeakerMuted;
+                remoteAudio.muted = isSpeakerMuted;
+                const speakerBtn = document.getElementById('speakerBtn');
+                if (speakerBtn) {
+                    speakerBtn.style.opacity = isSpeakerMuted ? '0.5' : '1';
+                }
+            }
+        }
+
+        function goToChat() {
+            window.location.href = `/chat/with/${targetUserId}`;
+        }
+
+        async function endCall() {
+            const statusEl = document.getElementById('callStatusText');
+            if (statusEl) statusEl.textContent = 'Ending Call...';
+
+            if (currentCallLog && callHub) {
+                try {
+                    await callHub.invoke('EndCall', { 
+                        callLogId: currentCallLog.id || currentCallLog.Id, 
+                        reason: 'NormalHangup' 
+                    });
+                } catch(e) { 
+                    console.error('EndCall invoke error:', e); 
+                }
+            }
+            cleanup();
+            window.location.href = `/chat/with/${targetUserId}`;
+        }
+
+        function cleanup() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            cleanup();
+        });
+
+        document.addEventListener('DOMContentLoaded', initCall);
+    </script>
+}

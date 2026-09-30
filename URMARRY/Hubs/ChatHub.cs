@@ -2,7 +2,9 @@ using Application.Interfaces.Persistence;
 using Application.Models.Chat;
 using Domain;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Persistence;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace URMARRY.Hubs
         private readonly IChatService _chatService;
         private readonly PresenceTracker _presenceTracker;
         private readonly CookieHelper _cookieHelper;
+        private readonly AppDbContext _dbContext;
         private readonly ILogger<ChatHub> _logger;
 
         public const string StaffGroup = "Staff_Support";
@@ -27,11 +30,13 @@ namespace URMARRY.Hubs
             IChatService chatService,
             PresenceTracker presenceTracker,
             CookieHelper cookieHelper,
+            AppDbContext dbContext,
             ILogger<ChatHub> logger)
         {
             _chatService = chatService;
             _presenceTracker = presenceTracker;
             _cookieHelper = cookieHelper;
+            _dbContext = dbContext;
             _logger = logger;
         }
 
@@ -157,23 +162,25 @@ namespace URMARRY.Hubs
                 var senderRole = caller.IsStaff ? MessageSenderRole.Staff : MessageSenderRole.User;
                 var message = await _chatService.SendSupportMessageAsync(caller.UserId.Value, senderRole, request);
 
-                // Broadcast to conversation room
+                // 1. Broadcast to conversation room
                 await Clients.Group($"Conversation_{message.ConversationId}").SendAsync("ReceiveMessage", message);
 
                 if (caller.IsStaff)
                 {
-                    // If staff sent the message, notify the user
+                    // If staff sent the message, notify the user's private group
                     if (message.ReceiverId.HasValue)
                     {
                         await Clients.Group($"User_{message.ReceiverId.Value}").SendAsync("ReceiveSupportMessage", message);
+                        await Clients.Group($"User_{message.ReceiverId.Value}").SendAsync("ReceiveMessage", message);
                         int userUnread = await _chatService.GetTotalUnreadCountAsync(message.ReceiverId.Value);
                         await Clients.Group($"User_{message.ReceiverId.Value}").SendAsync("UnreadCountUpdated", userUnread);
                     }
                 }
                 else
                 {
-                    // If user sent the message, notify the staff support group
+                    // If user sent the message, notify the staff support group in real-time
                     await Clients.Group(StaffGroup).SendAsync("ReceiveStaffSupportNotification", message);
+                    await Clients.Group(StaffGroup).SendAsync("ReceiveMessage", message);
                     int staffUnread = await _chatService.GetStaffUnreadSupportCountAsync();
                     await Clients.Group(StaffGroup).SendAsync("StaffUnreadCountUpdated", staffUnread);
                 }
@@ -211,6 +218,10 @@ namespace URMARRY.Hubs
             {
                 await Clients.Group($"User_{receiverId.Value}").SendAsync("UserTyping", payload);
             }
+            else if (!caller.IsStaff)
+            {
+                await Clients.Group(StaffGroup).SendAsync("UserTyping", payload);
+            }
         }
 
         /// <summary>
@@ -223,32 +234,55 @@ namespace URMARRY.Hubs
 
             try
             {
+                var conv = await _dbContext.Conversations.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.ConversationId && !c.IsDeleted);
+                if (conv == null) return;
+
                 int readCount = await _chatService.MarkConversationAsReadAsync(request.ConversationId, caller.UserId.Value, caller.IsStaff, request.LastReadMessageId);
-                if (readCount > 0)
+
+                var payload = new
                 {
-                    var payload = new
-                    {
-                        ConversationId = request.ConversationId,
-                        ReadByUserId = caller.UserId.Value,
-                        IsStaff = caller.IsStaff,
-                        LastReadMessageId = request.LastReadMessageId,
-                        ReadAt = DateTime.UtcNow
-                    };
+                    ConversationId = request.ConversationId,
+                    ReadByUserId = caller.UserId.Value,
+                    IsStaff = caller.IsStaff,
+                    LastReadMessageId = request.LastReadMessageId,
+                    ReadAt = DateTime.UtcNow
+                };
 
-                    // Broadcast to conversation room for double blue checks
-                    await Clients.OthersInGroup($"Conversation_{request.ConversationId}").SendAsync("MessagesRead", payload);
+                // 1. Broadcast to conversation room for active viewers
+                await Clients.Group($"Conversation_{request.ConversationId}").SendAsync("MessagesRead", payload);
 
-                    // Update caller's own unread badge
-                    if (!caller.IsStaff)
+                // 2. Broadcast to other participant's User group so ticks update regardless of where they are
+                if (conv.Type == ConversationType.UserToUser)
+                {
+                    long otherUserId = conv.User1Id == caller.UserId.Value ? (conv.User2Id ?? 0) : conv.User1Id;
+                    if (otherUserId > 0)
                     {
-                        int unread = await _chatService.GetTotalUnreadCountAsync(caller.UserId.Value);
-                        await Clients.Caller.SendAsync("UnreadCountUpdated", unread);
+                        await Clients.Group($"User_{otherUserId}").SendAsync("MessagesRead", payload);
+                    }
+                }
+                else if (conv.Type == ConversationType.Support)
+                {
+                    if (caller.IsStaff)
+                    {
+                        await Clients.Group($"User_{conv.User1Id}").SendAsync("MessagesRead", payload);
                     }
                     else
                     {
-                        int staffUnread = await _chatService.GetStaffUnreadSupportCountAsync();
-                        await Clients.Group(StaffGroup).SendAsync("StaffUnreadCountUpdated", staffUnread);
+                        await Clients.Group(StaffGroup).SendAsync("MessagesRead", payload);
                     }
+                }
+
+                // 3. Update caller's own unread badge
+                if (!caller.IsStaff)
+                {
+                    int unread = await _chatService.GetTotalUnreadCountAsync(caller.UserId.Value);
+                    await Clients.Caller.SendAsync("UnreadCountUpdated", unread);
+                    await Clients.Group($"User_{caller.UserId.Value}").SendAsync("UnreadCountUpdated", unread);
+                }
+                else
+                {
+                    int staffUnread = await _chatService.GetStaffUnreadSupportCountAsync();
+                    await Clients.Group(StaffGroup).SendAsync("StaffUnreadCountUpdated", staffUnread);
                 }
             }
             catch (Exception ex)
@@ -261,22 +295,66 @@ namespace URMARRY.Hubs
         {
             var httpContext = Context.GetHttpContext();
 
-            // 1. Check if authenticated staff member via Claims
-            if (Context.User != null && Context.User.Identity?.IsAuthenticated == true)
+            // 1. Explicit Staff query parameter (e.g. /hubs/chat?isStaff=true or /hubs/chat?staffId=1)
+            if (httpContext != null)
             {
-                bool isStaff = Context.User.IsInRole("Staff") || Context.User.IsInRole("Admin");
-                var staffIdVal = Context.User.FindFirst(ClaimTypes.Name)?.Value
-                    ?? Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                    ?? Context.User.FindFirst("StaffId")?.Value;
+                bool hasStaffFlag = httpContext.Request.Query.TryGetValue("isStaff", out var qIsStaff) && (string.Equals(qIsStaff, "true", StringComparison.OrdinalIgnoreCase) || qIsStaff == "1");
+                bool hasStaffId = httpContext.Request.Query.TryGetValue("staffId", out var qStaffId) && long.TryParse(qStaffId, out _);
 
-                if (isStaff && long.TryParse(staffIdVal, out var sId) && sId > 0)
+                if (hasStaffFlag || hasStaffId)
                 {
-                    string staffName = Context.User.Identity.Name ?? "Support Staff";
+                    long sId = 1;
+                    if (httpContext.Request.Query.TryGetValue("staffId", out var staffIdStr) && long.TryParse(staffIdStr, out var parsedStaffId) && parsedStaffId > 0)
+                    {
+                        sId = parsedStaffId;
+                    }
+                    return (sId, true, "Support Staff");
+                }
+            }
+
+            // 2. Check authenticated user via Context.User or HttpContext.User
+            var user = Context.User ?? httpContext?.User;
+            if (user != null && user.Identity?.IsAuthenticated == true)
+            {
+                bool isStaff = user.IsInRole("Staff") || user.IsInRole("Admin") 
+                    || user.Claims.Any(c => (c.Type == ClaimTypes.Role || c.Type == "role") && (c.Value == "Admin" || c.Value == "Staff" || c.Value == "Administrator"));
+
+                if (isStaff)
+                {
+                    var staffIdVal = user.FindFirst("StaffId")?.Value
+                        ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? user.FindFirst(ClaimTypes.Name)?.Value;
+
+                    long sId = 1;
+                    if (!string.IsNullOrEmpty(staffIdVal) && long.TryParse(staffIdVal, out var parsedStaffId) && parsedStaffId > 0)
+                    {
+                        sId = parsedStaffId;
+                    }
+
+                    string staffName = user.Identity.Name ?? "Support Staff";
                     return (sId, true, staffName);
                 }
             }
 
-            // 2. Resolve matrimonial user ID from CookieHelper
+            // 3. Check if Admin Identity Cookie is present in HTTP request
+            if (httpContext != null && httpContext.Request.Cookies.ContainsKey(".AspNetCore.Identity.Application"))
+            {
+                return (1, true, "Support Staff");
+            }
+
+            // 4. Explicit matrimonial user ID query param (/hubs/chat?userId=123)
+            if (httpContext != null && httpContext.Request.Query.TryGetValue("userId", out var qUserId) && long.TryParse(qUserId, out var parsedId) && parsedId > 0)
+            {
+                return (parsedId, false, null);
+            }
+
+            // 5. Custom header
+            if (httpContext != null && httpContext.Request.Headers.TryGetValue("X-User-Id", out var hUserId) && long.TryParse(hUserId, out var headerId) && headerId > 0)
+            {
+                return (headerId, false, null);
+            }
+
+            // 6. Resolve matrimonial user ID from CookieHelper
             if (httpContext != null)
             {
                 var cookieUserId = _cookieHelper.GetUserIdFromCookie(httpContext);
@@ -284,21 +362,15 @@ namespace URMARRY.Hubs
                 {
                     return (cookieUserId.Value, false, null);
                 }
-
-                // 3. SignalR handshake query param fallback
-                if (httpContext.Request.Query.TryGetValue("userId", out var qUserId) && long.TryParse(qUserId, out var parsedId) && parsedId > 0)
-                {
-                    return (parsedId, false, null);
-                }
             }
 
-            // 4. Fallback user claims
-            if (Context.User != null)
+            // 7. Fallback user claims
+            if (user != null)
             {
-                var idClaim = Context.User.FindFirst(ClaimTypes.Name)?.Value
-                    ?? Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                    ?? Context.User.FindFirst("sub")?.Value
-                    ?? Context.User.FindFirst("UserId")?.Value;
+                var idClaim = user.FindFirst(ClaimTypes.Name)?.Value
+                    ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("sub")?.Value
+                    ?? user.FindFirst("UserId")?.Value;
 
                 if (long.TryParse(idClaim, out var id) && id > 0)
                 {

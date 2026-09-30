@@ -274,18 +274,27 @@ namespace URMARRY.Hubs
             var httpContext = Context.GetHttpContext();
             if (httpContext != null)
             {
+                // 1. Explicit SignalR query param (crucial for dual-testing and mobile clients: /hubs/call?userId=123)
+                if (httpContext.Request.Query.TryGetValue("userId", out var qUserId) && long.TryParse(qUserId, out var parsedId) && parsedId > 0)
+                {
+                    return parsedId;
+                }
+
+                // 2. Custom header
+                if (httpContext.Request.Headers.TryGetValue("X-User-Id", out var hUserId) && long.TryParse(hUserId, out var headerId) && headerId > 0)
+                {
+                    return headerId;
+                }
+
+                // 3. Matrimonial user ID from CookieHelper
                 var cookieUserId = _cookieHelper.GetUserIdFromCookie(httpContext);
                 if (cookieUserId.HasValue && cookieUserId.Value > 0)
                 {
                     return cookieUserId.Value;
                 }
-
-                if (httpContext.Request.Query.TryGetValue("userId", out var qUserId) && long.TryParse(qUserId, out var parsedId) && parsedId > 0)
-                {
-                    return parsedId;
-                }
             }
 
+            // 4. Fallback user claims
             if (Context.User != null)
             {
                 var idClaim = Context.User.FindFirst(ClaimTypes.Name)?.Value

@@ -36,6 +36,9 @@ namespace Domain
         public int User2UnreadCount { get; set; } = 0;
         public int SupportUnreadCount { get; set; } = 0;
 
+        // Interest card first-time display tracking
+        public bool InterestCardShown { get; set; } = false;
+
         // Navigation
         public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     }

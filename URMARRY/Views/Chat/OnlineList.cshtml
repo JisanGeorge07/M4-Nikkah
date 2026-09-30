@@ -1,0 +1,539 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+        color: #333;
+    }
+
+    .sidebar-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff !important;
+    }
+
+    .category-link:hover {
+        background-color: #e2e6ea !important;
+    }
+
+    .profile-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        width: 100%;
+        max-width: 300px;
+        height: 380px;
+        margin: 0 auto;
+        cursor: pointer;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Background zoom */
+    .profile-bg {
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s ease;
+    }
+
+    .profile-card:hover .profile-bg {
+        transform: scale(1.1);
+    }
+
+    /* Overlay gradient */
+    .profile-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.2), transparent);
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover .profile-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.2), transparent);
+    }
+
+    /* Buttons */
+    .action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    i.uil {
+        font-size: 18px;
+        width: 20px;
+    }
+</style>
+
+
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+                        
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+							
+                    <div class="messages-wrapper">
+								
+                        <div class="">
+
+                            <!-- ==========================
+         TOP TABS
+    =========================== -->
+
+                            <div class="top-tabs">
+
+                                <div class="top-tab active" data-main-tab="online">
+                                    Online Now
+                                </div>
+
+                                <div class="top-tab" data-main-tab="recent">
+                                    Recently Active
+                                </div>
+
+                                <div class="top-tab" data-main-tab="matches">
+                                    My Matches
+                                </div>
+
+                            </div>
+
+
+                            <!-- ==========================
+         FILTER BAR
+    =========================== -->
+
+                            <div class="filter-bar">
+
+                                <div class="filter-tab active" data-filter="all">
+                                    All
+                                </div>
+
+                                <div class="filter-tab" data-filter="profile">
+                                    Profile ID
+                                </div>
+
+                                <div class="filter-tab" data-filter="age">
+                                    Age
+                                </div>
+
+                                <div class="filter-tab" data-filter="location">
+                                    Location
+                                </div>
+
+                                <div class="filter-tab" data-filter="profession">
+                                    Profession
+                                </div>
+
+                                <div class="filter-button" id="openFilter">
+
+                                    <div class="filter-icon">
+
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ==========================
+         PROFILES
+    =========================== -->
+
+                            <div class="profile-container">
+
+                                <div class="profile-list" id="profileList">
+                                    <div class="text-muted p-4 text-center" style="width: 100%;">Loading profiles...</div>
+                                </div>
+
+
+                                <div class="no-results" id="noResults">
+                                    No profiles found.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ==========================
+     FILTER POPUP
+=========================== -->
+
+                        <div class="filter-overlay" id="filterOverlay">
+
+                            <div class="filter-panel">
+
+                                <div class="filter-panel-header">
+
+                                    <h3>Filter Profiles</h3>
+
+                                    <button class="close-filter" id="closeFilter">
+                                        ×
+                                    </button>
+
+                                </div>
+
+
+                                <!-- Profile ID -->
+
+                                <div class="filter-group">
+
+                                    <label>Profile ID</label>
+
+                                    <input type="text" id="profileIdInput" placeholder="Enter Profile ID">
+
+                                </div>
+
+
+                                <!-- Age -->
+
+                                <div class="filter-group">
+
+                                    <label>Age</label>
+
+                                    <select id="ageInput">
+
+                                        <option value="">Any Age</option>
+
+                                        <option value="25">25 - 27</option>
+
+                                        <option value="28">28 - 30</option>
+
+                                        <option value="31">31 - 35</option>
+
+                                        <option value="36">36+</option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- Location -->
+
+                                <div class="filter-group">
+
+                                    <label>Location</label>
+
+                                    <select id="locationInput">
+
+                                        <option value="">All Locations</option>
+
+                                        <option value="Malappuram">
+                                            Malappuram
+                                        </option>
+
+                                        <option value="Kozhikode">
+                                            Kozhikode
+                                        </option>
+
+                                        <option value="Kochi">
+                                            Kochi
+                                        </option>
+
+                                        <option value="Thrissur">
+                                            Thrissur
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- Profession -->
+
+                                <div class="filter-group">
+
+                                    <label>Profession</label>
+
+                                    <select id="professionInput">
+
+                                        <option value="">All Professions</option>
+
+                                        <option value="Professor">
+                                            Professor
+                                        </option>
+
+                                        <option value="Engineer">
+                                            Engineer
+                                        </option>
+
+                                        <option value="Doctor">
+                                            Doctor
+                                        </option>
+
+                                        <option value="Business">
+                                            Business
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <div class="filter-actions">
+
+                                    <button class="clear-btn" id="clearFilter">
+                                        Clear
+                                    </button>
+
+                                    <button class="apply-btn" id="applyFilter">
+                                        Apply Filter
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+	
+								
+
+                    </div>
+								
+								
+								
+                </div>
+
+                            
+                            
+
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts
+{
+    <script>
+        const currentUserId = @(ViewBag.CurrentUserId ?? 0);
+        let currentTab = 'online';
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getAvatar(imagePath, gender) {
+            const defaultImg = (gender && String(gender).toLowerCase() === 'female')
+                ? '/assets/images/default-user-women.png'
+                : '/assets/images/default-user-men.png';
+
+            if (imagePath && imagePath.trim() !== '' && !imagePath.includes('user-default.png')) {
+                return (imagePath.startsWith('http') || imagePath.startsWith('/')) ? imagePath : '/' + imagePath;
+            }
+            return defaultImg;
+        }
+
+        async function loadProfiles() {
+            const profileList = document.getElementById("profileList");
+            const noResults = document.getElementById("noResults");
+            if (!profileList) return;
+
+            profileList.innerHTML = '<div class="text-muted p-4 text-center" style="width: 100%;">Loading profiles...</div>';
+            if (noResults) noResults.classList.remove("show");
+
+            const profileId = document.getElementById("profileIdInput")?.value?.trim() || "";
+            const age = document.getElementById("ageInput")?.value?.trim() || "";
+            const location = document.getElementById("locationInput")?.value?.trim() || "";
+            const profession = document.getElementById("professionInput")?.value?.trim() || "";
+
+            const params = new URLSearchParams({
+                tab: currentTab,
+                profileId: profileId,
+                age: age,
+                location: location,
+                profession: profession
+            });
+
+            try {
+                const resp = await fetch(`/api/chat/online-list?${params.toString()}`);
+                if (!resp.ok) {
+                    profileList.innerHTML = '';
+                    if (noResults) noResults.classList.add("show");
+                    return;
+                }
+
+                const profiles = await resp.json();
+                if (!profiles || profiles.length === 0) {
+                    profileList.innerHTML = '';
+                    if (noResults) noResults.classList.add("show");
+                    return;
+                }
+
+                if (noResults) noResults.classList.remove("show");
+
+                let html = '';
+                profiles.forEach(p => {
+                    const name = escapeHtml(p.name || 'Member');
+                    const defaultImg = (p.gender && String(p.gender).toLowerCase() === 'female') ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png';
+                    const photo = getAvatar(p.imagePath, p.gender);
+                    const regId = escapeHtml(p.registerNumber ? (p.registerNumber.startsWith('ID') ? p.registerNumber : 'ID : ' + p.registerNumber) : 'ID : ' + p.id);
+                    const ageText = p.age ? `${p.age}yrs` : '25yrs';
+                    const job = escapeHtml(p.profession || 'Professional');
+                    const loc = escapeHtml(p.location || 'Kerala');
+                    const dotClass = p.isOnline ? 'status-dot' : 'status-dot offline';
+                    const timeClass = p.isOnline ? 'profile-time online' : 'profile-time';
+
+                    html += `
+                        <div class="profile-card2" data-status="${p.status}">
+                            <div class="profile-image-box">
+                                <img src="${photo}" alt="" onerror="this.onerror=null; this.src='${defaultImg}';">
+                                <span class="${dotClass}"></span>
+                            </div>
+                            <div class="profile-info">
+                                <div class="profile-name">${name}</div>
+                                <div class="profile-details">
+                                    ${regId} – ${ageText}<br>
+                                    Job: ${job}<br>
+                                    ${loc}
+                                </div>
+                            </div>
+                            <div class="profile-action">
+                                <div class="${timeClass}">
+                                    ${p.timeText || 'Online Now'}
+                                </div>
+                                <button class="message-btn" onclick="sendMessage(${p.id})">
+                                    Message
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                profileList.innerHTML = html;
+            } catch (err) {
+                console.error("Error loading profiles:", err);
+                profileList.innerHTML = '';
+                if (noResults) noResults.classList.add("show");
+            }
+        }
+
+        function sendMessage(userId) {
+            window.location.href = `/chat/with/${userId}`;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // TOP TABS
+            const topTabs = document.querySelectorAll(".top-tab");
+            topTabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    topTabs.forEach(item => item.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.dataset.mainTab || 'online';
+                    loadProfiles();
+                });
+            });
+
+
+            // FILTER POPUP CONTROLS
+            const filterOverlay = document.getElementById("filterOverlay");
+            const openFilter = document.getElementById("openFilter");
+            const closeFilter = document.getElementById("closeFilter");
+            const applyFilter = document.getElementById("applyFilter");
+            const clearFilter = document.getElementById("clearFilter");
+
+            if (openFilter && filterOverlay) {
+                openFilter.addEventListener("click", () => filterOverlay.classList.add("show"));
+            }
+            if (closeFilter && filterOverlay) {
+                closeFilter.addEventListener("click", () => filterOverlay.classList.remove("show"));
+            }
+            if (filterOverlay) {
+                filterOverlay.addEventListener("click", function (e) {
+                    if (e.target === filterOverlay) filterOverlay.classList.remove("show");
+                });
+            }
+
+            // FILTER TABS BAR
+            const filterTabs = document.querySelectorAll(".filter-tab");
+            filterTabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    filterTabs.forEach(item => item.classList.remove("active"));
+                    this.classList.add("active");
+                    const type = this.dataset.filter;
+                    if (type === "all") {
+                        if (document.getElementById("profileIdInput")) document.getElementById("profileIdInput").value = "";
+                        if (document.getElementById("ageInput")) document.getElementById("ageInput").value = "";
+                        if (document.getElementById("locationInput")) document.getElementById("locationInput").value = "";
+                        if (document.getElementById("professionInput")) document.getElementById("professionInput").value = "";
+                        loadProfiles();
+                    } else if (filterOverlay) {
+                        filterOverlay.classList.add("show");
+                        if (type === "profile") document.getElementById("profileIdInput")?.focus();
+                        if (type === "age") document.getElementById("ageInput")?.focus();
+                        if (type === "location") document.getElementById("locationInput")?.focus();
+                        if (type === "profession") document.getElementById("professionInput")?.focus();
+                    }
+                });
+            });
+
+            if (applyFilter) {
+                applyFilter.addEventListener("click", function () {
+                    if (filterOverlay) filterOverlay.classList.remove("show");
+                    loadProfiles();
+                });
+            }
+
+            if (clearFilter) {
+                clearFilter.addEventListener("click", function () {
+                    if (document.getElementById("profileIdInput")) document.getElementById("profileIdInput").value = "";
+                    if (document.getElementById("ageInput")) document.getElementById("ageInput").value = "";
+                    if (document.getElementById("locationInput")) document.getElementById("locationInput").value = "";
+                    if (document.getElementById("professionInput")) document.getElementById("professionInput").value = "";
+                    if (filterOverlay) filterOverlay.classList.remove("show");
+                    loadProfiles();
+                });
+            }
+
+            // Initial load
+            loadProfiles();
+
+            // Presence SignalR setup
+            if (typeof signalR !== 'undefined') {
+                const presenceHub = new signalR.HubConnectionBuilder()
+                    .withUrl('/hubs/presence?userId=' + currentUserId)
+                    .withAutomaticReconnect()
+                    .build();
+
+                presenceHub.on('UserOnline', function () {
+                    if (currentTab === 'online') loadProfiles();
+                });
+                presenceHub.on('UserOffline', function () {
+                    if (currentTab === 'online') loadProfiles();
+                });
+                presenceHub.on('UserIsOnline', function () {
+                    if (currentTab === 'online') loadProfiles();
+                });
+                presenceHub.on('UserIsOffline', function () {
+                    if (currentTab === 'online') loadProfiles();
+                });
+                presenceHub.start().catch(err => console.log('PresenceHub connection:', err));
+            }
+        });
+    </script>
+}

@@ -192,9 +192,9 @@ namespace URMARRY.Areas.Admin.Controllers
                             || (f.FollowUpType == FollowUpType.RenewalFollowUp && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember)))
                         )
                         && (
-                            f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
-                            || f.PaymentCompleted
+                            f.PaymentCompleted
                             || staffTransactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
+                            || (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && !f.PaymentLinkSent && f.Profile != null && f.Profile.IsPremiumMember)
                         ))
                     .ToList();
 
@@ -251,7 +251,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         var profileFollowUps = convertedFollowUps.Where(f => f.ProfileId == fu.ProfileId);
                         foreach (var pfu in profileFollowUps)
                         {
-                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                            if (pfu.PaymentAmount.HasValue && pfu.PaymentAmount > 0 && pfu.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && (pfu.PaymentCompleted || !pfu.PaymentLinkSent))
                             {
                                 profileCollection += pfu.PaymentAmount.Value;
                             }

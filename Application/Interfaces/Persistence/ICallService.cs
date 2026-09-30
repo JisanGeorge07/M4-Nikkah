@@ -51,5 +51,20 @@ namespace Application.Interfaces.Persistence
         /// Saves 14-day security call recording metadata (S3 key, URL, duration, expiry date).
         /// </summary>
         Task<bool> SaveCallRecordingMetadataAsync(long callLogId, string s3Key, string recordingUrl, long fileSize, int durationSeconds);
+
+        /// <summary>
+        /// Gets remaining audio call contacts and video call minutes for the active plan.
+        /// </summary>
+        Task<CallCreditStatus> GetCallCreditStatusAsync(long userId);
+
+        /// <summary>
+        /// Consumes 1 audio call contact credit (only if this is the first call to a new profile in the plan cycle).
+        /// </summary>
+        Task<bool> SpendAudioCallContactAsync(long callerId, long receiverId);
+
+        /// <summary>
+        /// Records video call duration against the user's video call minutes quota.
+        /// </summary>
+        Task<bool> RecordVideoCallDurationAsync(long userId, int durationSeconds);
     }
 }
