@@ -1,0 +1,242 @@
+@using Application.Models.Call
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+    var reasons = ViewBag.Reasons as List<CallReportReasonDto> ?? new List<CallReportReasonDto>();
+}
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+                        
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+							
+                    <div class="report-screen">
+
+                        <!-- Header -->
+                        <div class="header">
+                            Reporting &amp; End Call
+                        </div>
+
+                        <!-- White Card -->
+                        <div class="card">
+
+                            <!-- Warning Icon -->
+                            <div class="warning-icon">
+                                <img src="/assets/images/report-page.svg">
+                            </div>
+
+                            <!-- Message -->
+                            <div class="message">
+                                We're sorry to hear that.<br>
+                                Please let us know the reason.
+                            </div>
+
+                            <!-- Reason -->
+                            <div class="form-group">
+
+                                <label class="form-label">
+                                    Select Reason
+                                </label>
+
+                                <div class="select-wrapper">
+
+                                    <select id="reason">
+                                        <option value="">
+                                            Select Reason
+                                        </option>
+                                        @if (reasons != null && reasons.Any())
+                                        {
+                                            foreach (var r in reasons)
+                                            {
+                                                <option value="@r.Reason">
+                                                    @r.Reason
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+
+                                    <span class="select-arrow"></span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Comments -->
+                            <div class="form-group">
+
+                                <label class="form-label">
+                                    Additional Comments (Optional)
+                                </label>
+
+                                <textarea id="comments" maxlength="300"
+                                          placeholder="She was behaving in an inappropriate manner during the video call."></textarea>
+
+                                <div class="char-count">
+                                    <span id="count">0</span>/300
+                                </div>
+
+                            </div>
+
+
+                            <!-- Submit -->
+                            <button class="submit-button" id="submitReportBtn" onclick="submitReport()">
+                                Submit Report &amp; End Call
+                            </button>
+
+
+                            <!-- Note -->
+                            <div class="note">
+                                This member will be temporarily restricted and our team
+                                will review your report.
+                            </div>
+
+                        </div>
+
+                    </div>
+								
+								
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts
+{
+    <script>
+        const targetUserId = @(ViewBag.TargetUserId ?? 0);
+        const callLogId = @(ViewBag.CallLogId ?? 0);
+        const callType = '@Html.Raw(ViewBag.CallType ?? "Voice")';
+        const durationSeconds = @(ViewBag.DurationSeconds ?? 0);
+
+        // Character counter
+        const commentsInput = document.getElementById('comments');
+        const countSpan = document.getElementById('count');
+        if (commentsInput && countSpan) {
+            commentsInput.addEventListener('input', function () {
+                countSpan.textContent = this.value.length;
+            });
+        }
+
+        // Fallback reason loader if needed
+        async function loadReasonsIfEmpty() {
+            const selectEl = document.getElementById('reason');
+            if (selectEl && selectEl.options.length <= 1) {
+                try {
+                    const resp = await fetch('/api/call/report-reasons');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                const opt = document.createElement('option');
+                                opt.value = item.reason || item.Reason;
+                                opt.textContent = item.reason || item.Reason;
+                                selectEl.appendChild(opt);
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error fetching reasons:', e);
+                }
+            }
+        }
+
+        async function submitReport() {
+            const selectEl = document.getElementById('reason');
+            const commentsEl = document.getElementById('comments');
+            const submitBtn = document.getElementById('submitReportBtn');
+
+            const selectedReason = selectEl ? selectEl.value.trim() : '';
+            const comments = commentsEl ? commentsEl.value.trim() : '';
+
+            if (!selectedReason) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Reason Required',
+                        text: 'Please select a reason for reporting before submitting.',
+                        confirmButtonColor: '#007b3d'
+                    });
+                } else {
+                    alert('Please select a reason for reporting.');
+                }
+                if (selectEl) selectEl.focus();
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+            }
+
+            try {
+                const payload = {
+                    reportedUserId: targetUserId,
+                    callLogId: callLogId > 0 ? callLogId : null,
+                    callType: callType.toLowerCase() === 'video' ? 1 : 0,
+                    callDurationSeconds: durationSeconds,
+                    reason: selectedReason,
+                    comments: comments
+                };
+
+                const response = await fetch('/api/call/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    window.location.href = targetUserId > 0 ? `/call/report-thank-you/${targetUserId}` : '/call/report-thank-you';
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData.message || 'An error occurred while submitting your report. Please try again.';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Submission Failed',
+                            text: errMsg,
+                            confirmButtonColor: '#007b3d'
+                        });
+                    } else {
+                        alert(errMsg);
+                    }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Report & End Call';
+                    }
+                }
+            } catch (err) {
+                console.error('Error submitting report:', err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Unable to connect to the server. Please try again.',
+                        confirmButtonColor: '#007b3d'
+                    });
+                } else {
+                    alert('Unable to connect to the server. Please try again.');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Report & End Call';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadReasonsIfEmpty);
+    </script>
+}

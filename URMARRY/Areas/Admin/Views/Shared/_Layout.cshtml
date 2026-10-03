@@ -213,6 +213,22 @@
                             </a>
                         </li>
                         <li>
+                            <a asp-action="Index" asp-controller="CallBackup">
+                                <i class="fas fa-shield-alt"></i>
+                                <span data-key="t-dashboard">Call Backups</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript: void 0;" class="has-arrow">
+                                <i class="fas fa-phone-slash"></i>
+                                <span data-key="t-dashboard">Call Reports</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/admin/call-reports">Call Complaints</a></li>
+                                <li><a href="/admin/call-report-reasons">Report Reasons</a></li>
+                            </ul>
+                        </li>
+                        <li>
                             <a asp-action="GetAll" asp-controller="SocialMedia">
                                 <i class="fas fa-file"></i>
                                 <span data-key="t-dashboard">Social Media</span>

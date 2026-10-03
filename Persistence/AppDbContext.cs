@@ -82,6 +82,8 @@ namespace Persistence;
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<CallLog> CallLogs { get; set; }
     public DbSet<AudioCallContact> AudioCallContacts { get; set; }
+    public DbSet<CallReport> CallReports { get; set; }
+    public DbSet<CallReportReason> CallReportReasons { get; set; }
 
 
 
@@ -152,14 +154,27 @@ namespace Persistence;
         foreach (var entry in base.ChangeTracker.Entries<BaseEntity>()
                      .Where(q => q.State is EntityState.Added or EntityState.Modified))
         {
-            entry.Entity.ModifiedOn = DateTime.UtcNow;
-            entry.Entity.ModifiedBy = username;
-
-
-            if (entry.State == EntityState.Added)
+            if (entry.Entity is ColdLead)
             {
-                entry.Entity.CreatedOn = DateTime.UtcNow;
-                entry.Entity.CreatedBy = username;
+                entry.Entity.ModifiedOn = DateTime.Now;
+                entry.Entity.ModifiedBy = username;
+
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedOn = DateTime.Now;
+                    entry.Entity.CreatedBy = username;
+                }
+            }
+            else
+            {
+                entry.Entity.ModifiedOn = DateTime.UtcNow;
+                entry.Entity.ModifiedBy = username;
+
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedOn = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = username;
+                }
             }
         }
 

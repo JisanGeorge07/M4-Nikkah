@@ -699,7 +699,8 @@
                         <!-- Profile Avatar with soft pulsing effect -->
                         <div class="position-relative my-2" style="width: 96px; height: 96px;">
                             <div class="m4-call-avatar-pulse"></div>
-                            <img id="incomingCallerPhoto" src="/assets/images/chat-img2.jpg" alt="Caller"
+                            <img id="incomingCallerPhoto" src="/assets/images/default-user-men.png" alt="Caller"
+                                 onerror="this.onerror=null; this.src='/assets/images/default-user-men.png';"
                                  style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid #007B3D; box-shadow: 0 6px 18px rgba(0, 123, 61, 0.25); background: #fff;">
                         </div>
 
@@ -818,10 +819,22 @@
 
                     document.getElementById('incomingCallerName').textContent = callLog.callerName || 'Member';
                     document.getElementById('incomingCallerRegNo').textContent = callLog.callerRegisterNumber ? 'Reg ID: ' + callLog.callerRegisterNumber : '';
-                    if (callLog.callerPhotoUrl) {
-                        document.getElementById('incomingCallerPhoto').src = callLog.callerPhotoUrl;
-                    } else {
-                        document.getElementById('incomingCallerPhoto').src = '/assets/images/chat-img2.jpg';
+
+                    const isCallerFemale = callLog.callerGender && String(callLog.callerGender).toLowerCase() === 'female';
+                    const defaultAvatar = isCallerFemale ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png';
+                    const photoEl = document.getElementById('incomingCallerPhoto');
+                    if (photoEl) {
+                        photoEl.onerror = function () {
+                            this.onerror = null;
+                            this.src = defaultAvatar;
+                        };
+                        if (callLog.callerPhotoUrl && callLog.callerPhotoUrl.trim() !== '' && !callLog.callerPhotoUrl.includes('default-user') && !callLog.callerPhotoUrl.includes('chat-img2')) {
+                            photoEl.src = (callLog.callerPhotoUrl.startsWith('http') || callLog.callerPhotoUrl.startsWith('/'))
+                                ? callLog.callerPhotoUrl
+                                : '/' + callLog.callerPhotoUrl;
+                        } else {
+                            photoEl.src = defaultAvatar;
+                        }
                     }
 
                     modal.classList.add('active');

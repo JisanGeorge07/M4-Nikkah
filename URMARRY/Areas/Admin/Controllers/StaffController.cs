@@ -840,8 +840,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     var activePlan = activePlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
                     var latestPlan = userPlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
 
-                    int? remainingCredits = activePlans.Count > 0 
-                        ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed)) 
+                    int? remainingCredits = activePlans.Count > 0
+                        ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed))
                         : (int?)null;
 
                     string membershipStatus;
@@ -892,7 +892,7 @@ namespace URMARRY.Areas.Admin.Controllers
                         Location = locationStr,
                         x.Phone,
                         CreatedOn = x.CreatedOn.ToString("yyyy-MM-dd"),
-                        Status = x.IsPremiumMember ? "Premium" : (x.IsComplete && x.IsVisible && x.IsVerified  ? "Active" : "Pending"),
+                        Status = x.IsPremiumMember ? "Premium" : (x.IsComplete && x.IsVisible && x.IsVerified ? "Active" : "Pending"),
                         x.IsComplete,
                         x.CompletedStep,
                         x.IsVerified,
@@ -919,7 +919,7 @@ namespace URMARRY.Areas.Admin.Controllers
             {
                 var logger = HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Logging.ILogger<StaffController>)) as Microsoft.Extensions.Logging.ILogger<StaffController>;
                 logger?.LogError(ex, "Error occurred in AssignProfilesData endpoint");
-                
+
                 var isPost = HttpContext.Request.Method == "POST";
                 var drawVal = isPost ? Request.Form["draw"] : Request.Query["draw"];
                 return Json(new
@@ -1033,7 +1033,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     // 3. Auto-generate or update Premium Follow-up (or Renewal Follow-up if already Premium)
                     var userProfile = await _userRepository.Get(profileId);
                     var existingPremFollowUp = (await _followUpRepo.Where(f => f.ProfileId == profileId && f.FollowUpType == FollowUpType.PremiumFollowUp && !f.IsDeleted)).FirstOrDefault();
-                    bool isAlreadyConverted = (existingPremFollowUp != null && existingPremFollowUp.LatestInterestStatus == PremiumInterestStatus.Converted && existingPremFollowUp.LatestAdminApprovalStatus == AdminApprovalStatus.Approved) 
+                    bool isAlreadyConverted = (existingPremFollowUp != null && existingPremFollowUp.LatestInterestStatus == PremiumInterestStatus.Converted && existingPremFollowUp.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
                         || (userProfile != null && userProfile.IsPremiumMember);
 
                     if (isAlreadyConverted)
@@ -1414,7 +1414,7 @@ namespace URMARRY.Areas.Admin.Controllers
         #endregion
 
         #region Read-Only Profile View
-        
+
         [HttpGet("/admin/staff/profile/{id:long}")]
         [HttpGet("/admin/staff/view-profile/{id:long}")]
         public async Task<IActionResult> ProfileDetails(long id)
@@ -1642,8 +1642,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     .Where(p => p.ExpiresAt > DateTime.UtcNow)
                     .Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed));
 
-                string expiryDate = activePlan != null 
-                    ? activePlan.ExpiresAt.ToString("yyyy-MM-dd") 
+                string expiryDate = activePlan != null
+                    ? activePlan.ExpiresAt.ToString("yyyy-MM-dd")
                     : (latestPlan != null ? latestPlan.ExpiresAt.ToString("yyyy-MM-dd") + " (Expired)" : "N/A");
 
                 var profileData = new
@@ -1827,8 +1827,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     return Json(new { success = false, message = "All selected follow-up type(s) already exist for this profile." });
                 }
 
-                string msg = createdCount == 1 
-                    ? "Follow-up initialized successfully." 
+                string msg = createdCount == 1
+                    ? "Follow-up initialized successfully."
                     : $"Successfully initialized {createdCount} follow-up(s).";
 
                 if (skippedCount > 0)
@@ -2097,8 +2097,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
 
                 // Filter by Follow-up Schedule (Today's Follow-ups)
-                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
-                    ? scheduleFilter 
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter)
+                    ? scheduleFilter
                     : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
 
                 if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
@@ -2184,56 +2184,56 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
                 else if (sortColumn == "Name")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
                 }
                 else if (sortColumn == "RegisterNumber")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
                 }
                 else if (sortColumn == "Gender")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
                 }
                 else if (sortColumn == "Staff")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.AssignedStaffId) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.AssignedStaffId)
                         : query.OrderByDescending(x => x.AssignedStaffId);
                 }
                 else if (sortColumn == "ContactType")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.LatestContactType) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.LatestContactType)
                         : query.OrderByDescending(x => x.LatestContactType);
                 }
                 else if (sortColumn == "CallStatus")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.LatestCallStatus) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.LatestCallStatus)
                         : query.OrderByDescending(x => x.LatestCallStatus);
                 }
                 else if (sortColumn == "NextFollowUpDate")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.NextFollowUpDate) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.NextFollowUpDate)
                         : query.OrderByDescending(x => x.NextFollowUpDate);
                 }
                 else if (sortColumn == "Status")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.LatestProfileVerificationStatus) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.LatestProfileVerificationStatus)
                         : query.OrderByDescending(x => x.LatestProfileVerificationStatus);
                 }
                 else
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id)
                         : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
@@ -2461,8 +2461,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
 
                 // Filter by Follow-up Schedule (Today's Follow-ups)
-                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
-                    ? scheduleFilter 
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter)
+                    ? scheduleFilter
                     : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
 
                 if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
@@ -2546,38 +2546,38 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
                 else if (sortColumn == "Name")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
                 }
                 else if (sortColumn == "RegisterNumber")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
                 }
                 else if (sortColumn == "Gender")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
                 }
                 else if (sortColumn == "Staff")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.AssignedStaffId) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.AssignedStaffId)
                         : query.OrderByDescending(x => x.AssignedStaffId);
                 }
                 else if (sortColumn == "Status")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.LatestInterestStatus).ThenBy(x => x.LatestCallStatus) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.LatestInterestStatus).ThenBy(x => x.LatestCallStatus)
                         : query.OrderByDescending(x => x.LatestInterestStatus).ThenByDescending(x => x.LatestCallStatus);
                 }
                 else
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id)
                         : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
@@ -2740,8 +2740,8 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
 
                 // Filter by Follow-up Schedule (Today's Follow-ups)
-                string? schedule = !string.IsNullOrEmpty(scheduleFilter) 
-                    ? scheduleFilter 
+                string? schedule = !string.IsNullOrEmpty(scheduleFilter)
+                    ? scheduleFilter
                     : (isPost ? Request.Form["scheduleFilter"].ToString() : Request.Query["scheduleFilter"].ToString());
 
                 if (!string.IsNullOrEmpty(schedule) && string.Equals(schedule, "today", StringComparison.OrdinalIgnoreCase))
@@ -2825,38 +2825,38 @@ namespace URMARRY.Areas.Admin.Controllers
                 }
                 else if (sortColumn == "Name")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
                 }
                 else if (sortColumn == "RegisterNumber")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
                 }
                 else if (sortColumn == "Gender")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.Profile != null ? x.Profile.Gender : string.Empty)
                         : query.OrderByDescending(x => x.Profile != null ? x.Profile.Gender : string.Empty);
                 }
                 else if (sortColumn == "Staff")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.AssignedStaffId) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.AssignedStaffId)
                         : query.OrderByDescending(x => x.AssignedStaffId);
                 }
                 else if (sortColumn == "Status")
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.LatestRenewalInterestStatus).ThenBy(x => x.LatestCallStatus) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.LatestRenewalInterestStatus).ThenBy(x => x.LatestCallStatus)
                         : query.OrderByDescending(x => x.LatestRenewalInterestStatus).ThenByDescending(x => x.LatestCallStatus);
                 }
                 else
                 {
-                    query = isAscending 
-                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id) 
+                    query = isAscending
+                        ? query.OrderBy(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenBy(x => x.Id)
                         : query.OrderByDescending(x => x.ModifiedOn > x.CreatedOn ? x.ModifiedOn : x.CreatedOn).ThenByDescending(x => x.Id);
                 }
 
@@ -3081,7 +3081,7 @@ namespace URMARRY.Areas.Admin.Controllers
                             await _userRepository.SaveChanges();
                         }
                     }
-                    else if (model.ProfileVerificationStatus == ProfileVerificationStatus.Verify || 
+                    else if (model.ProfileVerificationStatus == ProfileVerificationStatus.Verify ||
                         model.ProfileVerificationStatus == ProfileVerificationStatus.Dismissed ||
                         model.ProfileVerificationStatus == ProfileVerificationStatus.Suspended)
                     {
@@ -3522,23 +3522,23 @@ namespace URMARRY.Areas.Admin.Controllers
                     switch (sortColumnIndex)
                     {
                         case "0": // RegisterNumber
-                            query = isAscending 
-                                ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty) 
+                            query = isAscending
+                                ? query.OrderBy(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty)
                                 : query.OrderByDescending(x => x.Profile != null ? x.Profile.RegisterNumber : string.Empty);
                             break;
                         case "1": // Customer Name
-                            query = isAscending 
-                                ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty) 
+                            query = isAscending
+                                ? query.OrderBy(x => x.Profile != null ? x.Profile.Name : string.Empty)
                                 : query.OrderByDescending(x => x.Profile != null ? x.Profile.Name : string.Empty);
                             break;
                         case "6": // Last Updated
-                            query = isAscending 
-                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id) 
+                            query = isAscending
+                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id)
                                 : query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
                             break;
                         default:
-                            query = isAscending 
-                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id) 
+                            query = isAscending
+                                ? query.OrderBy(x => x.ModifiedOn).ThenBy(x => x.CreatedOn).ThenBy(x => x.Id)
                                 : query.OrderByDescending(x => x.ModifiedOn).ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id);
                             break;
                     }
@@ -3694,13 +3694,13 @@ namespace URMARRY.Areas.Admin.Controllers
                 followUp.LatestAdminApprovalStatus = approvalStatus;
 
                 // Assign Verification Grade if approved for Profile Verification (Only for Verify and DetailedVerify)
-                if (model.IsApproved && followUp.FollowUpType == FollowUpType.ProfileVerification 
+                if (model.IsApproved && followUp.FollowUpType == FollowUpType.ProfileVerification
                     && (followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && !string.IsNullOrWhiteSpace(model.VerificationGrade))
                 {
                     followUp.VerificationGrade = model.VerificationGrade.Trim().ToUpper();
                 }
-                else if (followUp.FollowUpType == FollowUpType.ProfileVerification 
+                else if (followUp.FollowUpType == FollowUpType.ProfileVerification
                     && (followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Suspended || followUp.LatestProfileVerificationStatus == ProfileVerificationStatus.Dismissed))
                 {
                     followUp.VerificationGrade = null;
@@ -3946,7 +3946,7 @@ namespace URMARRY.Areas.Admin.Controllers
 
                 DateTime expiryTime = DateTime.UtcNow.AddMinutes(expirationMinutes);
                 string payload = $"{userProfile.Id}|{expiryTime:o}";
-                
+
                 var crypt = new RijndaelCrypt(secretKey);
                 string token = crypt.Encrypt(payload);
                 string paymentLink = $"{Request.Scheme}://{Request.Host}/Transaction/MakePaymentDirect?token={Uri.EscapeDataString(token)}";
@@ -4119,7 +4119,7 @@ namespace URMARRY.Areas.Admin.Controllers
             var assignments = await _assignmentRepo.GetQueryable()
                 .Where(x => !x.IsDeleted)
                 .ToListAsync();
-            
+
             var followups = await _followUpRepo.GetQueryable()
                 .Where(x => !x.IsDeleted)
                 .Include(x => x.Profile)
@@ -4138,18 +4138,18 @@ namespace URMARRY.Areas.Admin.Controllers
                 .ToListAsync();
 
             model.TotalAssignedProfiles = assignments.Count;
-            
+
             // Real stats counting
             foreach (var staff in staffUsers)
             {
                 long staffId = staff.Id;
                 var staffAssignments = assignments.Where(a => a.StaffId == staffId).ToList();
                 var staffProfileIds = staffAssignments.Select(a => a.ProfileId).ToList();
-                
+
                 var staffFollowups = followups.Where(f => f.AssignedStaffId == staffId).ToList();
-                
+
                 // Verified count (Requires Admin Approval)
-                int verified = staffFollowups.Count(f => f.FollowUpType == FollowUpType.ProfileVerification 
+                int verified = staffFollowups.Count(f => f.FollowUpType == FollowUpType.ProfileVerification
                     && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
                 int assigned = staffAssignments.Count;
@@ -4158,22 +4158,22 @@ namespace URMARRY.Areas.Admin.Controllers
                 int staffTimelinesCount = timelines.Count(t => t.StaffId == staffId);
 
                 int premInterested = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp && f.LatestInterestStatus == PremiumInterestStatus.Interested);
-                
+
                 // Payment verification: only count if payment is completed or customer has a successful transaction created on or after this follow-up was created
-                int premConverted = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp 
+                int premConverted = staffFollowups.Count(f => f.FollowUpType == FollowUpType.PremiumFollowUp
                     && (f.LatestInterestStatus == PremiumInterestStatus.Converted || (f.Profile != null && f.Profile.IsPremiumMember))
                     && (f.PaymentCompleted
                         || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
                         || (f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved && !f.PaymentLinkSent && f.Profile != null && f.Profile.IsPremiumMember)));
-                
+
                 // Expired premium
                 // Count plan purchases belonging to assigned users that are expired
                 int expired = planPurchases.Count(p => staffProfileIds.Contains(p.UserId) && p.ExpiresAt < DateTime.UtcNow);
 
                 int renewalFollows = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp);
-                
+
                 // Payment verification: only count renewal if payment is completed or customer has a successful transaction created on or after this follow-up was created
-                int renewalConvs = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp 
+                int renewalConvs = staffFollowups.Count(f => f.FollowUpType == FollowUpType.RenewalFollowUp
                     && (f.LatestRenewalInterestStatus == RenewalInterestStatus.Renewed || (f.Profile != null && f.Profile.IsPremiumMember))
                     && (f.PaymentCompleted
                         || transactions.Any(t => t.userId == f.ProfileId && t.CreatedOn >= f.CreatedOn)
@@ -4207,7 +4207,7 @@ namespace URMARRY.Areas.Admin.Controllers
             model.RenewalConverted = model.StaffPerformanceList.Sum(s => s.RenewalConverted);
             model.FollowupsCompleted = model.StaffPerformanceList.Sum(s => s.Followups);
 
-            model.AvgConversionRate = model.TotalAssignedProfiles > 0 
+            model.AvgConversionRate = model.TotalAssignedProfiles > 0
                 ? (int)Math.Round((double)model.PremiumConverted * 100 / model.TotalAssignedProfiles)
                 : 0;
 
@@ -4289,6 +4289,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     id = c.Id,
                     name = c.Name,
                     phoneNumber = c.PhoneNumber,
+                    gender = c.Gender ?? "",
                     assignedStaffId = c.AssignedStaffId,
                     assignedStaffName = staffDict.TryGetValue(c.AssignedStaffId, out var sName) ? sName : "Unassigned",
                     status = (int)c.Status,
@@ -4571,10 +4572,10 @@ namespace URMARRY.Areas.Admin.Controllers
                     .OrderByDescending(l => l.LeaveDate)
                     .ToListAsync();
 
-                decimal perDaySalary = salaryConfig?.PerDaySalary > 0 
-                    ? salaryConfig.PerDaySalary 
-                    : (salaryConfig != null && salaryConfig.BasicMonthlySalary > 0 
-                        ? Math.Round(salaryConfig.BasicMonthlySalary / daysInFilteredMonth, 2) 
+                decimal perDaySalary = salaryConfig?.PerDaySalary > 0
+                    ? salaryConfig.PerDaySalary
+                    : (salaryConfig != null && salaryConfig.BasicMonthlySalary > 0
+                        ? Math.Round(salaryConfig.BasicMonthlySalary / daysInFilteredMonth, 2)
                         : 0);
 
                 vm.PerDaySalary = perDaySalary;

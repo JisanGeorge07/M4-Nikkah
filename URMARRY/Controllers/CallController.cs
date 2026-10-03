@@ -109,6 +109,47 @@ namespace URMARRY.Controllers
             return View("Video", viewModel);
         }
 
+        [HttpGet("/call/report/{targetUserId:long}")]
+        public async Task<IActionResult> Report(
+            long targetUserId,
+            [FromQuery] long? callLogId = null,
+            [FromQuery] string? callType = "Voice",
+            [FromQuery] int durationSeconds = 0)
+        {
+            var userId = _cookieHelper.GetUserIdFromCookie(HttpContext);
+            if (!userId.HasValue || userId.Value <= 0)
+                return RedirectToAction("Login", "Account");
+
+            var targetUser = await _registrationRepo.Get(targetUserId);
+            var reasons = await _callService.GetActiveReportReasonsAsync();
+
+            ViewBag.CurrentUserId = userId.Value;
+            ViewBag.TargetUserId = targetUserId;
+            ViewBag.TargetUserName = targetUser?.Name ?? "Member";
+            ViewBag.TargetUserPhoto = targetUser?.ImagePath ?? "/assets/images/chat-img2.jpg";
+            ViewBag.CallLogId = callLogId ?? 0;
+            ViewBag.CallType = callType ?? "Voice";
+            ViewBag.DurationSeconds = durationSeconds;
+            ViewBag.Reasons = reasons;
+
+            var viewModel = await GetUserDashboardViewModelAsync();
+            return View("Report", viewModel);
+        }
+
+        [HttpGet("/call/report-thank-you/{targetUserId:long?}")]
+        [HttpGet("/call/report-thankyou/{targetUserId:long?}")]
+        public async Task<IActionResult> ReportThankYou(long? targetUserId = null)
+        {
+            var userId = _cookieHelper.GetUserIdFromCookie(HttpContext);
+            if (!userId.HasValue || userId.Value <= 0)
+                return RedirectToAction("Login", "Account");
+
+            ViewBag.TargetUserId = targetUserId ?? 0;
+
+            var viewModel = await GetUserDashboardViewModelAsync();
+            return View("ReportThankYou", viewModel);
+        }
+
         private async Task<UserDashboardViewModel> GetUserDashboardViewModelAsync()
         {
             var userId = _cookieHelper.GetUserIdFromCookie(HttpContext);
@@ -120,8 +161,8 @@ namespace URMARRY.Controllers
                 };
             }
             var userEntity = await _registrationRepo.Get(userId.Value);
-            var profile = userEntity != null 
-                ? _mapper.Map<RegistrationDto>(userEntity) 
+            var profile = userEntity != null
+                ? _mapper.Map<RegistrationDto>(userEntity)
                 : new RegistrationDto();
             if (profile != null && !profile.IsPremiumMember && profile.Id > 0)
             {

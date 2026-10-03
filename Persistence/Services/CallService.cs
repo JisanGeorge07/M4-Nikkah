@@ -239,7 +239,7 @@ namespace Persistence.Services
 
             callLog.Status = CallLogStatus.Connected;
             callLog.ConnectedAt = DateTime.UtcNow;
-            callLog.RecordingExpiresAt = DateTime.UtcNow.AddDays(14); // 14-day security retention window
+            callLog.RecordingExpiresAt = DateTime.UtcNow.AddDays(3); // 3-day security retention window
 
             await _dbContext.SaveChangesAsync(receiverId.ToString());
 
@@ -427,17 +427,17 @@ namespace Persistence.Services
             return response;
         }
 
-        public async Task<bool> SaveCallRecordingMetadataAsync(long callLogId, string s3Key, string recordingUrl, long fileSize, int durationSeconds)
+        public async Task<bool> SaveCallRecordingMetadataAsync(long callLogId, string filePath, string recordingUrl, long fileSize, int durationSeconds)
         {
             var callLog = await _dbContext.CallLogs
                 .FirstOrDefaultAsync(c => c.Id == callLogId && !c.IsDeleted);
 
             if (callLog == null) return false;
 
-            callLog.RecordingS3Key = s3Key;
+            callLog.RecordingFilePath = filePath;
             callLog.RecordingUrl = recordingUrl;
             callLog.RecordingFileSize = fileSize;
-            callLog.RecordingExpiresAt = DateTime.UtcNow.AddDays(14); // 14 days retention
+            callLog.RecordingExpiresAt = DateTime.UtcNow.AddDays(3); // 3 days retention
             if (durationSeconds > 0)
             {
                 callLog.DurationSeconds = durationSeconds;
@@ -489,7 +489,7 @@ namespace Persistence.Services
 
             // Check if this contact was already called in this plan cycle
             bool alreadyCalled = await _dbContext.AudioCallContacts
-                .AnyAsync(a => a.UserId == callerId && a.ContactUserId == receiverId 
+                .AnyAsync(a => a.UserId == callerId && a.ContactUserId == receiverId
                             && planIds.Contains(a.PlanPurchaseId) && !a.IsDeleted);
 
             if (alreadyCalled) return true; // No credit consumed — already contacted in current cycle
@@ -556,6 +556,117 @@ namespace Persistence.Services
             return true;
         }
 
+        public async Task<List<CallReportReasonDto>> GetActiveReportReasonsAsync()
+        {
+            try
+            {
+                var reasons = await _dbContext.CallReportReasons
+                    .AsNoTracking()
+                    .Where(r => !r.IsDeleted && r.IsActive)
+                    .OrderBy(r => r.DisplayOrder)
+                    .Select(r => new CallReportReasonDto
+                    {
+                        Id = r.Id,
+                        Reason = r.Reason,
+                        Description = r.Description,
+                        IconName = r.IconName,
+                        DisplayOrder = r.DisplayOrder,
+                        IsActive = r.IsActive
+                    })
+                    .ToListAsync();
+
+                return reasons;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CallService: Error fetching active call report reasons.");
+                return new List<CallReportReasonDto>();
+            }
+        }
+
+        public async Task<CallReportDto> CreateCallReportAsync(long reporterUserId, CreateCallReportRequest request)
+        {
+            if (reporterUserId <= 0)
+            {
+                throw new ArgumentException("Invalid reporter user ID.");
+            }
+
+            if (request.ReportedUserId <= 0)
+            {
+                throw new ArgumentException("Invalid reported user ID.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Reason))
+            {
+                throw new ArgumentException("A reason must be selected for the report.");
+            }
+
+            var reporter = await _dbContext.Registration
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == reporterUserId);
+
+            var reported = await _dbContext.Registration
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == request.ReportedUserId);
+
+            if (reported == null)
+            {
+                throw new InvalidOperationException("The user being reported could not be found.");
+            }
+
+            CallLog? callLog = null;
+            if (request.CallLogId.HasValue && request.CallLogId.Value > 0)
+            {
+                callLog = await _dbContext.CallLogs
+                    .FirstOrDefaultAsync(c => c.Id == request.CallLogId.Value && !c.IsDeleted);
+            }
+
+            var report = new CallReport
+            {
+                ReporterUserId = reporterUserId,
+                ReportedUserId = request.ReportedUserId,
+                CallLogId = request.CallLogId > 0 ? request.CallLogId : null,
+                CallType = request.CallType ?? callLog?.CallType ?? UserCallType.Voice,
+                CallDurationSeconds = request.CallDurationSeconds ?? callLog?.DurationSeconds ?? 0,
+                Reason = request.Reason.Trim(),
+                Comments = request.Comments?.Trim(),
+                Status = UserReportStatus.Pending,
+                CreatedOn = DateTime.UtcNow,
+                ModifiedOn = DateTime.UtcNow
+            };
+
+            _dbContext.CallReports.Add(report);
+            await _dbContext.SaveChangesAsync(reporterUserId.ToString());
+
+            _logger.LogInformation("CallService: Created call report {ReportId} by user {ReporterId} against user {ReportedId}",
+                report.Id, reporterUserId, request.ReportedUserId);
+
+            return new CallReportDto
+            {
+                Id = report.Id,
+                ReporterUserId = report.ReporterUserId,
+                ReporterName = reporter?.Name ?? "Member",
+                ReporterRegisterNumber = reporter?.RegisterNumber,
+                ReporterPhotoUrl = reporter?.ImagePath,
+                ReporterPhone = reporter?.Phone,
+                ReportedUserId = report.ReportedUserId,
+                ReportedUserName = reported.Name,
+                ReportedUserRegisterNumber = reported.RegisterNumber,
+                ReportedUserPhotoUrl = reported.ImagePath,
+                ReportedUserPhone = reported.Phone,
+                CallLogId = report.CallLogId,
+                CallType = report.CallType,
+                CallDurationSeconds = report.CallDurationSeconds,
+                Reason = report.Reason,
+                Comments = report.Comments,
+                HasRecording = !string.IsNullOrEmpty(callLog?.RecordingUrl) || !string.IsNullOrEmpty(callLog?.RecordingFilePath),
+                RecordingUrl = callLog?.RecordingUrl,
+                RecordingFilePath = callLog?.RecordingFilePath,
+                Status = report.Status,
+                CreatedOn = report.CreatedOn
+            };
+        }
+
         private static string GenerateHmacSha1(string secret, string message)
         {
             try
@@ -582,10 +693,12 @@ namespace Persistence.Services
                 CallerName = caller?.Name ?? "Member",
                 CallerRegisterNumber = caller?.RegisterNumber,
                 CallerPhotoUrl = caller?.ImagePath,
+                CallerGender = caller?.Gender,
                 ReceiverId = log.ReceiverId,
                 ReceiverName = receiver?.Name ?? "Member",
                 ReceiverRegisterNumber = receiver?.RegisterNumber,
                 ReceiverPhotoUrl = receiver?.ImagePath,
+                ReceiverGender = receiver?.Gender,
                 CallType = log.CallType,
                 Status = log.Status,
                 RoomId = log.RoomId,
@@ -594,7 +707,7 @@ namespace Persistence.Services
                 EndedAt = log.EndedAt,
                 DurationSeconds = log.DurationSeconds,
                 EndReason = log.EndReason,
-                HasRecording = !string.IsNullOrEmpty(log.RecordingUrl) || !string.IsNullOrEmpty(log.RecordingS3Key),
+                HasRecording = !string.IsNullOrEmpty(log.RecordingUrl) || !string.IsNullOrEmpty(log.RecordingFilePath),
                 RecordingUrl = log.RecordingUrl,
                 RecordingExpiresAt = log.RecordingExpiresAt,
                 IsIncoming = log.ReceiverId == currentUserId

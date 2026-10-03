@@ -237,7 +237,7 @@ namespace URMARRY.Controllers.Api
         }
 
         /// <summary>
-        /// Uploads 14-day security call recording file (.mp4 / .webm / audio stream) for legal and dispute backup.
+        /// Uploads 3-day security call recording backup file (.mp4 / .webm / audio stream) for legal and dispute backup.
         /// </summary>
         [HttpPost("recording")]
         [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB max
@@ -259,7 +259,7 @@ namespace URMARRY.Controllers.Api
 
             try
             {
-                string uploadFolder = Path.Combine(_env.WebRootPath, "Uploads", "CallRecordings");
+                string uploadFolder = Path.Combine(_env.WebRootPath, "Uploads", "backups");
                 if (!Directory.Exists(uploadFolder))
                 {
                     Directory.CreateDirectory(uploadFolder);
@@ -268,32 +268,71 @@ namespace URMARRY.Controllers.Api
                 string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
                 if (string.IsNullOrEmpty(ext)) ext = ".mp4";
 
-                string s3Key = $"recordings/call_{callLogId}_{Guid.NewGuid():N}{ext}";
-                string physicalPath = Path.Combine(uploadFolder, Path.GetFileName(s3Key));
+                string fileName = $"call_{callLogId}_{Guid.NewGuid():N}{ext}";
+                string physicalPath = Path.Combine(uploadFolder, fileName);
 
                 using (var stream = new FileStream(physicalPath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
 
-                string relativeUrl = $"/Uploads/CallRecordings/{Path.GetFileName(s3Key)}";
-                DateTime expiresAt = DateTime.UtcNow.AddDays(14);
+                string relativeUrl = $"/Uploads/backups/{fileName}";
+                DateTime expiresAt = DateTime.UtcNow.AddDays(3);
 
-                bool saved = await _callService.SaveCallRecordingMetadataAsync(callLogId, s3Key, relativeUrl, file.Length, durationSeconds);
+                bool saved = await _callService.SaveCallRecordingMetadataAsync(callLogId, physicalPath, relativeUrl, file.Length, durationSeconds);
 
                 return Ok(new CallRecordingUploadResponse
                 {
                     Success = saved,
                     RecordingUrl = relativeUrl,
-                    S3Key = s3Key,
+                    FilePath = fileName,
                     ExpiresAt = expiresAt,
-                    Message = "Call recording saved for 14-day security retention."
+                    Message = "Call recording saved for 3-day security backup."
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "CallApiController: Error uploading call recording for call {CallLogId}", callLogId);
                 return StatusCode(500, new { message = "Call recording upload failed." });
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all active call report complaint reasons created from admin panel.
+        /// </summary>
+        [HttpGet("report-reasons")]
+        public async Task<IActionResult> GetReportReasons()
+        {
+            var reasons = await _callService.GetActiveReportReasonsAsync();
+            return Ok(reasons);
+        }
+
+        /// <summary>
+        /// Submits a call complaint / misconduct report against a user.
+        /// </summary>
+        [HttpPost("report")]
+        public async Task<IActionResult> SubmitCallReport([FromBody] CreateCallReportRequest request)
+        {
+            var userId = ResolveCurrentUserId();
+            if (!userId.HasValue || userId.Value <= 0)
+            {
+                return Unauthorized(new { message = "Authentication required." });
+            }
+
+            if (request == null || request.ReportedUserId <= 0 || string.IsNullOrWhiteSpace(request.Reason))
+            {
+                return BadRequest(new { message = "Reported user ID and reason are required." });
+            }
+
+            try
+            {
+                var report = await _callService.CreateCallReportAsync(userId.Value, request);
+                return Ok(new { success = true, reportId = report.Id, message = "Call report submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CallApiController: Error submitting call report by user {UserId}", userId.Value);
+                return BadRequest(new { message = ex.Message });
             }
         }
 

@@ -22,8 +22,8 @@ namespace Domain
         // Reason call terminated (e.g. NormalHangup, ReceiverRejected, MissedTimeout, NetworkFailed)
         public string? EndReason { get; set; }
 
-        // 14-Day Security Call Recording
-        public string? RecordingS3Key { get; set; }
+        // 3-Day Security Call Recording Backup
+        public string? RecordingFilePath { get; set; }
         public string? RecordingUrl { get; set; }
         public long? RecordingFileSize { get; set; }
         public DateTime? RecordingExpiresAt { get; set; }

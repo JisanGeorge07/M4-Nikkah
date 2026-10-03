@@ -52,6 +52,7 @@ builder.Services.AddHostedService<RelationshipStatusNotificationService>();
 builder.Services.AddHostedService<PresenceCleanupService>();
 builder.Services.AddScoped<IRenewalFollowUpProcessor, RenewalFollowUpProcessor>();
 builder.Services.AddHostedService<AutoRenewalFollowUpService>();
+builder.Services.AddHostedService<BackupCleanupService>();
 
 builder.Services.AddReCaptcha(builder.Configuration.GetSection("ReCaptcha"));
 // it sets the login path to /account/login, so unauthenticated users are redirected there when authentication is required.
@@ -65,7 +66,7 @@ builder.Services.AddAuthentication(options =>
 {
     var secret = builder.Configuration["JwtSettings:Secret"];
     var key = Encoding.ASCII.GetBytes(secret ?? string.Empty);
-    
+
     options.SaveToken = true;
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
@@ -128,7 +129,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-   // dbContext.Database.Migrate();
+    // dbContext.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.

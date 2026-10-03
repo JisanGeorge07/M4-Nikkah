@@ -207,6 +207,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     .DistinctBy(fu => fu.Id)
                     .ToList();
 
+                var convertedProfileItems = new List<ConvertedProfileDetailItem>();
+
                 foreach (var fu in validConvertedFollowUps)
                 {
                     if (fu.Profile == null) continue;
@@ -217,6 +219,50 @@ namespace URMARRY.Areas.Admin.Controllers
                     bool isMale = string.Equals(fu.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase);
                     if (isMale) convBoys++;
                     else convGirls++;
+
+                    var p = fu.Profile;
+                    var profileTransactions = transactions
+                        .Where(t => t.userId == p.Id)
+                        .ToList();
+
+                    decimal profilePayment = 0;
+                    string txnId = fu.TransactionId ?? "";
+                    string payMode = fu.PaymentMode ?? (profileTransactions.Any() ? "Online Gateway" : (fu.OfflinePaymentType.HasValue ? fu.OfflinePaymentType.Value.ToString() : "N/A"));
+
+                    foreach (var txn in profileTransactions)
+                    {
+                        if (decimal.TryParse(txn.Amount, out decimal amt) && amt > 0)
+                        {
+                            profilePayment += amt;
+                            if (string.IsNullOrEmpty(txnId)) txnId = txn.TxnId ?? "";
+                        }
+                    }
+
+                    if (profilePayment == 0 && fu.PaymentAmount.HasValue && fu.PaymentAmount > 0)
+                    {
+                        profilePayment = fu.PaymentAmount.Value;
+                    }
+
+                    string convType = fu.FollowUpType == FollowUpType.RenewalFollowUp ? "Renewal Conversion" : "Premium Conversion";
+                    DateTime? convDate = fu.ModifiedOn != default ? fu.ModifiedOn : fu.CreatedOn;
+                    string phoneNum = string.Join(" ", new[] { p.CountryCode, p.Phone }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    string loc = string.Join(", ", new[] { p.PresentCity, p.PresentDistrict, p.PresentState ?? p.State }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                    convertedProfileItems.Add(new ConvertedProfileDetailItem
+                    {
+                        ProfileId = p.Id,
+                        RegisterNumber = !string.IsNullOrEmpty(p.RegisterNumber) ? p.RegisterNumber : ("ID #" + p.Id),
+                        ProfileName = !string.IsNullOrEmpty(p.Name) ? p.Name : ("Profile #" + p.Id),
+                        Gender = p.Gender ?? "N/A",
+                        ConversionType = convType,
+                        ConversionDate = convDate,
+                        PaymentAmount = profilePayment,
+                        PaymentMode = payMode,
+                        TransactionId = txnId,
+                        ContactNumber = phoneNum,
+                        Location = loc,
+                        FollowUpId = fu.Id
+                    });
                 }
 
                 // Sum transactions per distinct ProfileId to avoid double-counting payments
@@ -280,12 +326,17 @@ namespace URMARRY.Areas.Admin.Controllers
                         ))
                     .ToList();
 
-                int gradeA = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
-                int gradeB = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
-                int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started
+                var validVerificationFollowUps = verificationFollowUps
+                    .Where(f => f.Profile != null && (string.IsNullOrEmpty(gender) || string.Equals(f.Profile.Gender, gender, StringComparison.OrdinalIgnoreCase)))
+                    .DistinctBy(f => f.Id)
+                    .ToList();
+
+                int gradeA = validVerificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
+                int gradeB = validVerificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
+                int gradeC = validVerificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started
                     || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest
                     || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
-                int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending
+                int gradeD = validVerificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending
                     || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold
                     || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
 
@@ -301,6 +352,62 @@ namespace URMARRY.Areas.Admin.Controllers
                         _ => true
                     };
                     if (!hasGrade) continue;
+                }
+
+                var verifiedProfileItems = new List<VerifiedProfileDetailItem>();
+
+                foreach (var vf in validVerificationFollowUps)
+                {
+                    var p = vf.Profile!;
+
+                    string grade;
+                    string verifType;
+                    if (vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && vf.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    {
+                        grade = "A";
+                        verifType = "Detailed Verify (Grade A)";
+                    }
+                    else if (vf.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && vf.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
+                    {
+                        grade = "B";
+                        verifType = "Standard Verify (Grade B)";
+                    }
+                    else if (vf.LatestProfileVerificationStatus == ProfileVerificationStatus.Started
+                        || vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest
+                        || (vf.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && vf.LatestAdminApprovalStatus != AdminApprovalStatus.Approved))
+                    {
+                        grade = "C";
+                        verifType = "Verification In-Progress (Grade C)";
+                    }
+                    else
+                    {
+                        grade = "D";
+                        verifType = "Pending / On Hold (Grade D)";
+                    }
+
+                    // Apply verification grade filter
+                    if (!string.IsNullOrEmpty(verificationGrade) && !string.Equals(grade, verificationGrade, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    DateTime? vDate = vf.ModifiedOn != default ? vf.ModifiedOn : vf.CreatedOn;
+                    string phoneNum = string.Join(" ", new[] { p.CountryCode, p.Phone }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    string loc = string.Join(", ", new[] { p.PresentCity, p.PresentDistrict, p.PresentState ?? p.State }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                    verifiedProfileItems.Add(new VerifiedProfileDetailItem
+                    {
+                        ProfileId = p.Id,
+                        RegisterNumber = !string.IsNullOrEmpty(p.RegisterNumber) ? p.RegisterNumber : ("ID #" + p.Id),
+                        ProfileName = !string.IsNullOrEmpty(p.Name) ? p.Name : ("Profile #" + p.Id),
+                        Gender = p.Gender ?? "N/A",
+                        VerificationType = verifType,
+                        VerificationGrade = grade,
+                        VerificationStatus = vf.LatestProfileVerificationStatus?.ToString() ?? "Pending",
+                        AdminApprovalStatus = vf.LatestAdminApprovalStatus?.ToString() ?? "Pending",
+                        VerifiedDate = vDate,
+                        ContactNumber = phoneNum,
+                        Location = loc,
+                        Remarks = vf.LatestRemarks ?? "",
+                        FollowUpId = vf.Id
+                    });
                 }
 
                 // ── Salary Config & Eligibility ────────────────────
@@ -622,6 +729,8 @@ namespace URMARRY.Areas.Admin.Controllers
                     ComplaintDeductions = complaintDeduction,
                     DeletedProfileDeductions = deletedProfileDeduction,
                     DeletedProfileItems = deletedProfileItems,
+                    ConvertedProfileItems = convertedProfileItems,
+                    VerifiedProfileItems = verifiedProfileItems,
                     PerformanceScore = perfScore
                 };
 

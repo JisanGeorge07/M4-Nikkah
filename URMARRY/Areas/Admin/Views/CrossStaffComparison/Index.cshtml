@@ -257,7 +257,35 @@
                                     <td>@(row.Department ?? "—")</td>
                                     <td class="text-center"><span class="badge badge-soft-primary">@row.PremiumConversionsBoys</span></td>
                                     <td class="text-center"><span class="badge badge-soft-danger">@row.PremiumConversionsGirls</span></td>
-                                    <td class="text-center fw-bold">@row.TotalPremiumConversions</td>
+                                    <td class="text-center" data-sort="@row.TotalPremiumConversions" data-order="@row.TotalPremiumConversions">
+                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                            <span class="fw-bold">@row.TotalPremiumConversions</span>
+                                            @if (row.TotalPremiumConversions > 0 || row.ConvertedProfileItems.Any())
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 btn-view-converted-profiles"
+                                                        data-staff-name="@row.StaffName"
+                                                        data-conv-boys="@row.PremiumConversionsBoys"
+                                                        data-conv-girls="@row.PremiumConversionsGirls"
+                                                        data-collection="@row.TotalPremiumCollection"
+                                                        data-items='@System.Text.Json.JsonSerializer.Serialize(row.ConvertedProfileItems.Select(i => new {
+                                                            profileId = i.ProfileId,
+                                                            registerNumber = i.RegisterNumber,
+                                                            profileName = i.ProfileName,
+                                                            gender = i.Gender,
+                                                            conversionType = i.ConversionType,
+                                                            conversionDate = i.ConversionDate.HasValue ? i.ConversionDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "—",
+                                                            paymentAmount = i.PaymentAmount,
+                                                            paymentMode = i.PaymentMode,
+                                                            transactionId = i.TransactionId,
+                                                            contactNumber = i.ContactNumber,
+                                                            location = i.Location
+                                                        }))'
+                                                        title="View Converted Profiles (@row.ConvertedProfileItems.Count profile(s))">
+                                                    <i class="fas fa-eye me-1"></i><small>Details</small>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
                                     <td class="text-end">₹@row.PremiumCollectionBoys.ToString("N0")</td>
                                     <td class="text-end">₹@row.PremiumCollectionGirls.ToString("N0")</td>
                                     <td class="text-end fw-bold">₹@row.TotalPremiumCollection.ToString("N0")</td>
@@ -272,7 +300,35 @@
                                     <td class="text-center">@row.VerificationGradeB</td>
                                     <td class="text-center">@row.VerificationGradeC</td>
                                     <td class="text-center">@row.VerificationGradeD</td>
-                                    <td class="text-center fw-bold">@row.TotalVerifications</td>
+                                    <td class="text-center" data-sort="@row.TotalVerifications" data-order="@row.TotalVerifications">
+                                        <div class="fw-bold">@row.TotalVerifications</div>
+                                        @if (row.TotalVerifications > 0 || row.VerifiedProfileItems.Any())
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-info py-0 px-2 mt-1 btn-view-verified-profiles"
+                                                    data-staff-name="@row.StaffName"
+                                                    data-grade-a="@row.VerificationGradeA"
+                                                    data-grade-b="@row.VerificationGradeB"
+                                                    data-grade-c="@row.VerificationGradeC"
+                                                    data-grade-d="@row.VerificationGradeD"
+                                                    data-items='@System.Text.Json.JsonSerializer.Serialize(row.VerifiedProfileItems.Select(i => new {
+                                                        profileId = i.ProfileId,
+                                                        registerNumber = i.RegisterNumber,
+                                                        profileName = i.ProfileName,
+                                                        gender = i.Gender,
+                                                        verificationType = i.VerificationType,
+                                                        verificationGrade = i.VerificationGrade,
+                                                        verificationStatus = i.VerificationStatus,
+                                                        adminApprovalStatus = i.AdminApprovalStatus,
+                                                        verifiedDate = i.VerifiedDate.HasValue ? i.VerifiedDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "—",
+                                                        contactNumber = i.ContactNumber,
+                                                        location = i.Location,
+                                                        remarks = i.Remarks
+                                                    }))'
+                                                    title="View Verified Profiles (@row.VerifiedProfileItems.Count profile(s))">
+                                                <i class="fas fa-shield-alt me-1"></i><small>Details</small>
+                                            </button>
+                                        }
+                                    </td>
                                     <td class="text-end text-success fw-semibold">₹@row.IncentivePayable.ToString("N0")</td>
                                     <td class="text-end text-danger">₹@row.LeaveDeductions.ToString("N0")</td>
                                     <td class="text-end text-danger">₹@row.ComplaintDeductions.ToString("N0")</td>
@@ -838,6 +894,199 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CONVERTED PROFILES DETAIL MODAL                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="convertedProfilesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+            <div class="modal-header text-white py-3 px-4" style="background: linear-gradient(135deg, #556ee6 0%, #344cb7 100%); border-top-left-radius: 14px; border-top-right-radius: 14px;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 p-2 bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                        <i class="fas fa-user-check text-white fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Converted Profiles Detail</h5>
+                        <small class="text-white-50">Profiles converted by <strong id="convModalStaffName" class="text-white"></strong> in this period</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Summary KPI Cards -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 border rounded bg-light text-center">
+                            <span class="text-muted d-block font-size-12">Total Converted</span>
+                            <span class="fw-bold fs-5 text-primary" id="convModalTotalCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 border rounded bg-light text-center">
+                            <span class="text-muted d-block font-size-12">Boys (Male)</span>
+                            <span class="fw-bold fs-5 text-info" id="convModalBoysCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 border rounded bg-light text-center">
+                            <span class="text-muted d-block font-size-12">Girls (Female)</span>
+                            <span class="fw-bold fs-5 text-danger" id="convModalGirlsCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 border rounded bg-light text-center">
+                            <span class="text-muted d-block font-size-12">Total Collection</span>
+                            <span class="fw-bold fs-5 text-success" id="convModalTotalCollection">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In-Modal Filter & Search Bar -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div class="btn-group btn-group-sm" role="group" id="convModalGenderFilters">
+                        <button type="button" class="btn btn-primary active conv-filter-btn" data-filter="all">All (<span id="convFilterCountAll">0</span>)</button>
+                        <button type="button" class="btn btn-outline-primary conv-filter-btn" data-filter="Male"><i class="fas fa-mars me-1"></i>Boys (<span id="convFilterCountMale">0</span>)</button>
+                        <button type="button" class="btn btn-outline-danger conv-filter-btn" data-filter="Female"><i class="fas fa-venus me-1"></i>Girls (<span id="convFilterCountFemale">0</span>)</button>
+                    </div>
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="convModalSearch" class="form-control border-start-0" placeholder="Search name, ID, phone, city...">
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive" style="max-height: 460px;">
+                    <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light sticky-top" style="z-index: 1;">
+                            <tr>
+                                <th style="width: 40px;" class="text-center">#</th>
+                                <th>Register ID</th>
+                                <th>Profile Name</th>
+                                <th>Gender</th>
+                                <th>Conversion Type</th>
+                                <th class="text-end">Paid Amount</th>
+                                <th>Payment Mode / Txn</th>
+                                <th>Converted Date</th>
+                                <th>Contact & Location</th>
+                            </tr>
+                        </thead>
+                        <tbody id="convModalTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 d-flex justify-content-between align-items-center" style="background-color: #f8fafc;">
+                <div class="text-muted font-size-12">
+                    Showing <span id="convModalShowingCount" class="fw-bold text-dark">0</span> profiles
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- VERIFIED PROFILES DETAIL MODAL                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="verifiedProfilesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+            <div class="modal-header text-white py-3 px-4" style="background: linear-gradient(135deg, #0ab39c 0%, #087f6e 100%); border-top-left-radius: 14px; border-top-right-radius: 14px;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 p-2 bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                        <i class="fas fa-shield-alt text-white fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0">Verified Profiles Detail</h5>
+                        <small class="text-white-50">Profiles verified by <strong id="verifModalStaffName" class="text-white"></strong> in this period</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Summary KPI Cards -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md col-6">
+                        <div class="p-2 border rounded bg-light text-center">
+                            <span class="text-muted d-block font-size-12">Total Verifications</span>
+                            <span class="fw-bold fs-5 text-dark" id="verifModalTotalCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md col-6">
+                        <div class="p-2 border rounded text-center" style="background: rgba(52,195,143,0.08); border-color: rgba(52,195,143,0.2) !important;">
+                            <span class="text-success d-block font-size-12 fw-semibold">Grade A (Detailed)</span>
+                            <span class="fw-bold fs-5 text-success" id="verifModalGradeACount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md col-6">
+                        <div class="p-2 border rounded text-center" style="background: rgba(85,110,230,0.08); border-color: rgba(85,110,230,0.2) !important;">
+                            <span class="text-primary d-block font-size-12 fw-semibold">Grade B (Verify)</span>
+                            <span class="fw-bold fs-5 text-primary" id="verifModalGradeBCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md col-6">
+                        <div class="p-2 border rounded text-center" style="background: rgba(241,180,76,0.08); border-color: rgba(241,180,76,0.2) !important;">
+                            <span class="text-warning d-block font-size-12 fw-semibold">Grade C (Started)</span>
+                            <span class="fw-bold fs-5 text-warning" id="verifModalGradeCCount">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md col-6">
+                        <div class="p-2 border rounded text-center" style="background: rgba(244,106,106,0.08); border-color: rgba(244,106,106,0.2) !important;">
+                            <span class="text-danger d-block font-size-12 fw-semibold">Grade D (Pending/Hold)</span>
+                            <span class="fw-bold fs-5 text-danger" id="verifModalGradeDCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In-Modal Filter & Search Bar -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div class="btn-group btn-group-sm flex-wrap" role="group" id="verifModalGradeFilters">
+                        <button type="button" class="btn btn-primary active verif-filter-btn" data-filter="all">All (<span id="verifFilterCountAll">0</span>)</button>
+                        <button type="button" class="btn btn-outline-success verif-filter-btn" data-filter="A">Grade A (<span id="verifFilterCountA">0</span>)</button>
+                        <button type="button" class="btn btn-outline-primary verif-filter-btn" data-filter="B">Grade B (<span id="verifFilterCountB">0</span>)</button>
+                        <button type="button" class="btn btn-outline-warning verif-filter-btn" data-filter="C">Grade C (<span id="verifFilterCountC">0</span>)</button>
+                        <button type="button" class="btn btn-outline-danger verif-filter-btn" data-filter="D">Grade D (<span id="verifFilterCountD">0</span>)</button>
+                    </div>
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="verifModalSearch" class="form-control border-start-0" placeholder="Search name, ID, phone, city...">
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive" style="max-height: 460px;">
+                    <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light sticky-top" style="z-index: 1;">
+                            <tr>
+                                <th style="width: 40px;" class="text-center">#</th>
+                                <th>Register ID</th>
+                                <th>Profile Name</th>
+                                <th>Gender</th>
+                                <th>Verification Grade</th>
+                                <th>Verification Status</th>
+                                <th>Admin Approval</th>
+                                <th>Verified Date</th>
+                                <th>Contact & Location</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="verifModalTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 d-flex justify-content-between align-items-center" style="background-color: #f8fafc;">
+                <div class="text-muted font-size-12">
+                    Showing <span id="verifModalShowingCount" class="fw-bold text-dark">0</span> profiles
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal" style="border-radius: 6px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
@@ -1340,6 +1589,270 @@
                 $('#delModalTableFooterTotal').text('-₹' + totalAmt.toLocaleString('en-IN'));
 
                 new bootstrap.Modal('#deletedProfilesDeductionModal').show();
+            });
+
+            // ─── Converted Profiles Popup Logic ───────────────
+            var currentConvertedItems = [];
+            var currentConvertedFilter = 'all';
+
+            function renderConvertedTable() {
+                var search = ($('#convModalSearch').val() || '').toLowerCase().trim();
+                var $tbody = $('#convModalTableBody');
+                $tbody.empty();
+
+                var filtered = currentConvertedItems.filter(function (item) {
+                    if (currentConvertedFilter !== 'all') {
+                        if ((item.gender || '').toLowerCase() !== currentConvertedFilter.toLowerCase()) {
+                            return false;
+                        }
+                    }
+                    if (search) {
+                        var regMatch = (item.registerNumber || '').toLowerCase().indexOf(search) !== -1;
+                        var nameMatch = (item.profileName || '').toLowerCase().indexOf(search) !== -1;
+                        var phoneMatch = (item.contactNumber || '').toLowerCase().indexOf(search) !== -1;
+                        var locMatch = (item.location || '').toLowerCase().indexOf(search) !== -1;
+                        var typeMatch = (item.conversionType || '').toLowerCase().indexOf(search) !== -1;
+                        var txnMatch = (item.transactionId || '').toLowerCase().indexOf(search) !== -1;
+                        if (!regMatch && !nameMatch && !phoneMatch && !locMatch && !typeMatch && !txnMatch) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                $('#convModalShowingCount').text(filtered.length);
+
+                if (filtered.length === 0) {
+                    $tbody.html('<tr><td colspan="9" class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2 d-block"></i>No converted profiles match your filter.</td></tr>');
+                    return;
+                }
+
+                filtered.forEach(function (item, idx) {
+                    var genderBadge = (item.gender === 'Male')
+                        ? '<span class="badge badge-soft-primary"><i class="fas fa-mars me-1"></i>Male</span>'
+                        : '<span class="badge badge-soft-danger"><i class="fas fa-venus me-1"></i>Female</span>';
+
+                    var typeBadge = (item.conversionType && item.conversionType.indexOf('Renewal') !== -1)
+                        ? '<span class="badge badge-soft-warning"><i class="fas fa-sync-alt me-1"></i>Renewal</span>'
+                        : '<span class="badge badge-soft-success"><i class="fas fa-crown me-1"></i>Premium</span>';
+
+                    var payModeHtml = '<span class="badge badge-soft-secondary font-size-11">' + $('<span>').text(item.paymentMode || 'N/A').html() + '</span>';
+                    if (item.transactionId) {
+                        payModeHtml += '<br><small class="text-muted font-size-11" title="Txn ID: ' + $('<span>').text(item.transactionId).html() + '"><i class="fas fa-hashtag me-1"></i>' + $('<span>').text(item.transactionId.length > 15 ? item.transactionId.substring(0, 15) + '...' : item.transactionId).html() + '</small>';
+                    }
+
+                    var contactHtml = '';
+                    if (item.contactNumber) {
+                        contactHtml += '<div class="fw-semibold font-size-12"><i class="fas fa-phone-alt text-success me-1"></i>' + $('<span>').text(item.contactNumber).html() + '</div>';
+                    }
+                    if (item.location) {
+                        contactHtml += '<small class="text-muted font-size-11"><i class="fas fa-map-marker-alt text-danger me-1"></i>' + $('<span>').text(item.location).html() + '</small>';
+                    }
+                    if (!contactHtml) contactHtml = '<span class="text-muted">—</span>';
+
+                    var amt = parseFloat(item.paymentAmount) || 0;
+                    var amtHtml = amt > 0
+                        ? '<span class="text-success fw-bold">₹' + amt.toLocaleString('en-IN') + '</span>'
+                        : '<span class="text-muted">₹0</span>';
+
+                    var row = '<tr>' +
+                        '<td class="text-center text-muted">' + (idx + 1) + '</td>' +
+                        '<td><span class="fw-bold text-primary">' + $('<span>').text(item.registerNumber || ('ID #' + item.profileId)).html() + '</span></td>' +
+                        '<td><span class="fw-semibold text-dark">' + $('<span>').text(item.profileName || '—').html() + '</span></td>' +
+                        '<td>' + genderBadge + '</td>' +
+                        '<td>' + typeBadge + '</td>' +
+                        '<td class="text-end">' + amtHtml + '</td>' +
+                        '<td>' + payModeHtml + '</td>' +
+                        '<td><small class="text-muted">' + (item.conversionDate || '—') + '</small></td>' +
+                        '<td>' + contactHtml + '</td>' +
+                        '</tr>';
+                    $tbody.append(row);
+                });
+            }
+
+            $(document).on('click', '.btn-view-converted-profiles', function () {
+                var staffName = $(this).data('staff-name') || 'Staff';
+                var items = $(this).data('items') || [];
+                var convBoys = parseInt($(this).data('conv-boys')) || 0;
+                var convGirls = parseInt($(this).data('conv-girls')) || 0;
+                var collection = parseFloat($(this).data('collection')) || 0;
+
+                currentConvertedItems = items;
+                currentConvertedFilter = 'all';
+
+                $('#convModalStaffName').text(staffName);
+                $('#convModalTotalCount').text(items.length);
+                $('#convModalBoysCount').text(convBoys);
+                $('#convModalGirlsCount').text(convGirls);
+                $('#convModalTotalCollection').text('₹' + collection.toLocaleString('en-IN'));
+
+                // Update filter buttons count
+                $('#convFilterCountAll').text(items.length);
+                var maleCount = items.filter(function (i) { return (i.gender || '').toLowerCase() === 'male'; }).length;
+                var femaleCount = items.filter(function (i) { return (i.gender || '').toLowerCase() === 'female'; }).length;
+                $('#convFilterCountMale').text(maleCount);
+                $('#convFilterCountFemale').text(femaleCount);
+
+                $('.conv-filter-btn').removeClass('active btn-primary btn-danger').addClass('btn-outline-primary');
+                $('.conv-filter-btn[data-filter="Female"]').removeClass('btn-outline-primary').addClass('btn-outline-danger');
+                $('.conv-filter-btn[data-filter="all"]').addClass('active btn-primary').removeClass('btn-outline-primary');
+
+                $('#convModalSearch').val('');
+                renderConvertedTable();
+                new bootstrap.Modal('#convertedProfilesModal').show();
+            });
+
+            $(document).on('click', '.conv-filter-btn', function () {
+                $('.conv-filter-btn').removeClass('active');
+                $(this).addClass('active');
+                currentConvertedFilter = $(this).data('filter');
+                renderConvertedTable();
+            });
+
+            $('#convModalSearch').on('input keyup', function () {
+                renderConvertedTable();
+            });
+
+            // ─── Verified Profiles Popup Logic ───────────────
+            var currentVerifiedItems = [];
+            var currentVerifiedFilter = 'all';
+
+            function renderVerifiedTable() {
+                var search = ($('#verifModalSearch').val() || '').toLowerCase().trim();
+                var $tbody = $('#verifModalTableBody');
+                $tbody.empty();
+
+                var filtered = currentVerifiedItems.filter(function (item) {
+                    if (currentVerifiedFilter !== 'all') {
+                        if ((item.verificationGrade || '').toUpperCase() !== currentVerifiedFilter.toUpperCase()) {
+                            return false;
+                        }
+                    }
+                    if (search) {
+                        var regMatch = (item.registerNumber || '').toLowerCase().indexOf(search) !== -1;
+                        var nameMatch = (item.profileName || '').toLowerCase().indexOf(search) !== -1;
+                        var phoneMatch = (item.contactNumber || '').toLowerCase().indexOf(search) !== -1;
+                        var locMatch = (item.location || '').toLowerCase().indexOf(search) !== -1;
+                        var statusMatch = (item.verificationStatus || '').toLowerCase().indexOf(search) !== -1;
+                        var remarksMatch = (item.remarks || '').toLowerCase().indexOf(search) !== -1;
+                        if (!regMatch && !nameMatch && !phoneMatch && !locMatch && !statusMatch && !remarksMatch) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                $('#verifModalShowingCount').text(filtered.length);
+
+                if (filtered.length === 0) {
+                    $tbody.html('<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2 d-block"></i>No verified profiles match your filter.</td></tr>');
+                    return;
+                }
+
+                filtered.forEach(function (item, idx) {
+                    var genderBadge = (item.gender === 'Male')
+                        ? '<span class="badge badge-soft-primary"><i class="fas fa-mars me-1"></i>Male</span>'
+                        : '<span class="badge badge-soft-danger"><i class="fas fa-venus me-1"></i>Female</span>';
+
+                    var gradeBadgeClass = 'badge-soft-secondary';
+                    var grade = (item.verificationGrade || '').toUpperCase();
+                    if (grade === 'A') gradeBadgeClass = 'badge-soft-success';
+                    else if (grade === 'B') gradeBadgeClass = 'badge-soft-primary';
+                    else if (grade === 'C') gradeBadgeClass = 'badge-soft-warning';
+                    else if (grade === 'D') gradeBadgeClass = 'badge-soft-danger';
+
+                    var gradeBadge = '<span class="badge ' + gradeBadgeClass + ' fw-bold px-2 py-1">Grade ' + (grade || '—') + '</span>';
+                    if (item.verificationType) {
+                        gradeBadge += '<br><small class="text-muted font-size-11">' + $('<span>').text(item.verificationType).html() + '</small>';
+                    }
+
+                    var statusBadge = '<span class="badge badge-soft-info">' + $('<span>').text(item.verificationStatus || 'Pending').html() + '</span>';
+
+                    var appStatus = (item.adminApprovalStatus || 'Pending');
+                    var appBadgeClass = 'badge-soft-secondary';
+                    if (appStatus.toLowerCase().indexOf('approve') !== -1) appBadgeClass = 'badge-soft-success';
+                    else if (appStatus.toLowerCase().indexOf('reject') !== -1) appBadgeClass = 'badge-soft-danger';
+                    else appBadgeClass = 'badge-soft-warning';
+                    var appBadge = '<span class="badge ' + appBadgeClass + '">' + $('<span>').text(appStatus).html() + '</span>';
+
+                    var contactHtml = '';
+                    if (item.contactNumber) {
+                        contactHtml += '<div class="fw-semibold font-size-12"><i class="fas fa-phone-alt text-success me-1"></i>' + $('<span>').text(item.contactNumber).html() + '</div>';
+                    }
+                    if (item.location) {
+                        contactHtml += '<small class="text-muted font-size-11"><i class="fas fa-map-marker-alt text-danger me-1"></i>' + $('<span>').text(item.location).html() + '</small>';
+                    }
+                    if (!contactHtml) contactHtml = '<span class="text-muted">—</span>';
+
+                    var remarksHtml = item.remarks
+                        ? '<span class="text-muted font-size-12" title="' + $('<span>').text(item.remarks).html() + '"><i class="fas fa-comment-alt text-muted me-1"></i>' + $('<span>').text(item.remarks.length > 25 ? item.remarks.substring(0, 25) + '...' : item.remarks).html() + '</span>'
+                        : '<span class="text-muted">—</span>';
+
+                    var row = '<tr>' +
+                        '<td class="text-center text-muted">' + (idx + 1) + '</td>' +
+                        '<td><span class="fw-bold text-primary">' + $('<span>').text(item.registerNumber || ('ID #' + item.profileId)).html() + '</span></td>' +
+                        '<td><span class="fw-semibold text-dark">' + $('<span>').text(item.profileName || '—').html() + '</span></td>' +
+                        '<td>' + genderBadge + '</td>' +
+                        '<td>' + gradeBadge + '</td>' +
+                        '<td>' + statusBadge + '</td>' +
+                        '<td>' + appBadge + '</td>' +
+                        '<td><small class="text-muted">' + (item.verifiedDate || '—') + '</small></td>' +
+                        '<td>' + contactHtml + '</td>' +
+                        '<td>' + remarksHtml + '</td>' +
+                        '</tr>';
+                    $tbody.append(row);
+                });
+            }
+
+            $(document).on('click', '.btn-view-verified-profiles', function () {
+                var staffName = $(this).data('staff-name') || 'Staff';
+                var items = $(this).data('items') || [];
+                var gradeA = parseInt($(this).data('grade-a')) || 0;
+                var gradeB = parseInt($(this).data('grade-b')) || 0;
+                var gradeC = parseInt($(this).data('grade-c')) || 0;
+                var gradeD = parseInt($(this).data('grade-d')) || 0;
+
+                currentVerifiedItems = items;
+                currentVerifiedFilter = 'all';
+
+                $('#verifModalStaffName').text(staffName);
+                $('#verifModalTotalCount').text(items.length);
+                $('#verifModalGradeACount').text(gradeA);
+                $('#verifModalGradeBCount').text(gradeB);
+                $('#verifModalGradeCCount').text(gradeC);
+                $('#verifModalGradeDCount').text(gradeD);
+
+                // Update filter buttons count
+                $('#verifFilterCountAll').text(items.length);
+                $('#verifFilterCountA').text(items.filter(function (i) { return (i.verificationGrade || '').toUpperCase() === 'A'; }).length);
+                $('#verifFilterCountB').text(items.filter(function (i) { return (i.verificationGrade || '').toUpperCase() === 'B'; }).length);
+                $('#verifFilterCountC').text(items.filter(function (i) { return (i.verificationGrade || '').toUpperCase() === 'C'; }).length);
+                $('#verifFilterCountD').text(items.filter(function (i) { return (i.verificationGrade || '').toUpperCase() === 'D'; }).length);
+
+                $('.verif-filter-btn').removeClass('active btn-primary btn-success btn-warning btn-danger').addClass('btn-outline-secondary');
+                $('.verif-filter-btn[data-filter="all"]').addClass('active btn-primary').removeClass('btn-outline-secondary');
+
+                $('#verifModalSearch').val('');
+                renderVerifiedTable();
+                new bootstrap.Modal('#verifiedProfilesModal').show();
+            });
+
+            $(document).on('click', '.verif-filter-btn', function () {
+                $('.verif-filter-btn').removeClass('active btn-primary btn-success btn-warning btn-danger').addClass('btn-outline-secondary');
+                var f = $(this).data('filter');
+                $(this).addClass('active');
+                if (f === 'all') $(this).addClass('btn-primary').removeClass('btn-outline-secondary');
+                else if (f === 'A') $(this).addClass('btn-success').removeClass('btn-outline-secondary');
+                else if (f === 'B') $(this).addClass('btn-primary').removeClass('btn-outline-secondary');
+                else if (f === 'C') $(this).addClass('btn-warning').removeClass('btn-outline-secondary');
+                else if (f === 'D') $(this).addClass('btn-danger').removeClass('btn-outline-secondary');
+
+                currentVerifiedFilter = f;
+                renderVerifiedTable();
+            });
+
+            $('#verifModalSearch').on('input keyup', function () {
+                renderVerifiedTable();
             });
 
             // ─── Fix select defaults on page load ─────────────

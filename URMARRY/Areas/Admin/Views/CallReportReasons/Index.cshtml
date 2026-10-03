@@ -1,0 +1,68 @@
+@model List<Application.Models.Call.CallReportReasonDto>
+@{
+    ViewBag.Title = "Call Report Reasons";
+}
+
+@section Title
+{
+    Call Complaint Report Reasons
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Call Complaint Dropdown Options</h5>
+                <a asp-action="Get" asp-route-id="0" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add New Reason
+                </a>
+            </div>
+            <div class="card-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <table id="datatable" class="table table-striped dt-responsive nowrap w-100">
+                    <thead>
+                    <tr>
+                        <th width="10%">Order</th>
+                        <th width="45%">Reason</th>
+                        <th width="20%">Status</th>
+                        <th width="15%">Created On</th>
+                        <th width="10%">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@item.DisplayOrder</span></td>
+                            <td class="fw-semibold">@item.Reason</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Disabled</span>
+                                }
+                            </td>
+                            <td>@(item.CreatedOn?.ToString("dd MMM yyyy") ?? "-")</td>
+                            <td>
+                                <a asp-action="Get" asp-route-id="@item.Id" class="btn btn-primary btn-xs" title="Edit Reason">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

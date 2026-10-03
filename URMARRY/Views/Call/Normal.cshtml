@@ -38,7 +38,8 @@
                             <div class="call-content">
 
                                 <!-- Replace profile.jpg with your profile image -->
-                                <img src="/assets/images/chat-img2.jpg" alt="Profile" class="profile-image2" id="callerPhoto">
+                                <img src="/assets/images/default-user-men.png" alt="Profile" class="profile-image2"
+                                     id="callerPhoto" onerror="this.onerror=null; this.src='/assets/images/default-user-men.png';">
 
                                 <div class="name" id="callerName">Loading...</div>
 
@@ -51,22 +52,26 @@
                                     00:00
                                 </div>
 
-                                <!-- Controls -->
+                                 <!-- Controls -->
                                 <div class="controls">
 
-                                    <button type="button" class="control gray" title="Speaker" id="speakerBtn" onclick="toggleSpeaker()">
+                                    <button type="button" class="control gray" title="Speaker" id="speakerBtn"
+                                            onclick="toggleSpeaker()">
                                         <img src="/assets/images/speaker.svg" alt="Speaker">
                                     </button>
 
-                                    <button type="button" class="control gray" title="Mute" id="muteBtn" onclick="toggleMute()">
-                                        <img src="/assets/images/report.svg" alt="Mute">
+                                    <button type="button" class="control gray" title="Report" id="reportBtn"
+                                            onclick="handleReportClick()">
+                                        <img src="/assets/images/report.svg" alt="Report">
                                     </button>
 
-                                    <button type="button" class="control greenvideo" title="Message" id="messageBtn" onclick="goToChat()">
+                                    <button type="button" class="control greenvideo" title="Message" id="messageBtn"
+                                            onclick="goToChat()">
                                         <img src="/assets/images/message.svg" alt="Message">
                                     </button>
 
-                                    <button type="button" class="control red" title="End Call" id="endCallBtn" onclick="endCall()">
+                                    <button type="button" class="control red" title="End Call" id="endCallBtn"
+                                            onclick="endCall()">
                                         <img src="/assets/images/disconnect.svg" alt="End Call">
                                     </button>
 
@@ -84,6 +89,65 @@
         </div>
     </div>
 </main>
+
+<!-- M4Nikah Post-Call Summary & Report Modal -->
+<div id="postCallModalOverlay" class="upgrade-modal-overlay" onclick="if(event.target === this) goToChat()">
+    <div class="upgrade-modal-card" style="max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+        
+        <!-- Close button -->
+        <div class="modal-close-btn" onclick="goToChat()" title="Close">
+            <i class="uil uil-times"></i>
+        </div>
+
+        <div class="modal-body-scroll" style="padding: 32px 24px 28px;">
+            
+            <!-- Call Ended Badge -->
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3" style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 999px; color: #475569; font-size: 13px; font-weight: 600;">
+                <i class="uil uil-phone-slash fs-16 text-danger"></i>
+                <span>Call Ended</span>
+            </div>
+
+            <!-- Profile Avatar -->
+            <div class="position-relative my-2" style="width: 84px; height: 84px;">
+                <img id="postCallUserPhoto" src="/assets/images/default-user-men.png" alt="Member"
+                     onerror="this.onerror=null; this.src='/assets/images/default-user-men.png';"
+                     style="width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid #007B3D; box-shadow: 0 4px 14px rgba(0, 123, 61, 0.2); background: #fff;">
+            </div>
+
+            <!-- User Name -->
+            <h5 id="postCallUserName" class="fw-bold fs-17 mb-1 mt-2" style="color: #1e293b;">Member</h5>
+            
+            <!-- Call Duration display -->
+            <div class="d-flex align-items-center justify-content-center gap-2 my-3 px-3 py-2" style="background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; width: 100%;">
+                <i class="uil uil-clock-three fs-16 text-muted"></i>
+                <span class="text-muted fs-13">Call Duration:</span>
+                <span id="postCallDurationText" class="fw-bold fs-15 text-dark">00:00</span>
+            </div>
+
+            <p class="text-muted fs-12 mb-4" style="line-height: 1.4;">
+                How was your conversation? If you experienced any abusive behaviour or policy violations, you can report this call.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-center gap-3 w-100">
+                <!-- Report Button -->
+                <button type="button" id="postCallReportBtn" onclick="goToReportPage()" class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2"
+                        style="background-color: #fff !important; color: #dc2626 !important; border: 1.5px solid #dc2626 !important; border-radius: 999px; font-size: 14px; font-weight: 600; padding: 10px 18px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.1);">
+                    <img src="/assets/images/report.svg" alt="Report" style="width: 16px; height: 16px; filter: invert(21%) sepia(85%) saturate(4522%) hue-rotate(349deg) brightness(92%) contrast(93%);">
+                    <span>Report</span>
+                </button>
+
+                <!-- Done Button -->
+                <button type="button" id="postCallDoneBtn" onclick="goToChat()" class="btn d-flex align-items-center justify-content-center gap-2 flex-fill py-2 text-white"
+                        style="background-color: #007B3D !important; border-radius: 999px; font-size: 14px; font-weight: 600; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0, 123, 61, 0.3); border: none;">
+                    <i class="uil uil-check fs-18"></i>
+                    <span>Done</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <audio id="remoteAudio" autoplay playsinline style="display: none;"></audio>
 
@@ -104,11 +168,21 @@
         let currentCallLog = null;
         let peerConnection = null;
         let localStream = null;
+        let remoteStream = null;
         let callTimerInterval = null;
         let callStartTime = null;
+        let totalDurationSeconds = 0;
         let isMuted = false;
         let isSpeakerMuted = false;
         let candidateQueue = [];
+        let isCallEndedLocally = false;
+
+        // Recording variables
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let audioContext = null;
+        let isRecordingStarted = false;
+        let isUploadingRecording = false;
 
         async function loadTargetUserInfo() {
             try {
@@ -117,12 +191,28 @@
                     const data = await resp.json();
                     const nameEl = document.getElementById('callerName');
                     const photoEl = document.getElementById('callerPhoto');
-                    if (nameEl) nameEl.textContent = data.participantName || 'Member';
-                    if (photoEl && data.participantPhotoUrl) {
-                        photoEl.src = data.participantPhotoUrl;
+                    const postNameEl = document.getElementById('postCallUserName');
+                    const postPhotoEl = document.getElementById('postCallUserPhoto');
+
+                    const pName = data.participantName || 'Member';
+                    const isFemale = data.participantGender && String(data.participantGender).toLowerCase() === 'female';
+                    const defaultAvatar = isFemale ? '/assets/images/default-user-women.png' : '/assets/images/default-user-men.png';
+                    const pPhoto = (data.participantPhotoUrl && data.participantPhotoUrl.trim() !== '' && !data.participantPhotoUrl.includes('chat-img2') && !data.participantPhotoUrl.includes('default-user'))
+                        ? ((data.participantPhotoUrl.startsWith('http') || data.participantPhotoUrl.startsWith('/')) ? data.participantPhotoUrl : '/' + data.participantPhotoUrl)
+                        : defaultAvatar;
+
+                    if (nameEl) nameEl.textContent = pName;
+                    if (photoEl) {
+                        photoEl.onerror = function () { this.onerror = null; this.src = defaultAvatar; };
+                        photoEl.src = pPhoto;
+                    }
+                    if (postNameEl) postNameEl.textContent = pName;
+                    if (postPhotoEl) {
+                        postPhotoEl.onerror = function () { this.onerror = null; this.src = defaultAvatar; };
+                        postPhotoEl.src = pPhoto;
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error('Failed to load user info:', e);
             }
         }
@@ -198,7 +288,7 @@
                     await callHub.invoke('SendOffer', targetUserId, JSON.stringify(offer), currentCallLog.roomId);
                 }
 
-            } catch(e) {
+            } catch (e) {
                 console.error('Call initialization failed:', e);
                 if (statusEl) statusEl.textContent = e.message || 'Call failed';
             }
@@ -214,7 +304,7 @@
                         iceServers = iceConfig.iceServers;
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 console.warn('ICE servers fetch fallback:', e);
             }
 
@@ -230,15 +320,17 @@
             peerConnection.ontrack = (event) => {
                 const remoteAudio = document.getElementById('remoteAudio');
                 if (remoteAudio && event.streams && event.streams[0]) {
-                    remoteAudio.srcObject = event.streams[0];
+                    remoteStream = event.streams[0];
+                    remoteAudio.srcObject = remoteStream;
                     remoteAudio.play().catch(e => console.warn('Autoplay prevented:', e));
+                    startMediaRecording();
                 }
             };
 
             // ICE Candidate handler
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate && callHub && currentCallLog) {
-                    callHub.invoke('SendIceCandidate', targetUserId, 
+                    callHub.invoke('SendIceCandidate', targetUserId,
                         JSON.stringify(event.candidate), currentCallLog.roomId)
                         .catch(e => console.error('Error sending ICE candidate:', e));
                 }
@@ -249,11 +341,120 @@
                 if (!peerConnection) return;
                 if (peerConnection.connectionState === 'connected') {
                     if (statusEl) statusEl.textContent = 'Connected';
+                    startMediaRecording();
                 } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
                     if (statusEl) statusEl.textContent = 'Call Disconnected';
-                    setTimeout(() => endCall(), 2000);
+                    setTimeout(() => endCall(), 1500);
                 }
             };
+        }
+
+        function startMediaRecording() {
+            if (isRecordingStarted) return;
+            try {
+                const tracks = [];
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+                if (AudioContextClass) {
+                    audioContext = new AudioContextClass();
+                    const destination = audioContext.createMediaStreamDestination();
+
+                    if (localStream && localStream.getAudioTracks().length > 0) {
+                        const localSource = audioContext.createMediaStreamSource(localStream);
+                        localSource.connect(destination);
+                    }
+                    if (remoteStream && remoteStream.getAudioTracks().length > 0) {
+                        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+                        remoteSource.connect(destination);
+                    }
+
+                    destination.stream.getAudioTracks().forEach(t => tracks.push(t));
+                } else {
+                    if (localStream) localStream.getAudioTracks().forEach(t => tracks.push(t));
+                    if (remoteStream) remoteStream.getAudioTracks().forEach(t => tracks.push(t));
+                }
+
+                if (tracks.length === 0) return;
+
+                const mixedStream = new MediaStream(tracks);
+                recordedChunks = [];
+
+                let options = {};
+                if (typeof MediaRecorder.isTypeSupported === 'function') {
+                    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                        options = { mimeType: 'audio/webm;codecs=opus' };
+                    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                        options = { mimeType: 'audio/webm' };
+                    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                        options = { mimeType: 'audio/mp4' };
+                    }
+                }
+
+                mediaRecorder = new MediaRecorder(mixedStream, options);
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.start(1000); // gather chunks every 1 second
+                isRecordingStarted = true;
+                console.log('Audio call recording started successfully.');
+            } catch (err) {
+                console.warn('Unable to start audio MediaRecorder:', err);
+            }
+        }
+
+        async function stopAndUploadRecording() {
+            if (isUploadingRecording) return;
+            isUploadingRecording = true;
+
+            const callLogId = (currentCallLog && (currentCallLog.id || currentCallLog.Id)) || urlCallLogId;
+            const durationSec = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : totalDurationSeconds;
+
+            if (!mediaRecorder || mediaRecorder.state === 'inactive' || !callLogId) {
+                return;
+            }
+
+            return new Promise((resolve) => {
+                mediaRecorder.onstop = async () => {
+                    try {
+                        if (recordedChunks.length > 0) {
+                            const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                            const ext = mimeType.includes('mp4') ? '.mp4' : '.webm';
+                            const blob = new Blob(recordedChunks, { type: mimeType });
+
+                            if (blob.size > 500) {
+                                const formData = new FormData();
+                                formData.append('callLogId', callLogId);
+                                formData.append('durationSeconds', durationSec);
+                                formData.append('file', blob, `audio_call_${callLogId}${ext}`);
+
+                                console.log(`Uploading call recording (${blob.size} bytes)...`);
+                                await fetch(`/api/call/recording?userId=${currentUserId}`, {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                console.log('Call recording upload finished.');
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error during recording upload:', e);
+                    } finally {
+                        if (audioContext) {
+                            try { audioContext.close(); } catch (e) { }
+                            audioContext = null;
+                        }
+                        resolve();
+                    }
+                };
+
+                try {
+                    mediaRecorder.stop();
+                } catch (e) {
+                    resolve();
+                }
+            });
         }
 
         async function onCallAccepted(callLog) {
@@ -261,12 +462,13 @@
             const statusEl = document.getElementById('callStatusText');
             if (statusEl) statusEl.textContent = 'Connected';
             startCallTimer();
+            startMediaRecording();
 
             // Re-send offer if caller to ensure newly joined receiver processes it
             if (!isIncoming && peerConnection && peerConnection.localDescription && callHub && currentCallLog) {
                 try {
                     await callHub.invoke('SendOffer', targetUserId, JSON.stringify(peerConnection.localDescription), currentCallLog.roomId);
-                } catch(err) {
+                } catch (err) {
                     console.warn('Error re-sending offer:', err);
                 }
             }
@@ -277,7 +479,7 @@
                 const cand = candidateQueue.shift();
                 try {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
-                } catch(e) {
+                } catch (e) {
                     console.warn('Error applying queued ICE candidate:', e);
                 }
             }
@@ -294,14 +496,15 @@
                     await peerConnection.setLocalDescription(answer);
                     if (callHub) {
                         const roomId = payload.roomId || (currentCallLog ? currentCallLog.roomId : urlRoomId);
-                        await callHub.invoke('SendAnswer', payload.callerId || targetUserId, 
+                        await callHub.invoke('SendAnswer', payload.callerId || targetUserId,
                             JSON.stringify(answer), roomId);
                     }
                     const statusEl = document.getElementById('callStatusText');
                     if (statusEl) statusEl.textContent = 'Connected';
                     startCallTimer();
+                    startMediaRecording();
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error('Error handling SDP offer:', e);
             }
         }
@@ -315,8 +518,9 @@
                     const statusEl = document.getElementById('callStatusText');
                     if (statusEl) statusEl.textContent = 'Connected';
                     startCallTimer();
+                    startMediaRecording();
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error('Error processing SDP answer:', e);
             }
         }
@@ -331,27 +535,27 @@
                         candidateQueue.push(candidate);
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error('Error adding ICE candidate:', e);
             }
         }
 
-        function onCallRejected(callLog) {
+        async function onCallRejected(callLog) {
+            if (isCallEndedLocally) return;
             const statusEl = document.getElementById('callStatusText');
             if (statusEl) statusEl.textContent = 'Call Declined';
+            await stopAndUploadRecording();
             cleanup();
-            setTimeout(() => {
-                window.location.href = `/chat/with/${targetUserId}`;
-            }, 2000);
+            showPostCallModal();
         }
 
-        function onCallEnded(callLog) {
+        async function onCallEnded(callLog) {
+            if (isCallEndedLocally) return;
             const statusEl = document.getElementById('callStatusText');
             if (statusEl) statusEl.textContent = 'Call Ended';
+            await stopAndUploadRecording();
             cleanup();
-            setTimeout(() => {
-                window.location.href = `/chat/with/${targetUserId}`;
-            }, 1500);
+            showPostCallModal();
         }
 
         function startCallTimer() {
@@ -359,11 +563,25 @@
             callStartTime = Date.now();
             const timerEl = document.getElementById('timer');
             callTimerInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-                const secs = String(elapsed % 60).padStart(2, '0');
+                totalDurationSeconds = Math.floor((Date.now() - callStartTime) / 1000);
+                const mins = String(Math.floor(totalDurationSeconds / 60)).padStart(2, '0');
+                const secs = String(totalDurationSeconds % 60).padStart(2, '0');
                 if (timerEl) timerEl.textContent = `${mins}:${secs}`;
             }, 1000);
+        }
+
+        function showPostCallModal() {
+            const mins = String(Math.floor(totalDurationSeconds / 60)).padStart(2, '0');
+            const secs = String(totalDurationSeconds % 60).padStart(2, '0');
+            const durationEl = document.getElementById('postCallDurationText');
+            if (durationEl) {
+                durationEl.textContent = `${mins}:${secs}`;
+            }
+
+            const modalOverlay = document.getElementById('postCallModalOverlay');
+            if (modalOverlay) {
+                modalOverlay.classList.add('active');
+            }
         }
 
         function toggleMute() {
@@ -397,22 +615,38 @@
             window.location.href = `/chat/with/${targetUserId}`;
         }
 
-        async function endCall() {
+        function goToReportPage() {
+            const callLogId = (currentCallLog && (currentCallLog.id || currentCallLog.Id)) || urlCallLogId || 0;
+            window.location.href = `/call/report/${targetUserId}?callLogId=${callLogId}&callType=Voice&durationSeconds=${totalDurationSeconds}`;
+        }
+
+        async function handleReportClick() {
+            await endCall(true);
+        }
+
+        async function endCall(isReportAction = false) {
+            isCallEndedLocally = true;
             const statusEl = document.getElementById('callStatusText');
             if (statusEl) statusEl.textContent = 'Ending Call...';
 
             if (currentCallLog && callHub) {
                 try {
-                    await callHub.invoke('EndCall', { 
-                        callLogId: currentCallLog.id || currentCallLog.Id, 
-                        reason: 'NormalHangup' 
+                    await callHub.invoke('EndCall', {
+                        callLogId: currentCallLog.id || currentCallLog.Id,
+                        reason: isReportAction ? 'ReportAndEnd' : 'NormalHangup'
                     });
-                } catch(e) { 
-                    console.error('EndCall invoke error:', e); 
+                } catch (e) {
+                    console.error('EndCall invoke error:', e);
                 }
             }
+            await stopAndUploadRecording();
             cleanup();
-            window.location.href = `/chat/with/${targetUserId}`;
+
+            if (isReportAction) {
+                goToReportPage();
+            } else {
+                showPostCallModal();
+            }
         }
 
         function cleanup() {
@@ -431,6 +665,7 @@
         }
 
         window.addEventListener('beforeunload', () => {
+            stopAndUploadRecording();
             cleanup();
         });
 

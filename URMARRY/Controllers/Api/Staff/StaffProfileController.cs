@@ -156,7 +156,7 @@ namespace URMARRY.Controllers.Api.Staff
                     .Select(a =>
                     {
                         var profile = a.Profile!;
-                        
+
                         // Resolve staff name from dictionary
                         staffDict.TryGetValue(a.StaffId, out var staffName);
                         if (string.IsNullOrEmpty(staffName))
@@ -176,8 +176,8 @@ namespace URMARRY.Controllers.Api.Staff
                         var activePlan = activePlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
                         var latestPlan = userPlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
 
-                        int? remainingCredits = activePlans.Count > 0 
-                            ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed)) 
+                        int? remainingCredits = activePlans.Count > 0
+                            ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed))
                             : (int?)null;
 
                         string membershipStatus;
@@ -330,8 +330,8 @@ namespace URMARRY.Controllers.Api.Staff
                         var activePlan = activePlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
                         var latestPlan = userPlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
 
-                        int? remainingCredits = activePlans.Count > 0 
-                            ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed)) 
+                        int? remainingCredits = activePlans.Count > 0
+                            ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed))
                             : (int?)null;
 
                         string membershipStatus;
@@ -399,7 +399,7 @@ namespace URMARRY.Controllers.Api.Staff
                             expiryDate = expiryDate,
                             remainingCredits = remainingCredits,
                             daysLeft = daysLeft
-                        }; 
+                        };
                     })
                     .ToList();
 
@@ -695,8 +695,8 @@ namespace URMARRY.Controllers.Api.Staff
                     var activePlan = activePlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
                     var latestPlan = userPlans.OrderByDescending(p => p.ExpiresAt).FirstOrDefault();
 
-                    int? remainingCredits = activePlans.Count > 0 
-                        ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed)) 
+                    int? remainingCredits = activePlans.Count > 0
+                        ? activePlans.Sum(p => Math.Max(0, p.ViewCreditsPurchased - p.ViewCreditsUsed))
                         : (int?)null;
 
                     string membershipStatus;
@@ -1063,7 +1063,7 @@ namespace URMARRY.Controllers.Api.Staff
                     // Generate OTP Verification Code (Testing purpose: hardcoded to 123456)
                     Random rdm = new Random();
                     string pin = rdm.Next(111111, 999999).ToString();
-                     //string pin = "123456";
+                    //string pin = "123456";
                     model.VerificationCode = pin;
                     model.OtpGeneratedAt = DateTime.Now;
                     model.OtpResendCount = 0;
@@ -1077,10 +1077,10 @@ namespace URMARRY.Controllers.Api.Staff
 
                     // Map to Registration database entity
                     var entity = _mapper.Map<Registration>(model);
-                    
+
                     // Save profile images if any (handling file uploads is supported by _fileService)
                     await _fileService.SaveAllFiles(entity, model, "Uploads/Registration");
-                    
+
                     await _registrationRepo.Add(entity);
                     await _registrationRepo.SaveChanges();
 
@@ -1129,7 +1129,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                     // Generate Auth JWT Token for plug-and-play login capability
                     var token = _cookieHelper.GenerateJwtToken(entity.Id, entity.Email);
-                    
+
                     // Map the saved data back to mobile profile format
                     model.Id = entity.Id;
                     model.RegisterNumber = entity.RegisterNumber;
@@ -1432,7 +1432,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                     // Generate Auth JWT Token for plug-and-play login capability
                     var token = _cookieHelper.GenerateJwtToken(entity.Id, entity.Email);
-                    
+
                     // Map the saved data back to mobile profile format
                     model.Id = entity.Id;
                     model.RegisterNumber = entity.RegisterNumber;
@@ -2102,7 +2102,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                 DateTime expiryTime = DateTime.UtcNow.AddMinutes(expirationMinutes);
                 string payload = $"{userProfile.Id}|{expiryTime:o}";
-                
+
                 var crypt = new RijndaelCrypt(secretKey);
                 string token = crypt.Encrypt(payload);
                 string paymentLink = $"{Request.Scheme}://{Request.Host}/Transaction/MakePaymentDirect?token={Uri.EscapeDataString(token)}";
@@ -2759,6 +2759,7 @@ namespace URMARRY.Controllers.Api.Staff
                     Id = c.Id,
                     Name = c.Name,
                     PhoneNumber = c.PhoneNumber,
+                    Gender = c.Gender,
                     AssignedStaffId = c.AssignedStaffId,
                     Status = c.Status,
                     Remarks = c.Remarks,
@@ -2992,7 +2993,7 @@ namespace URMARRY.Controllers.Api.Staff
                     .ToListAsync();
 
                 var convertedFollowUps = staffFollowUps
-                    .Where(f => 
+                    .Where(f =>
                         (
                             timelineStaffFollowUpIds.Contains(f.Id)
                             || (f.ModifiedOn >= startDate && f.ModifiedOn <= endDate)
@@ -3075,20 +3076,20 @@ namespace URMARRY.Controllers.Api.Staff
 
                 int gradeA = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
                 int gradeB = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved);
-                int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started 
+                int gradeC = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Started
                     || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerifyRequest
                     || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
-                int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending 
+                int gradeD = verificationFollowUps.Count(f => f.LatestProfileVerificationStatus == ProfileVerificationStatus.Pending
                     || f.LatestProfileVerificationStatus == ProfileVerificationStatus.Hold
                     || (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify && f.LatestAdminApprovalStatus != AdminApprovalStatus.Approved));
                 int totalVerifications = gradeA + gradeB + gradeC + gradeD;
 
-                int verifBoys = verificationFollowUps.Count(f => f.Profile != null 
+                int verifBoys = verificationFollowUps.Count(f => f.Profile != null
                     && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Male", StringComparison.OrdinalIgnoreCase));
 
-                var approvedFemaleVerifs = verificationFollowUps.Where(f => f.Profile != null 
+                var approvedFemaleVerifs = verificationFollowUps.Where(f => f.Profile != null
                     && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                     && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved
                     && string.Equals(f.Profile.Gender, "Female", StringComparison.OrdinalIgnoreCase))
@@ -3132,8 +3133,8 @@ namespace URMARRY.Controllers.Api.Staff
                 int totalPeriodTarget = totalVerifTarget + totalConvTarget;
                 int totalPeriodAchieved = totalApprovedVerifications + totalPremiumConversions;
 
-                decimal targetAchievementPercent = totalPeriodTarget > 0 
-                    ? Math.Min(100, Math.Round((decimal)totalPeriodAchieved / totalPeriodTarget * 100, 2)) 
+                decimal targetAchievementPercent = totalPeriodTarget > 0
+                    ? Math.Min(100, Math.Round((decimal)totalPeriodAchieved / totalPeriodTarget * 100, 2))
                     : 0;
 
                 decimal maleVerifProgress = maleVerifTarget > 0 ? Math.Min(100, Math.Round((decimal)verifBoys / maleVerifTarget * 100, 2)) : 0;
@@ -3262,8 +3263,8 @@ namespace URMARRY.Controllers.Api.Staff
 
                 // 11. Leaves, Deductions & Payroll Summary
                 decimal basicSalary = salaryConfig?.BasicMonthlySalary ?? 0;
-                decimal perDaySalary = salaryConfig?.PerDaySalary > 0 
-                    ? salaryConfig.PerDaySalary 
+                decimal perDaySalary = salaryConfig?.PerDaySalary > 0
+                    ? salaryConfig.PerDaySalary
                     : (basicSalary > 0 ? Math.Round(basicSalary / DateTime.DaysInMonth(filterYear, filterMonth), 2) : 0);
 
                 var leaveRecords = await _dbContext.StaffLeaveRecords
@@ -3298,7 +3299,7 @@ namespace URMARRY.Controllers.Api.Staff
 
                 // Deleted Profile Incentive Deductions
                 var verifiedFollowUps = verificationFollowUps
-                    .Where(f => f.Profile != null 
+                    .Where(f => f.Profile != null
                         && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                         && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
                     .DistinctBy(f => f.ProfileId)
@@ -3310,10 +3311,10 @@ namespace URMARRY.Controllers.Api.Staff
                 foreach (var vf in verifiedFollowUps)
                 {
                     var profile = vf.Profile!;
-                    bool isDeleted = profile.IsDeleted 
-                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled 
-                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation 
-                        || profile.DeleteReasonId != null 
+                    bool isDeleted = profile.IsDeleted
+                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled
+                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation
+                        || profile.DeleteReasonId != null
                         || !profile.IsActive;
 
                     if (isDeleted)
@@ -3331,8 +3332,8 @@ namespace URMARRY.Controllers.Api.Staff
                         }
                         else
                         {
-                            string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade) 
-                                ? vf.VerificationGrade.Trim().ToUpper() 
+                            string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade)
+                                ? vf.VerificationGrade.Trim().ToUpper()
                                 : (isDocVerify ? "A" : "B");
                             verifType = $"Female Grade {grade} Verification";
 
@@ -3349,10 +3350,10 @@ namespace URMARRY.Controllers.Api.Staff
                             }
                         }
 
-                        string delStatus = !string.IsNullOrEmpty(profile.DeleteReasonText) 
-                            ? profile.DeleteReasonText 
-                            : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled" 
-                                : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation" 
+                        string delStatus = !string.IsNullOrEmpty(profile.DeleteReasonText)
+                            ? profile.DeleteReasonText
+                            : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled"
+                                : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation"
                                 : (profile.IsDeleted ? "Profile Deleted" : "Deactivated")));
 
                         deletedProfileItems.Add(new
@@ -3599,10 +3600,10 @@ namespace URMARRY.Controllers.Api.Staff
 
         private long GetCurrentStaffId()
         {
-            var claimVal = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
-                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+            var claimVal = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                 ?? User.Identity?.Name;
-                
+
             if (long.TryParse(claimVal, out long id))
             {
                 return id;
@@ -4484,7 +4485,7 @@ namespace URMARRY.Controllers.Api.Staff
                     .ToList();
 
                 var verifiedFollowUps = verificationFollowUps
-                    .Where(f => f.Profile != null 
+                    .Where(f => f.Profile != null
                         && (f.LatestProfileVerificationStatus == ProfileVerificationStatus.Verify || f.LatestProfileVerificationStatus == ProfileVerificationStatus.DetailedVerify)
                         && f.LatestAdminApprovalStatus == AdminApprovalStatus.Approved)
                     .DistinctBy(f => f.ProfileId)
@@ -4509,10 +4510,10 @@ namespace URMARRY.Controllers.Api.Staff
                 foreach (var vf in verifiedFollowUps)
                 {
                     var profile = vf.Profile!;
-                    bool isDeleted = profile.IsDeleted 
-                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled 
-                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation 
-                        || profile.DeleteReasonId != null 
+                    bool isDeleted = profile.IsDeleted
+                        || profile.DisabledReason == Application.Constants.DisabledReason.Recycled
+                        || profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation
+                        || profile.DeleteReasonId != null
                         || !profile.IsActive;
 
                     if (isDeleted)
@@ -4522,8 +4523,8 @@ namespace URMARRY.Controllers.Api.Staff
 
                         decimal unitDeduction = 0;
                         string verifType;
-                        string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade) 
-                            ? vf.VerificationGrade.Trim().ToUpper() 
+                        string grade = !string.IsNullOrWhiteSpace(vf.VerificationGrade)
+                            ? vf.VerificationGrade.Trim().ToUpper()
                             : (isDocVerify ? "A" : "B");
 
                         if (isMale)
@@ -4575,10 +4576,10 @@ namespace URMARRY.Controllers.Api.Staff
 
                         string delStatus = !string.IsNullOrEmpty(profile.DeleteReason?.Reason)
                             ? profile.DeleteReason.Reason
-                            : (!string.IsNullOrEmpty(profile.DeleteReasonText) 
-                                ? profile.DeleteReasonText 
-                                : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled" 
-                                    : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation" 
+                            : (!string.IsNullOrEmpty(profile.DeleteReasonText)
+                                ? profile.DeleteReasonText
+                                : (profile.DisabledReason == Application.Constants.DisabledReason.Recycled ? "Account Deleted / Recycled"
+                                    : (profile.DisabledReason == Application.Constants.DisabledReason.ReportedViolation ? "Reported Violation"
                                     : (profile.IsDeleted ? "Profile Deleted" : "Deactivated"))));
 
                         DateTime verifiedDate = vf.ModifiedOn != default ? vf.ModifiedOn : vf.CreatedOn;

@@ -77,6 +77,12 @@ namespace URMARRY.Areas.Admin.Models
         public decimal DeletedProfileDeductions { get; set; }
         public List<DeletedProfileDeductionItem> DeletedProfileItems { get; set; } = new();
 
+        // Converted Profile Details
+        public List<ConvertedProfileDetailItem> ConvertedProfileItems { get; set; } = new();
+
+        // Verified Profile Details
+        public List<VerifiedProfileDetailItem> VerifiedProfileItems { get; set; } = new();
+
         // Composite score for ranking
         public decimal PerformanceScore { get; set; }
     }
@@ -208,5 +214,40 @@ namespace URMARRY.Areas.Admin.Models
         public DateTime? VerifiedDate { get; set; }
         public string DeletionStatus { get; set; } = string.Empty;
         public decimal DeductionAmount { get; set; }
+    }
+
+    // ─── Converted Profile Detail Item ─────────────────────────
+    public class ConvertedProfileDetailItem
+    {
+        public long ProfileId { get; set; }
+        public string RegisterNumber { get; set; } = string.Empty;
+        public string ProfileName { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public string ConversionType { get; set; } = string.Empty;
+        public DateTime? ConversionDate { get; set; }
+        public decimal PaymentAmount { get; set; }
+        public string PaymentMode { get; set; } = string.Empty;
+        public string TransactionId { get; set; } = string.Empty;
+        public string ContactNumber { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public long FollowUpId { get; set; }
+    }
+
+    // ─── Verified Profile Detail Item ──────────────────────────
+    public class VerifiedProfileDetailItem
+    {
+        public long ProfileId { get; set; }
+        public string RegisterNumber { get; set; } = string.Empty;
+        public string ProfileName { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public string VerificationType { get; set; } = string.Empty;
+        public string VerificationGrade { get; set; } = string.Empty;
+        public string VerificationStatus { get; set; } = string.Empty;
+        public string AdminApprovalStatus { get; set; } = string.Empty;
+        public DateTime? VerifiedDate { get; set; }
+        public string ContactNumber { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string Remarks { get; set; } = string.Empty;
+        public long FollowUpId { get; set; }
     }
 }

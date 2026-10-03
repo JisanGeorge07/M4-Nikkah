@@ -1,0 +1,247 @@
+@model URMARRY.Areas.Admin.Models.CallReportDetailViewModel
+@using Domain
+@{
+    ViewBag.Title = $"Call Complaint #{Model.Report.Id}";
+    var r = Model.Report;
+    var reporter = Model.Reporter;
+    var reported = Model.ReportedUser;
+    var callLog = Model.CallLog;
+}
+
+@section Title
+{
+    <a href="/admin/call-reports" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="fas fa-arrow-left"></i> Back to Complaints
+    </a>
+    Call Complaint Review #@r.Id
+}
+
+<div class="row g-4">
+    <!-- Left Column: Complaint Details, Evidence Player, Profile Comparisons -->
+    <div class="col-lg-8">
+        
+        <!-- Call & Complaint Summary Card -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold text-dark">
+                    <i class="fas fa-exclamation-circle text-danger me-2"></i> Complaint Details
+                </h5>
+                <span class="badge @(r.Status == UserReportStatus.Pending ? "bg-warning text-dark" : r.Status == UserReportStatus.Actioned ? "bg-danger" : "bg-secondary") fs-6 px-3 py-2 rounded-pill">
+                    Status: @r.Status
+                </span>
+            </div>
+            <div class="card-body p-4">
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Complaint Reason</label>
+                        <div class="fs-5 fw-bold text-danger">@r.Reason</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small fw-bold text-uppercase">Call Type</label>
+                        <div>
+                            <span class="badge @(r.CallType == UserCallType.Video ? "bg-primary" : "bg-success") px-2 py-1 rounded-pill">
+                                <i class="fas @(r.CallType == UserCallType.Video ? "fa-video" : "fa-phone-alt") me-1"></i> @(r.CallType == UserCallType.Video ? "Video Call" : "Audio Call")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small fw-bold text-uppercase">Call Duration</label>
+                        <div class="fs-6 fw-bold text-dark">
+                            @(r.CallDurationSeconds.HasValue && r.CallDurationSeconds.Value > 0 ? $"{r.CallDurationSeconds.Value / 60}m {r.CallDurationSeconds.Value % 60}s" : "0s")
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase">Reporter Comments</label>
+                    <div class="p-3 rounded-3 bg-light border text-dark" style="white-space: pre-wrap; font-size: 0.95rem;">
+                        @(string.IsNullOrEmpty(r.Comments) ? "No additional written comments provided." : r.Comments)
+                    </div>
+                </div>
+
+                <div class="text-muted small">
+                    <i class="fas fa-calendar-alt me-1"></i> Submitted on: <strong>@(r.CreatedOn?.ToString("dd MMMM yyyy, hh:mm:ss tt UTC") ?? "-")</strong>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Call Recording Backup Evidence Card -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold text-dark">
+                    <i class="fas fa-shield-alt text-primary me-2"></i> Call Recording Evidence
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.BackupFileExists && !string.IsNullOrEmpty(Model.PlaybackUrl))
+                {
+                    <div class="alert alert-success d-flex align-items-center mb-3">
+                        <i class="fas fa-check-circle fs-4 me-3"></i>
+                        <div>
+                            <strong>Recording Backup is Available!</strong>
+                            <div class="small">You can play and inspect the call recording directly below to verify the complaint.</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center p-3 bg-dark rounded-4 mb-3">
+                        @if (r.CallType == UserCallType.Video)
+                        {
+                            <video src="@Model.PlaybackUrl" controls class="rounded-3 w-100 shadow" style="max-height: 400px; background: #000;"></video>
+                        }
+                        else
+                        {
+                            <audio src="@Model.PlaybackUrl" controls class="w-100 mt-2"></audio>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            <i class="fas fa-file-video me-1"></i> Storage URL: <code>@Model.PlaybackUrl</code>
+                        </span>
+                        @if (callLog != null)
+                        {
+                            <a href="/admin/call-backups/download/@callLog.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-download me-1"></i> Download Recording
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary text-center py-4 mb-0">
+                        <i class="fas fa-info-circle fs-3 text-muted mb-2 d-block"></i>
+                        <strong>No Active Recording File on Disk</strong>
+                        <div class="small text-muted mt-1">
+                            The recording file might have expired (3-day retention passed) or was not recorded.
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Profile Comparison Cards -->
+        <div class="row g-3">
+            <!-- Reporter Profile -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-light py-2">
+                        <span class="badge bg-primary me-1">Reporter</span>
+                        <strong class="text-dark">User Information</strong>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <img src="@(!string.IsNullOrEmpty(reporter?.ImagePath) ? reporter.ImagePath : "/assets/images/default-user.png")"
+                             class="rounded-circle object-fit-cover shadow-sm mb-2" style="width: 72px; height: 72px; border: 2px solid #007b3d;" onerror="this.src='/assets/images/default-user.png';" />
+                        <h6 class="fw-bold mb-1">@(reporter?.Name ?? "Deleted / Unknown")</h6>
+                        <div class="text-muted small mb-2">ID: @(reporter?.RegisterNumber ?? "N/A")</div>
+
+                        <div class="text-start bg-light p-2 rounded-3 small">
+                            <div><strong>Phone:</strong> @(reporter?.Phone ?? "N/A")</div>
+                            <div><strong>Email:</strong> @(reporter?.Email ?? "N/A")</div>
+                            <div><strong>Gender:</strong> @(reporter?.Gender ?? "N/A")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reported Profile -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-light py-2">
+                        <span class="badge bg-danger me-1">Reported Member</span>
+                        <strong class="text-dark">Accused Profile</strong>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <img src="@(!string.IsNullOrEmpty(reported?.ImagePath) ? reported.ImagePath : "/assets/images/default-user.png")"
+                             class="rounded-circle object-fit-cover shadow-sm mb-2" style="width: 72px; height: 72px; border: 2px solid #dc3545;" onerror="this.src='/assets/images/default-user.png';" />
+                        <h6 class="fw-bold mb-1">@(reported?.Name ?? "Deleted / Unknown")</h6>
+                        <div class="text-muted small mb-2">ID: @(reported?.RegisterNumber ?? "N/A")</div>
+
+                        <div class="text-start bg-light p-2 rounded-3 small">
+                            <div><strong>Phone:</strong> @(reported?.Phone ?? "N/A")</div>
+                            <div><strong>Email:</strong> @(reported?.Email ?? "N/A")</div>
+                            <div><strong>Status:</strong> 
+                                @if (reported?.IsVisible == false)
+                                {
+                                    <span class="badge bg-danger">Restricted / Hidden</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Active Profile</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Moderation Action Form -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 rounded-4 sticky-top" style="top: 20px;">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold text-dark">
+                    <i class="fas fa-gavel text-primary me-2"></i> Moderation Action
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <form asp-action="PostAction" asp-controller="CallReports" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@r.Id" />
+
+                    <!-- Status Selection -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">Change Status <span class="text-danger">*</span></label>
+                        <select name="status" class="form-select">
+                            <option value="Pending" selected="@(r.Status == UserReportStatus.Pending)">⏳ Pending Review</option>
+                            <option value="Actioned" selected="@(r.Status == UserReportStatus.Actioned)">⛔ Actioned / Violation Found</option>
+                            <option value="Dismissed" selected="@(r.Status == UserReportStatus.Dismissed)">✅ Dismissed (No Violation)</option>
+                        </select>
+                    </div>
+
+                    <!-- Moderator Notes -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">Moderator Notes</label>
+                        <textarea name="moderatorNotes" class="form-control" rows="4" placeholder="Explain the investigation findings or action details...">@r.ModeratorNotes</textarea>
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm mb-3">
+                        <i class="fas fa-save me-1"></i> Update Report Action
+                    </button>
+
+                </form>
+
+                @if (!string.IsNullOrEmpty(r.ActionedBy))
+                {
+                    <hr />
+                    <div class="text-muted small">
+                        <div><strong>Last Actioned By:</strong> @(r.ActionedByUsername ?? r.ActionedBy)</div>
+                        @if (r.ActionedOn.HasValue)
+                        {
+                            <div><strong>Actioned Date:</strong> @r.ActionedOn.Value.ToString("dd MMM yyyy, hh:mm tt")</div>
+                        }
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>

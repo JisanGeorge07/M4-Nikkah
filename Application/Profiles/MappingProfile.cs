@@ -1,4 +1,5 @@
 using Application.Models;
+using Application.Models.Call;
 using Application.Models.Common;
 using Application.Models.Framework;
 using AutoMapper;
@@ -143,5 +144,11 @@ public class MappingProfile : Profile
 
         //VerificationDocument
         CreateMap<VerificationDocument, VerificationDocumentDto>().IncludeBase<BaseEntity, BaseDto>().ReverseMap();
+
+        //CallReport
+        CreateMap<CallReport, CallReportDto>().IncludeBase<BaseEntity, BaseDto>().ReverseMap();
+
+        //CallReportReason
+        CreateMap<CallReportReason, CallReportReasonDto>().IncludeBase<OrderableBaseEntity, OrderableDto>().ReverseMap();
     }
 }

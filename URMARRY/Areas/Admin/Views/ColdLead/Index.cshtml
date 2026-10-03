@@ -45,6 +45,7 @@
                         <tr>
                             <th>#</th>
                             <th>Name</th>
+                            <th>Gender</th>
                             <th>Phone Number</th>
                             <th>Assigned Staff</th>
                             <th>Status</th>
@@ -75,6 +76,14 @@
                     <div class="mb-3">
                         <label for="createName" class="form-label fw-semibold">User / Prospect Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="createName" name="name" required placeholder="Enter prospect name" style="border-radius: 6px;" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="createGender" class="form-label fw-semibold">Gender</label>
+                        <select class="form-select" id="createGender" name="gender" style="border-radius: 6px;">
+                            <option value="">-- Select Gender --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="createPhoneNumber" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
@@ -131,6 +140,14 @@
                     <div class="mb-3">
                         <label for="editName" class="form-label fw-semibold">User / Prospect Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="editName" name="name" required style="border-radius: 6px;" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="editGender" class="form-label fw-semibold">Gender</label>
+                        <select class="form-select" id="editGender" name="gender" style="border-radius: 6px;">
+                            <option value="">-- Select Gender --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="editPhoneNumber" class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
@@ -203,6 +220,18 @@
                 columns: [
                     { data: null, render: function (data, type, row, meta) { return meta.row + 1; } },
                     { data: 'name' },
+                    {
+                        data: 'gender',
+                        render: function (data) {
+                            if (!data) return '<span class="text-muted">-</span>';
+                            if (data.toLowerCase() === 'male') {
+                                return '<span class="badge bg-soft-primary text-primary px-2 py-1"><i class="fas fa-mars me-1"></i>Male</span>';
+                            } else if (data.toLowerCase() === 'female') {
+                                return '<span class="badge bg-soft-danger text-danger px-2 py-1"><i class="fas fa-venus me-1"></i>Female</span>';
+                            }
+                            return '<span class="badge bg-soft-secondary text-secondary px-2 py-1">' + data + '</span>';
+                        }
+                    },
                     { 
                         data: 'phoneNumber',
                         render: function (data) {
@@ -275,23 +304,23 @@
                 }
 
                 $spinner.removeClass('d-none');
+                var excludeId = isEdit ? $('#editId').val() : '';
 
                 $.ajax({
-                    url: '@Url.Action("CheckPhone", "Home")',
+                    url: '/admin/cold-lead/check-phone',
                     type: 'GET',
-                    data: { phone: cleanPhone },
+                    data: { phone: cleanPhone, excludeId: excludeId },
                     success: function (response) {
                         $spinner.addClass('d-none');
-                        // response === true means phone is available (no registered profile)
-                        // response === false means phone already exists in registered profiles
-                        if (response === true) {
+                        if (response && response.available === true) {
                             $input.removeClass('is-invalid').addClass('is-valid');
                             $msg.html('<span class="text-success"><i class="fas fa-check-circle me-1"></i> Phone number is available.</span>').show();
                             $btn.prop('disabled', false);
                             if (isEdit) isEditPhoneValid = true; else isCreatePhoneValid = true;
                         } else {
                             $input.removeClass('is-valid').addClass('is-invalid');
-                            $msg.html('<div class="alert alert-danger py-2 px-3 mb-0 font-size-13"><i class="fas fa-exclamation-triangle me-1"></i> <strong>Warning:</strong> A registered profile already exists with this phone number. You cannot create a cold lead for an existing profile.</div>').show();
+                            var alertMsg = (response && response.message) ? response.message : 'This phone number cannot be used.';
+                            $msg.html('<div class="alert alert-danger py-2 px-3 mb-0 font-size-13"><i class="fas fa-exclamation-triangle me-1"></i> <strong>Warning:</strong> ' + alertMsg + '</div>').show();
                             $btn.prop('disabled', true);
                             if (isEdit) isEditPhoneValid = false; else isCreatePhoneValid = false;
                         }
@@ -342,6 +371,7 @@
             $('#createColdLeadModal').on('show.bs.modal', function () {
                 isCreatePhoneValid = true;
                 $('#createPhoneNumber').removeClass('is-invalid is-valid');
+                $('#createGender').val('');
                 $('#createPhoneCheckSpinner').addClass('d-none');
                 $('#createPhoneValidationMsg').hide().empty();
                 $('#createColdLeadForm button[type="submit"]').prop('disabled', false);
@@ -359,10 +389,11 @@
             $('#createColdLeadForm').submit(function (e) {
                 e.preventDefault();
                 if (!isCreatePhoneValid) {
+                    var validationText = $('#createPhoneValidationMsg').text().trim() || 'This phone number cannot be used.';
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Existing Profile Found',
-                        text: 'A registered profile already exists with this phone number. You cannot create a cold lead for an existing profile.'
+                        title: 'Duplicate Phone Found',
+                        text: validationText
                     });
                     return false;
                 }
@@ -376,7 +407,7 @@
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function (res) {
-                        if (res.success) {
+                        if (res && res.success) {
                             Swal.fire('Success', res.message, 'success');
                             $('#createColdLeadModal').modal('hide');
                             $('#createColdLeadForm')[0].reset();
@@ -387,12 +418,27 @@
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Cannot Create Lead',
-                                text: res.message
+                                text: (res && res.message) ? res.message : 'Unable to create cold lead.'
                             });
                         }
                     },
-                    error: function () {
-                        Swal.fire('Error', 'Failed to create cold lead.', 'error');
+                    error: function (xhr) {
+                        var errMessage = 'Failed to create cold lead.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                var parsed = JSON.parse(xhr.responseText);
+                                if (parsed && parsed.message) errMessage = parsed.message;
+                            } catch (e) {
+                                if (xhr.statusText) errMessage = xhr.statusText;
+                            }
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errMessage
+                        });
                     },
                     complete: function () {
                         $btn.prop('disabled', false).html(originalHtml);
@@ -406,6 +452,7 @@
                 originalEditPhone = (lead.phoneNumber || '').trim();
                 $('#editId').val(lead.id);
                 $('#editName').val(lead.name);
+                $('#editGender').val(lead.gender || '');
                 $('#editPhoneNumber').val(lead.phoneNumber);
                 $('#editStaffId').val(lead.assignedStaffId);
                 $('#editStatus').val(lead.status);
@@ -417,10 +464,11 @@
             $('#editColdLeadForm').submit(function (e) {
                 e.preventDefault();
                 if (!isEditPhoneValid) {
+                    var validationText = $('#editPhoneValidationMsg').text().trim() || 'This phone number cannot be used.';
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Existing Profile Found',
-                        text: 'A registered profile already exists with this phone number.'
+                        title: 'Duplicate Phone Found',
+                        text: validationText
                     });
                     return false;
                 }
@@ -434,7 +482,7 @@
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function (res) {
-                        if (res.success) {
+                        if (res && res.success) {
                             Swal.fire('Success', res.message, 'success');
                             $('#editColdLeadModal').modal('hide');
                             table.draw();
@@ -442,12 +490,27 @@
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Cannot Update Lead',
-                                text: res.message
+                                text: (res && res.message) ? res.message : 'Unable to update cold lead.'
                             });
                         }
                     },
-                    error: function () {
-                        Swal.fire('Error', 'Failed to update cold lead.', 'error');
+                    error: function (xhr) {
+                        var errMessage = 'Failed to update cold lead.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                var parsed = JSON.parse(xhr.responseText);
+                                if (parsed && parsed.message) errMessage = parsed.message;
+                            } catch (e) {
+                                if (xhr.statusText) errMessage = xhr.statusText;
+                            }
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errMessage
+                        });
                     },
                     complete: function () {
                         $btn.prop('disabled', false).html(originalHtml);

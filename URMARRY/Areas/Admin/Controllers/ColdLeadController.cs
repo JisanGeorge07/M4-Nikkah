@@ -49,6 +49,56 @@ namespace URMARRY.Areas.Admin.Controllers
             return View();
         }
 
+        [HttpGet("/admin/cold-lead/check-phone")]
+        public async Task<IActionResult> CheckPhone([FromQuery] string phone, [FromQuery] long? excludeId = null)
+        {
+            try
+            {
+                var cleanPhone = (phone ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(cleanPhone))
+                {
+                    return Json(new { available = true, message = "" });
+                }
+
+                // 1. Check if a registered profile already exists with this phone number
+                var existingProfile = await _registrationRepo.GetQueryable()
+                    .Where(x => !x.IsDeleted && x.Phone == cleanPhone && x.IsVerified)
+                    .FirstOrDefaultAsync();
+
+                if (existingProfile != null)
+                {
+                    return Json(new
+                    {
+                        available = false,
+                        reason = "registered",
+                        message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone}). You cannot create a cold lead for an existing profile."
+                    });
+                }
+
+                // 2. Check if already exists in other Cold Leads
+                var existingLead = await _coldLeadRepo.GetQueryable()
+                    .Where(x => !x.IsDeleted && x.PhoneNumber == cleanPhone && (!excludeId.HasValue || x.Id != excludeId.Value))
+                    .FirstOrDefaultAsync();
+
+                if (existingLead != null)
+                {
+                    return Json(new
+                    {
+                        available = false,
+                        reason = "coldlead",
+                        message = $"A cold lead already exists with this phone number ({cleanPhone}) (Lead: {existingLead.Name}, ID: #{existingLead.Id})."
+                    });
+                }
+
+                return Json(new { available = true, message = "Phone number is available." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking phone availability for cold lead: {Phone}", phone);
+                return Json(new { available = true, message = "" });
+            }
+        }
+
         [AcceptVerbs("GET", "POST")]
         [Route("/admin/cold-leads-data")]
         public async Task<IActionResult> GetColdLeadsData(long? staffId, ColdLeadStatus? statusFilter)
@@ -82,7 +132,9 @@ namespace URMARRY.Areas.Admin.Controllers
                 if (!string.IsNullOrWhiteSpace(searchValue))
                 {
                     var search = searchValue.Trim().ToLower();
-                    query = query.Where(x => x.Name.ToLower().Contains(search) || x.PhoneNumber.ToLower().Contains(search));
+                    query = query.Where(x => x.Name.ToLower().Contains(search)
+                                          || x.PhoneNumber.ToLower().Contains(search)
+                                          || (x.Gender != null && x.Gender.ToLower().Contains(search)));
                 }
 
                 int totalRecords = await query.CountAsync();
@@ -102,6 +154,7 @@ namespace URMARRY.Areas.Admin.Controllers
                     id = c.Id,
                     name = c.Name,
                     phoneNumber = c.PhoneNumber,
+                    gender = c.Gender ?? "",
                     assignedStaffId = c.AssignedStaffId,
                     assignedStaffName = staffDict.TryGetValue(c.AssignedStaffId, out var sName) ? sName : "Unassigned",
                     status = (int)c.Status,
@@ -126,37 +179,58 @@ namespace URMARRY.Areas.Admin.Controllers
         }
 
         [HttpPost("/admin/cold-lead/create")]
-        public async Task<IActionResult> Create([FromForm] string name, [FromForm] string phoneNumber, [FromForm] long assignedStaffId, [FromForm] string? remarks)
+        public async Task<IActionResult> Create(CreateColdLeadModel model)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(phoneNumber))
+                if (model == null || string.IsNullOrWhiteSpace(model.Name) || string.IsNullOrWhiteSpace(model.PhoneNumber))
                 {
                     return Json(new { success = false, message = "Name and Phone Number are required." });
                 }
 
-                var cleanPhone = phoneNumber.Trim();
+                if (!model.AssignedStaffId.HasValue || model.AssignedStaffId.Value <= 0)
+                {
+                    return Json(new { success = false, message = "Please select a staff member to assign." });
+                }
 
-                // Check if a registered profile already exists with this phone number
+                var cleanPhone = model.PhoneNumber.Trim();
+
+                // 1. Check if a registered profile already exists with this phone number
                 var existingProfile = await _registrationRepo.GetQueryable()
                     .Where(x => !x.IsDeleted && x.Phone == cleanPhone && x.IsVerified)
                     .FirstOrDefaultAsync();
 
                 if (existingProfile != null)
                 {
-                    return Json(new { 
-                        success = false, 
-                        message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone}). You cannot create a cold lead for an existing profile." 
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone}). You cannot create a cold lead for an existing profile."
+                    });
+                }
+
+                // 2. Check if another cold lead already exists with this phone number
+                var existingColdLead = await _coldLeadRepo.GetQueryable()
+                    .Where(x => !x.IsDeleted && x.PhoneNumber == cleanPhone)
+                    .FirstOrDefaultAsync();
+
+                if (existingColdLead != null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"A cold lead already exists with this phone number ({cleanPhone}) (Lead: {existingColdLead.Name}, ID: #{existingColdLead.Id})."
                     });
                 }
 
                 var coldLead = new ColdLead
                 {
-                    Name = name.Trim(),
+                    Name = model.Name.Trim(),
                     PhoneNumber = cleanPhone,
-                    AssignedStaffId = assignedStaffId,
+                    Gender = string.IsNullOrWhiteSpace(model.Gender) ? null : model.Gender.Trim(),
+                    AssignedStaffId = model.AssignedStaffId.Value,
                     Status = ColdLeadStatus.Pending,
-                    Remarks = remarks?.Trim(),
+                    Remarks = model.Remarks?.Trim(),
                     IsActive = true,
                     IsDeleted = false
                 };
@@ -169,44 +243,69 @@ namespace URMARRY.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating cold lead");
-                return Json(new { success = false, message = "An error occurred while creating cold lead." });
+                var detail = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Json(new { success = false, message = "Error creating cold lead: " + detail });
             }
         }
 
         [HttpPost("/admin/cold-lead/update")]
-        public async Task<IActionResult> Update([FromForm] long id, [FromForm] string name, [FromForm] string phoneNumber, [FromForm] long assignedStaffId, [FromForm] ColdLeadStatus status, [FromForm] string? remarks)
+        public async Task<IActionResult> Update(UpdateColdLeadModel model)
         {
             try
             {
-                var coldLead = await _coldLeadRepo.Get(id);
+                if (model == null || model.Id <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid cold lead ID." });
+                }
+
+                var coldLead = await _coldLeadRepo.Get(model.Id);
                 if (coldLead == null || coldLead.IsDeleted)
                 {
                     return Json(new { success = false, message = "Cold Lead not found." });
                 }
 
-                var cleanPhone = phoneNumber?.Trim();
+                var cleanPhone = model.PhoneNumber?.Trim();
                 if (!string.IsNullOrWhiteSpace(cleanPhone) && cleanPhone != coldLead.PhoneNumber)
                 {
-                    // Check if a registered profile exists with this new phone number
+                    // 1. Check if a registered profile exists with this new phone number
                     var existingProfile = await _registrationRepo.GetQueryable()
                         .Where(x => !x.IsDeleted && x.Phone == cleanPhone && x.IsVerified)
                         .FirstOrDefaultAsync();
 
                     if (existingProfile != null)
                     {
-                        return Json(new { 
-                            success = false, 
-                            message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone})." 
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"A registered profile ({existingProfile.Name ?? existingProfile.RegisterNumber}) already exists with this phone number ({cleanPhone})."
+                        });
+                    }
+
+                    // 2. Check if another cold lead exists with this new phone number
+                    var existingColdLead = await _coldLeadRepo.GetQueryable()
+                        .Where(x => !x.IsDeleted && x.PhoneNumber == cleanPhone && x.Id != model.Id)
+                        .FirstOrDefaultAsync();
+
+                    if (existingColdLead != null)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"Another cold lead already exists with this phone number ({cleanPhone}) (Lead: {existingColdLead.Name}, ID: #{existingColdLead.Id})."
                         });
                     }
 
                     coldLead.PhoneNumber = cleanPhone;
                 }
 
-                if (!string.IsNullOrWhiteSpace(name)) coldLead.Name = name.Trim();
-                coldLead.AssignedStaffId = assignedStaffId;
-                coldLead.Status = status;
-                coldLead.Remarks = remarks?.Trim();
+                if (!string.IsNullOrWhiteSpace(model.Name)) coldLead.Name = model.Name.Trim();
+                coldLead.Gender = string.IsNullOrWhiteSpace(model.Gender) ? null : model.Gender.Trim();
+                if (model.AssignedStaffId.HasValue && model.AssignedStaffId.Value > 0)
+                {
+                    coldLead.AssignedStaffId = model.AssignedStaffId.Value;
+                }
+                coldLead.Status = model.Status;
+                coldLead.Remarks = model.Remarks?.Trim();
 
                 await _coldLeadRepo.Update(coldLead);
                 await _coldLeadRepo.SaveChanges();
@@ -215,8 +314,9 @@ namespace URMARRY.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating cold lead ID: {Id}", id);
-                return Json(new { success = false, message = "An error occurred while updating cold lead." });
+                _logger.LogError(ex, "Error updating cold lead ID: {Id}", model?.Id);
+                var detail = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Json(new { success = false, message = "Error updating cold lead: " + detail });
             }
         }
 
@@ -240,5 +340,25 @@ namespace URMARRY.Areas.Admin.Controllers
                 return Json(new { success = false, message = "An error occurred while deleting cold lead." });
             }
         }
+    }
+
+    public class CreateColdLeadModel
+    {
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Gender { get; set; }
+        public long? AssignedStaffId { get; set; }
+        public string? Remarks { get; set; }
+    }
+
+    public class UpdateColdLeadModel
+    {
+        public long Id { get; set; }
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Gender { get; set; }
+        public long? AssignedStaffId { get; set; }
+        public ColdLeadStatus Status { get; set; }
+        public string? Remarks { get; set; }
     }
 }

@@ -1,0 +1,192 @@
+@model URMARRY.Areas.Admin.Models.CallReportListViewModel
+@using Domain
+@{
+    ViewBag.Title = "Call Reports & Complaints";
+}
+
+@section Title
+{
+    Call Complaints Management
+}
+
+<!-- Summary Filter Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <a href="/admin/call-reports" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 @(string.IsNullOrEmpty(Model.SelectedStatus) ? "border border-2 border-primary" : "")" style="background: #ffffff;">
+                <div class="text-muted small fw-bold text-uppercase">Total Complaints</div>
+                <div class="fs-2 fw-bold text-primary">@Model.TotalCount</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <a href="/admin/call-reports?status=Pending" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 @(Model.SelectedStatus == "Pending" ? "border border-2 border-warning" : "")" style="background: #fffbeb;">
+                <div class="text-warning-emphasis small fw-bold text-uppercase">Pending Review</div>
+                <div class="fs-2 fw-bold text-warning">@Model.PendingCount</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <a href="/admin/call-reports?status=Actioned" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 @(Model.SelectedStatus == "Actioned" ? "border border-2 border-danger" : "")" style="background: #fef2f2;">
+                <div class="text-danger small fw-bold text-uppercase">Actioned / Restricted</div>
+                <div class="fs-2 fw-bold text-danger">@Model.ActionedCount</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <a href="/admin/call-reports?status=Dismissed" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 @(Model.SelectedStatus == "Dismissed" ? "border border-2 border-secondary" : "")" style="background: #f8f9fa;">
+                <div class="text-secondary small fw-bold text-uppercase">Dismissed</div>
+                <div class="fs-2 fw-bold text-secondary">@Model.DismissedCount</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold text-dark">
+                    <i class="fas fa-phone-slash text-danger me-2"></i> User Call Complaints
+                </h5>
+                <a href="/admin/call-report-reasons" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-cog me-1"></i> Manage Dropdown Reasons
+                </a>
+            </div>
+            <div class="card-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <div class="table-responsive">
+                    <table id="datatable" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Reported Date</th>
+                            <th>Reporter</th>
+                            <th>Reported Member</th>
+                            <th>Call Type</th>
+                            <th>Duration</th>
+                            <th>Complaint Reason</th>
+                            <th>Backup Evidence</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @if (Model.Reports.Any())
+                        {
+                            @foreach (var r in Model.Reports)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@(r.CreatedOn?.ToString("dd MMM yyyy") ?? "-")</div>
+                                        <div class="text-muted small">@(r.CreatedOn?.ToString("hh:mm tt") ?? "")</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@(!string.IsNullOrEmpty(r.ReporterPhotoUrl) ? r.ReporterPhotoUrl : "/assets/images/default-user.png")"
+                                                 class="rounded-circle object-fit-cover shadow-sm" style="width: 38px; height: 38px;" onerror="this.src='/assets/images/default-user.png';" />
+                                            <div>
+                                                <div class="fw-semibold text-dark">@r.ReporterName</div>
+                                                <div class="text-muted small">@r.ReporterRegisterNumber</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@(!string.IsNullOrEmpty(r.ReportedUserPhotoUrl) ? r.ReportedUserPhotoUrl : "/assets/images/default-user.png")"
+                                                 class="rounded-circle object-fit-cover shadow-sm" style="width: 38px; height: 38px;" onerror="this.src='/assets/images/default-user.png';" />
+                                            <div>
+                                                <div class="fw-semibold text-dark">@r.ReportedUserName</div>
+                                                <div class="text-muted small">@r.ReportedUserRegisterNumber</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(r.CallType == UserCallType.Video ? "bg-primary" : "bg-success") rounded-pill">
+                                            <i class="fas @(r.CallType == UserCallType.Video ? "fa-video" : "fa-phone-alt") me-1"></i> @(r.CallType == UserCallType.Video ? "Video" : "Audio")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-dark">
+                                            @(r.CallDurationSeconds.HasValue && r.CallDurationSeconds.Value > 0 ? $"{r.CallDurationSeconds.Value / 60}m {r.CallDurationSeconds.Value % 60}s" : "0s")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                            @r.Reason
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(r.Comments))
+                                        {
+                                            <div class="text-muted small text-truncate mt-1" style="max-width: 180px;" title="@r.Comments">
+                                                @r.Comments
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (r.HasRecording)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="fas fa-play-circle me-1"></i> Recording Available
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted border">
+                                                <i class="fas fa-minus-circle me-1"></i> No Backup
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (r.Status)
+                                        {
+                                            case UserReportStatus.Pending:
+                                                <span class="badge bg-warning text-dark px-2 py-1">Pending</span>
+                                                break;
+                                            case UserReportStatus.Actioned:
+                                                <span class="badge bg-danger px-2 py-1">Actioned</span>
+                                                break;
+                                            case UserReportStatus.Dismissed:
+                                                <span class="badge bg-secondary px-2 py-1">Dismissed</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="/admin/call-reports/@r.Id" class="btn btn-primary btn-sm px-3 shadow-sm">
+                                            <i class="fas fa-eye me-1"></i> Review
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i class="fas fa-check-circle text-success fs-3 mb-2 d-block"></i>
+                                    No call complaints found.
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -7,6 +7,7 @@ namespace Application.Models
     {
         public string Name { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+        public string? Gender { get; set; }
         public long AssignedStaffId { get; set; }
         public string? AssignedStaffName { get; set; }
         public ColdLeadStatus Status { get; set; } = ColdLeadStatus.Pending;

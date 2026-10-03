@@ -1,0 +1,81 @@
+@{
+    Layout = "/Views/Shared/_LayoutAccount.cshtml";
+}
+
+<main class="flex-fill p-4">
+    <div class="container" style="max-width: 960px;">
+        <div>
+
+                        
+
+            <!-- Profiles Grid -->
+            <div class="row g-4">
+
+                <!-- Profile Card 1 -->
+                <div class="col-12 col-md-12 col-lg-12">
+                                
+							
+                    <div class="report-screen">
+
+                        <!-- Header -->
+                        <div class="header">
+                            Reporting &amp; End Call
+                        </div>
+
+                        <!-- White Card -->
+                        <div class="card">
+
+                            <!-- Warning Icon -->
+                            <div class="warning-icon">
+                                <img src="/assets/images/thankyou.svg">
+                            </div>
+
+                            <!-- Message -->
+                            <h4>Thank You!</h4>
+                            <div class="message">
+                                You report has been submitted. The member will be temporarily restricted. Our team will
+                                review your report.
+                            </div>
+
+        
+
+
+                            <!-- Submit -->
+                            <button class="submit-button" onclick="submitReport()">
+                                Ok
+                            </button>
+
+
+                            
+
+                        </div>
+
+                    </div>
+								
+								
+                </div>
+
+                            
+                            
+
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+@section Scripts
+{
+    <script>
+        const targetUserId = @(ViewBag.TargetUserId ?? 0);
+
+        function submitReport() {
+            if (targetUserId > 0) {
+                window.location.href = `/chat/with/${targetUserId}`;
+            } else {
+                window.location.href = '/chat';
+            }
+        }
+    </script>
+}

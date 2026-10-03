@@ -48,9 +48,9 @@ namespace Application.Interfaces.Persistence
         IceServerConfigResponse GetIceServerConfiguration(long userId);
 
         /// <summary>
-        /// Saves 14-day security call recording metadata (S3 key, URL, duration, expiry date).
+        /// Saves 3-day security call recording backup metadata (file path, URL, duration, expiry date).
         /// </summary>
-        Task<bool> SaveCallRecordingMetadataAsync(long callLogId, string s3Key, string recordingUrl, long fileSize, int durationSeconds);
+        Task<bool> SaveCallRecordingMetadataAsync(long callLogId, string filePath, string recordingUrl, long fileSize, int durationSeconds);
 
         /// <summary>
         /// Gets remaining audio call contacts and video call minutes for the active plan.
@@ -66,5 +66,15 @@ namespace Application.Interfaces.Persistence
         /// Records video call duration against the user's video call minutes quota.
         /// </summary>
         Task<bool> RecordVideoCallDurationAsync(long userId, int durationSeconds);
+
+        /// <summary>
+        /// Returns all active call report complaint reasons configured from the admin panel.
+        /// </summary>
+        Task<List<CallReportReasonDto>> GetActiveReportReasonsAsync();
+
+        /// <summary>
+        /// Creates a new member call report complaint linked to an optional call log.
+        /// </summary>
+        Task<CallReportDto> CreateCallReportAsync(long reporterUserId, CreateCallReportRequest request);
     }
 }
